@@ -1,5 +1,4 @@
-// entities.c: Main.bb's LoadEntities. TODO: the ark_blur_cam overlays (fog, gas mask, infect, nv),
-// particles + templates, SetChunkDataValues, user tracks
+// entities.c: Main.bb's LoadEntities. TODO: particle templates + templates, SetChunkDataValues, user tracks
 #include "g.h"
 
 static int hid(int e) { bbHideEntity(e); return e; }
@@ -7,6 +6,17 @@ static int filled(int w, int h, int flags, int r, int g, int b) {
 	int t = bbCreateTexture(w, h, flags, 1);
 	bbTextureFill(t, r, g, b, 255);
 	return t;
+}
+// full screen sprite on the blur cam (fog vignette, gas mask, infect, nv)
+static int overlay(int tex, float w, float h, int blend, int order, int fx) {
+	int s = bbCreateSprite(ark_blur_cam);
+	bbScaleSprite(s, Max(GraphicWidth / w, 1), Max(GraphicHeight / h * .8f, .8f));
+	bbEntityTexture(s, tex, 0, 0);
+	bbEntityBlend(s, blend);
+	if (fx) bbEntityFX(s, 1);
+	bbEntityOrder(s, order);
+	bbMoveEntity(s, 0, 0, 1);
+	return s;
 }
 // monitor_checkpoint: every surface but the screen gets the "off" texture
 static void monitoroff(int m) {
@@ -16,7 +26,9 @@ static void monitoroff(int m) {
 		if (!b) continue;
 		htex t1 = bbGetBrushTexture(b, 0);
 		if (t1) {
-			if (!bbSeq(bbLower(StripPath(bbTextureName(t1))), "monitortexture.jpg")) { bbBrushTexture(b, MonitorTextureOff, 0, 0); bbPaintSurface(sf, b); }
+			str name = StripPath(bbTextureName(t1));
+			if (!bbSeq(bbLower(name), "monitortexture.jpg")) { bbBrushTexture(b, MonitorTextureOff, 0, 0); bbPaintSurface(sf, b); }
+			if (bbLen(name)) bbFreeTexture(t1);
 		}
 		bbFreeBrush(b);
 	}
@@ -54,10 +66,23 @@ void LoadEntities(void) {
 	bbAmbientLight(Brightness, Brightness, Brightness);
 	ScreenTexs[0] = bbCreateTexture(512, 512, 1 + 256, 1);
 	ScreenTexs[1] = bbCreateTexture(512, 512, 1 + 256, 1);
+	CreateBlurImage();
+	bbCameraProjMode(ark_blur_cam, 0);
 	FogTexture = LoadTexture_Strict("GFX\\fog.jpg", 1);
+	Fog = overlay(FogTexture, 1240.0f, 960.0f, 2, -1000, 0);
 	GasMaskTexture = LoadTexture_Strict("GFX\\GasmaskOverlay.jpg", 1);
+	GasMaskOverlay = hid(overlay(GasMaskTexture, 1024.0f, 1024.0f, 2, -1003, 1));
 	InfectTexture = LoadTexture_Strict("GFX\\InfectOverlay.jpg", 1);
+	InfectOverlay = hid(overlay(InfectTexture, 1024.0f, 1024.0f, 3, -1003, 1));
 	NVTexture = LoadTexture_Strict("GFX\\NightVisionOverlay.jpg", 1);
+	NVOverlay = hid(overlay(NVTexture, 1024.0f, 1024.0f, 2, -1003, 1));
+	NVBlink = bbCreateSprite(ark_blur_cam);
+	bbScaleSprite(NVBlink, Max(GraphicWidth / 1024.0f, 1), Max(GraphicHeight / 1024.0f * .8f, .8f));
+	bbEntityColor(NVBlink, 0, 0, 0);
+	bbEntityFX(NVBlink, 1);
+	bbEntityOrder(NVBlink, -1005);
+	bbMoveEntity(NVBlink, 0, 0, 1);
+	bbHideEntity(NVBlink);
 	FogNVTexture = LoadTexture_Strict("GFX\\fogNV.jpg", 1);
 	DrawLoading(5, 0);
 

@@ -109,7 +109,7 @@ void bbBrushAlpha(hbrush b, float a);
 void bbBrushFX(hbrush b, int fx);
 void bbBrushBlend(hbrush b, int bl);
 void bbBrushTexture(hbrush b, htex t, int frame, int idx);
-htex bbGetBrushTexture(hbrush b, int idx);
+htex bbGetBrushTexture(hbrush b, int idx); // +1 ref, FreeTexture it like in blitz
 hbrush bbGetSurfaceBrush(surf *s);
 hbrush bbGetEntityBrush(ent e);
 

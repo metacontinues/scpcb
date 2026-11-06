@@ -89,6 +89,7 @@ float bbProjectedZ(void) { return proj.z; }
 static int vis(cam *c, float a, tf v, v3 ctr, float r) {
 	v3 p = tfp(v, ctr);
 	if (p.z < c->n - r || p.z > c->f + r) return 0;
+	if (c->proj == 2) return fabsf(p.x) - r <= c->n / c->zoom && fabsf(p.y) - r <= c->n / (c->zoom * a);
 	float zx = c->zoom, zy = c->zoom * a;
 	if ((-fabsf(p.x) * zx + p.z) / sqrtf(zx*zx + 1) < -r) return 0;
 	if ((-fabsf(p.y) * zy + p.z) / sqrtf(zy*zy + 1) < -r) return 0;
@@ -274,6 +275,10 @@ static void rendcam(ent ce) {
 		rlClearScreenBuffers(); // TODO: honor color-only/z-only cls
 	}
 	float P[16] = {c->zoom,0,0,0, 0,c->zoom*a,0,0, 0,0,(f+n)/(f-n),1, 0,0,-2*f*n/(f-n),0};
+	if (c->proj == 2) { // blitz ortho (gxscene setOrthoProj): x*zoom/near across, depth linear near..far
+		float O[16] = {c->zoom/n,0,0,0, 0,c->zoom*a/n,0,0, 0,0,2/(f-n),0, 0,0,-(f+n)/(f-n),1};
+		memcpy(P, O, sizeof P);
+	}
 	tf v = viewtf(ce);
 	rlSetMatrixProjection(mk(P));
 	rlSetMatrixModelview(mtf(v));
