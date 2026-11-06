@@ -121,10 +121,14 @@ void RemoveEvent(Events *e) {
 }
 
 // ---- UpdateEvents.bb's loop. events not in the table yet just sit there (TODO: the other ~90)
-typedef struct { const char *name; int (*fn)(Events *); } EvEntry;
-static const EvEntry evs[] = {
-	{"173", Ev173}, {"alarm", EvAlarm},
-};
+static const EvEntry evs0[] = {{"173", Ev173}, {"alarm", EvAlarm}, {NULL, NULL}};
+static const EvEntry *tables[] = {evs0, Evs1};
+
+static int (*evfn(const char *name))(Events *) {
+	for (size_t t = 0; t < sizeof tables / sizeof *tables; t++)
+		for (const EvEntry *x = tables[t]; x->name; x++) if (bbSeq(name, x->name)) return x->fn;
+	return NULL;
+}
 
 static void explosion(void) { // the 294 drinks' explosion, kept here like blitz does
 	if (ExplosionTimer <= 0) return;
@@ -161,12 +165,8 @@ void UpdateEvents(void) {
 	CurrStepSFX = 0;
 	UpdateRooms();
 	each(Events, e) {
-		for (size_t k = 0; k < sizeof evs / sizeof *evs; k++) {
-			if (!bbSeq(e->EventName, evs[k].name)) continue;
-			if (evs[k].fn(e)) goto out; // blitz Exit
-			break;
-		}
+		int (*f)(Events *) = evfn(e->EventName);
+		if (f && f(e)) break; // blitz Exit
 	}
-out:
 	explosion();
 }

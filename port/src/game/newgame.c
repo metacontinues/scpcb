@@ -82,6 +82,12 @@ void InitNewGame(void) {
 		bbUpdateWorld(1);
 		if (bbInt(i * .27f) != bbInt((i - 1) * .27f)) DrawLoading(80 + bbInt(i * .27f), 0);
 	}
+	if (getenv("SCPCB_ROOM")) each(Rooms, r) if (bbSeq(r->RoomTemplate->Name, getenv("SCPCB_ROOM"))) { // dev: start in that room
+		bbPositionEntity(Collider, bbEntityX(r->obj, 0), bbEntityY(r->obj, 0) + .5f, bbEntityZ(r->obj, 0), 0);
+		bbResetEntity(Collider);
+		PlayerRoom = r;
+		break;
+	}
 	// dev: SCPCB_173=d / SCPCB_106=d put 173 / an already risen 106 d units in front of you
 	for (int k = 0; k < 2; k++) {
 		const char *v = getenv(k ? "SCPCB_106" : "SCPCB_173");
