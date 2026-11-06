@@ -58,7 +58,7 @@ port/
     events.c       Events type, CreateEvent/InitEvents (UpdateEvents.bb itself isn't ported yet)
     inv.c          DrawGUI's inventory screen (drag, drop, combine into clipboard/wallet, batteries), the inventory key
     use.c          DrawGUI's item-in-hand part: documents, kits, wearables, pills... (not yet: radio, nav, 1499, 294 cup, 1025)
-    ev173.c ev1.c ev2.c ev3.c evpd.c  UpdateEvents.bb's events (ev2.c also has DrawQuickLoading/QuickLoadEvents) (evlib.c: their helpers), one name -> fn table per file
+    ev173.c ev1-4.c evpd.c  UpdateEvents.bb's events (ev2.c also has DrawQuickLoading/QuickLoadEvents) (evlib.c: their helpers), one name -> fn table per file
     keyname.c difficulty.c achv.c             the small .bb files (achv.c also has the unlock popups)
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)

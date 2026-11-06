@@ -123,7 +123,7 @@ void RemoveEvent(Events *e) {
 
 // ---- UpdateEvents.bb's loop. events not in the table yet just sit there (TODO: the other ~90)
 static const EvEntry evs0[] = {{"173", Ev173}, {"alarm", EvAlarm}, {"pocketdimension", EvPocketDimension}, {NULL, NULL}};
-static const EvEntry *tables[] = {evs0, Evs1, Evs2, Evs3};
+static const EvEntry *tables[] = {evs0, Evs1, Evs2, Evs3, Evs4};
 
 static int (*evfn(const char *name))(Events *) {
 	for (size_t t = 0; t < sizeof tables / sizeof *tables; t++)
