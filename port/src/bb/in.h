@@ -22,11 +22,15 @@ struct surf {
 	Mesh gpu;
 	int dirty;
 	unsigned ver; // bumped on every edit, for collision caches
+	float *bpos, *bnrm, *bw; unsigned char *bi; // skin: bind pose + 4 weights/bone idx per vert
 };
 
 // mesh data, shared by CopyEntity, deep copied by CopyMesh
+typedef struct { int nb; char (*name)[64]; tf *binv; } skin; // bones by name, bind inverse (mesh space)
+
 typedef struct {
 	surf **s;
+	skin *sk;
 	int ns, rc;
 	v3 lo, hi; int bdirty; // bounds
 } mdat;
@@ -41,7 +45,7 @@ typedef struct {
 	Color cls, fog;
 } cam;
 
-typedef struct { float t; v3 p, s; m3 r; int has; } key; // has: 1 pos 2 scl 4 rot
+typedef struct { float t; v3 p, s; float q[4]; int has; } key; // has: 1 pos 2 scl 4 rot. q = w x y z
 
 typedef struct {
 	int used, kind;
@@ -60,8 +64,11 @@ typedef struct {
 	// collision / pick
 	int ctype, pmode, pobsc;
 	float rx, ry; v3 boxo, boxs;
-	// anim keys (b3d), not interpreted yet
+	// anim (anim.c). keys on any node, the ANIM chunk's node owns time/seqs
 	key *keys; int nk;
+	int anim, amode, aseq, nseq; float atime, aspeed;
+	struct { int a, b; } *seqs;
+	ent *bones; int nbones; // skinned mesh: resolved bone ents
 	// collision state (coll.c)
 	v3 opos; int ohas;
 	struct hit *hits; int nhit, chit;
@@ -102,6 +109,9 @@ void tex_unref(htex t);
 ent b3d_load(const char *p, ent par);
 ent x_load(const char *p, ent par);
 void coll_free(E *x);
+m3 qmat(float w, float x, float y, float z); // blitz Quat::getMatrix
+void anim_pose(ent e, float t);
+void anim_step(float k);
 ent bb_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly);
 void rend_init(void);
 void rend_quit(void);

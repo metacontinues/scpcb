@@ -25,9 +25,11 @@ port/
     fs.c           blitz paths (backslashes, any case) + ReadInt/ReadString/etc
     sys.c          window/frame/time, primitives
     coll.c         Collisions/UpdateWorld (swept ellipsoid), picks, EntityVisible
+    anim.c         keyframes (lerp + slerp per channel), cpu skinning, SetAnimTime/Animate/seqs
   src/fmt/         file formats: b3d.c (+ LoadMesh dispatch), x.c, rmesh.c
   src/game/        game code goes here (empty rn)
-  tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider)
+  tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
+                   `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
   tools/colltest.c collision + pick checks, `make -C port test`
 ```
 
@@ -70,18 +72,18 @@ x11 only for now (works under xwayland). native wayland needs glfw's generated p
 
 ## status
 
-works: entities/hierarchy/transforms, meshes, brushes, textures, cameras, lights, sprites, fog,
+works: entities/hierarchy/transforms, b3d animation + skinning, meshes, brushes, textures, cameras, lights, sprites, fog,
 collisions + picking, b3d + .x meshes and node trees (.x: text, binary, and single-block mszip "bzip"), rmesh rooms w/ props.
 every .x in the repo loads. the only warnings are 2 broken asset paths (294.x wants a missing png, mug.x
 points at a folder on the modder's desktop), and blitz chokes on those too.
 
 next up, roughly in order:
-1. **animation**: b3d keys are parsed already. needs `Animate`/`SetAnimTime`/`AnimTime` + cpu skinning (BONE)
-2. **audio**: `LoadSound`/`PlaySound`/channels + the 3d pan/volume the game does by hand (it uses fmod for music)
-3. **2d**: images, fonts (`AAText.bb`), `Text`/`Rect`/`Line`, `SetBuffer`/render-to-texture
-4. **input + ini** helpers
-5. then the actual game port: Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
+1. **audio**: `LoadSound`/`PlaySound`/channels + the 3d pan/volume the game does by hand (it uses fmod for music)
+2. **2d**: images, fonts (`AAText.bb`), `Text`/`Rect`/`Line`, `SetBuffer`/render-to-texture
+3. **input + ini** helpers
+4. then the actual game port: Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
 
-known gaps: collision response 3 (no sliding down slopes) is approximated, moving targets are tested
+known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
+CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested
 where they are now (not swept), CameraClsMode only does both-or-neither, ortho proj mode is ignored, light attenuation
 is a guess (`1/(1+d/range)`), bump maps from materials.ini are skipped. .x SkinWeights (21 files) + AnimationSet (6) are skipped, so those render in bind pose.
