@@ -40,7 +40,10 @@ port/
     main.c         Main.bb top level (init order), console msgs, misc Main.bb fns
     ini.c          Main.bb INI-functions      strict.c  StrictLoads.bb (+ LoadTempSound)
     menu.c         launcher                   loading.c DrawLoading
-    widgets.c      buttons/ticks/frames/RowText/InputBox
+    widgets.c      buttons/ticks/frames/RowText/InputBox   sliders.c SlideBar/Slider3-7/Button/scrollbar
+    mainmenu.c     UpdateMainMenu + Menu.bb top level      options.c the options tabs
+    tooltip.c      option/map tooltips, GetLineAmount      save.c    Save.bb (save + map lists so far)
+    loop.c         Main.bb's main loop                     music.c   UpdateMusic + the Music list
     keyname.c difficulty.c achv.c             the small .bb files
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
@@ -82,7 +85,9 @@ LD_LIBRARY_PATH=/path/to/angle/out port/build/rmview ...
 glfw dlopens `libEGL.so.1`, so if the angle build only has `libEGL.so` symlink it.
 x11 only for now (works under xwayland). native wayland needs glfw's generated protocol headers.
 
-dev hook: `BB_SHOT=out.png BB_SHOT_FRAME=n` saves the nth Flip to a png and exits. to try the game w/o
+dev hooks: `BB_SHOT=out.png BB_SHOT_FRAME=n` saves the nth Flip to a png and exits. `BB_INPUT="11:c13,14:m250x225,15:l"`
+plays input at given flips: `m<x>x<y>` virtual mouse move, `l` left click, `k<scancode>` key hit, `c<ascii>` typed char.
+eg `BB_INPUT="11:c13,14:m250x365,15:l" BB_SHOT=o.png BB_SHOT_FRAME=22` gets past the loading screen and opens options at 720p. to try the game w/o
 touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data, Loadingscreens and has its own options.ini
 (the launcher rewrites options.ini on LAUNCH, like the original).
 
@@ -130,13 +135,15 @@ collisions + picking, b3d + .x meshes and node trees (.x: text, binary, and sing
 every .x in the repo loads. the only warnings are 2 broken asset paths (294.x wants a missing png, mug.x
 points at a folder on the modder's desktop), and blitz chokes on those too.
 
-game: hand-ported (no transpiler) into `src/game/`. done so far: Main.bb's init up to the first DrawLoading +
-the early globals, INI, StrictLoads, launcher, loading screens, widgets, KeyName, Difficulty, Achievements init.
-`build/scpcb` shows the launcher, then the loading screen at 100% and exits on a key.
-stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), UpdateMusic,
-borderless windowed + ScreenGamma (blitz did these w/ the fresize_* camera, not ported), ResizeImage2 is a plain ResizeImage.
-next up: the rest of Main.bb's top level (sounds via LoadAllSounds, materials, Items/Particles/MapSystem/NPCs includes)
-and Menu.bb's UpdateMainMenu, so the main loop runs into the menu.
+game: hand-ported (no transpiler) into `src/game/`. done so far: Main.bb's top level up to the main loop (minus the
+includes below), the main loop's menu side, INI, StrictLoads, launcher, loading screens, the whole main menu (new game,
+load game, load map, all 4 options tabs, tooltips, sliders), save/map lists, UpdateMusic, KeyName, Difficulty, Achievements init.
+`build/scpcb` goes launcher -> loading screens -> main menu. START/Load print "can't start a game yet" and stay in the menu.
+stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), Dreamfilter,
+borderless windowed + ScreenGamma (blitz did these w/ the fresize_* camera, not ported), ResizeImage2 is a plain ResizeImage,
+TextureLodBias is a no-op (es2), "antialiased text" only flips the ini value.
+next up: the game itself. Items.bb, Particles.bb, MapSystem.bb (LoadRoomTemplates + map gen), NPCs.bb, then
+LoadEntities/LoadAllSounds/InitNewGame and the in-game half of the main loop.
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested

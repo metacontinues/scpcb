@@ -24,8 +24,6 @@ int ScaledMouseX(void) {
 }
 int ScaledMouseY(void) { return bbInt(bbMouseY() * (float)GraphicHeight / RealGraphicHeight); }
 
-void UpdateMusic(void) {} // TODO Main.bb music player
-
 // TODO InitFastResize: the fresize_* camera/sprite are only for borderless upscaling + gamma
 void Graphics3DExt(int w, int h, int depth, int mode) {
 	bbGraphics3D(w, h, depth, mode);
@@ -154,8 +152,92 @@ int main(void) {
 	InitPlayerGlobals();
 	InitAchievements();
 	InitDifficulties();
+	InitLateGlobals();
+	MainLoop();
+	return 0;
+}
 
-	// TODO: the rest of Main.bb. for now park on a 100% loading screen
+int GenerateSeedNumber(const char *seed) {
+	int t = 0, sh = 0;
+	for (int i = 1; i <= bbLen(seed); i++) { t ^= (unsigned)bbAsc(bbMid(seed, i, 1)) << sh; sh = (sh + 1) % 24; }
+	return t;
+}
+
+void SaveOptionsINI(void) {
+#define P(sec, k, v) PutINIValue(OptionFile, sec, k, bbStr(v))
+	P("options", "mouse sensitivity", MouseSens); P("options", "invert mouse y", InvertMouse);
+	P("options", "bump mapping enabled", BumpEnabled); P("options", "HUD enabled", HUDenabled);
+	P("options", "screengamma", ScreenGamma); P("options", "antialias", Opt_AntiAlias);
+	P("options", "vsync", Vsync); P("options", "show FPS", ShowFPS); P("options", "framelimit", Framelimit);
+	P("options", "achievement popup enabled", AchvMSGenabled); P("options", "room lights enabled", EnableRoomLights);
+	P("options", "texture details", TextureDetails); P("console", "enabled", CanOpenConsole);
+	P("console", "auto opening", ConsoleOpening); P("options", "antialiased text", AATextEnable);
+	P("options", "particle amount", ParticleAmount); P("options", "enable vram", EnableVRam);
+	P("options", "mouse smoothing", MouseSmooth);
+	P("audio", "music volume", MusicVolume); P("audio", "sound volume", PrevSFXVolume);
+	P("audio", "sfx release", EnableSFXRelease); P("audio", "enable user tracks", EnableUserTracks);
+	P("audio", "user track setting", UserTrackMode);
+	P("binds", "Right key", KEY_RIGHT); P("binds", "Left key", KEY_LEFT); P("binds", "Up key", KEY_UP);
+	P("binds", "Down key", KEY_DOWN); P("binds", "Blink key", KEY_BLINK); P("binds", "Sprint key", KEY_SPRINT);
+	P("binds", "Inventory key", KEY_INV); P("binds", "Crouch key", KEY_CROUCH); P("binds", "Save key", KEY_SAVE);
+	P("binds", "Console key", KEY_CONSOLE);
+#undef P
+}
+
+// Main.bb 1525-2809: what runs between the first loading screen and the main loop
+void InitLateGlobals(void) {
+	BumpEnabled = GetINIInt("options.ini", "options", "bump mapping enabled", 0);
+	HUDenabled = GetINIInt("options.ini", "options", "HUD enabled", 0);
+	Brightness = bbInt(GetINIFloat("options.ini", "options", "brightness", 0));
+	CameraFogNear = GetINIFloat("options.ini", "options", "camera fog near", 0);
+	CameraFogFar = GetINIFloat("options.ini", "options", "camera fog far", 0);
+	StoredCameraFogFar = CameraFogFar;
+	MouseSens = GetINIFloat("options.ini", "options", "mouse sensitivity", 0);
+	EnableVRam = GetINIInt("options.ini", "options", "enable vram", 0);
+	// TODO Dreamfilter.bb
+	InitMusic();
+	DrawLoading(10, 1);
+	DrawLoading(20, 1);
+	DrawLoading(25, 1);
+	DrawLoading(30, 1);
+	NVGImages = bbLoadAnimImage("GFX\\battery.png", 64, 64, 0, 2);
+	bbMaskImage(NVGImages, 255, 0, 255);
+	EnableUserTracks = GetINIInt(OptionFile, "audio", "enable user tracks", 0);
+	UserTrackMode = GetINIInt(OptionFile, "audio", "user track setting", 0);
+	InFacility = 1;
+	PrevMusicVolume = MusicVolume; PrevSFXVolume = SFXVolume;
+	menuroomscale = 8.0f / 2048.0f;
+	CurrMenu_TestIMG = "";
+	ParticleAmount = GetINIInt(OptionFile, "options", "particle amount", 0);
+	for (int i = 0; i < 4; i++) {
+		NavImages[i] = LoadImage_Strict(cat("GFX\\navigator\\roomborder", bbStr(i), ".png"));
+		bbMaskImage(NavImages[i], 255, 0, 255);
+	}
+	NavImages[4] = LoadImage_Strict("GFX\\navigator\\batterymeter.png");
+	NavBG = bbCreateImage(GraphicWidth, GraphicHeight, 1);
+	DrawLoading(35, 1);
+	// TODO Items.bb, Particles.bb (HissSFX), doors, MapSystem.bb (LoadRoomTemplates), NPCs.bb, UpdateEvents.bb
+	DrawLoading(40, 1);
+	DrawLoading(80, 1);
+	bbCollisions(HIT_PLAYER, HIT_MAP, 2, 2);
+	bbCollisions(HIT_PLAYER, HIT_PLAYER, 1, 3);
+	bbCollisions(HIT_ITEM, HIT_MAP, 2, 2);
+	bbCollisions(HIT_APACHE, HIT_APACHE, 1, 2);
+	bbCollisions(HIT_178, HIT_MAP, 2, 2);
+	bbCollisions(HIT_178, HIT_178, 1, 3);
+	bbCollisions(HIT_DEAD, HIT_MAP, 2, 2);
+	DrawLoading(90, 1);
+	ShouldEntitiesFall = 1; PlayerFallingPickDistance = 10;
+	Save_MSG = "";
+	InitMenu();
+	MainMenuOpen = 1;
+	bbFlushKeys(); bbFlushMouse();
 	DrawLoading(100, 1);
+	LoopDelay = bbMilliSecs();
+}
+
+// TODO LoadEntities/LoadAllSounds/InitNewGame (new) and LoadGame/InitLoadGame (load)
+int StartGame(const char *how) {
+	fprintf(stderr, "scpcb: can't start a game yet (%s), the game itself isn't ported\n", how);
 	return 0;
 }
