@@ -71,7 +71,7 @@ static chan *gch(int h) {
 	if (h <= 0 || i >= NCH || !ch[i].used || ch[i].gen != h >> 12) return NULL;
 	return &ch[i];
 }
-static float rlpan(float p) { return (1 - fmaxf(-1, fminf(1, p))) * 0.5f; } // blitz -1 left .. 1 right; raylib 1 = left
+static float rlpan(float p) { return fmaxf(-1, fminf(1, p)); } // blitz and raylib 6: -1 left .. 1 right
 
 int bbPlaySound(int h) {
 	snd *s = gsnd(h);

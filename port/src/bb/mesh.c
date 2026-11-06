@@ -4,7 +4,7 @@
 #include <float.h>
 #include "in.h"
 #include "rlgl.h"
-#include "config.h" // MAX_MESH_VERTEX_BUFFERS
+#define MAX_MESH_VERTEX_BUFFERS 9 // rmodels.c keeps it private since raylib 6: 9 w/ SUPPORT_GPU_SKINNING (on by default)
 
 // ---- brushes
 static brush *bs; static char *bused; static int nbs, cbs;
