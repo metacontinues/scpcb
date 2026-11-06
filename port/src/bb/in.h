@@ -113,5 +113,7 @@ m3 qmat(float w, float x, float y, float z); // blitz Quat::getMatrix
 void anim_pose(ent e, float t);
 void anim_step(float k);
 ent bb_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly);
+void snd_update(void);
+void snd_quit(void);
 void rend_init(void);
 void rend_quit(void);

@@ -17,10 +17,10 @@ int bbGraphics3D(int w, int h, int depth, int mode) {
 	rend_init();
 	return 1;
 }
-void bbEndGraphics(void) { rend_quit(); CloseWindow(); }
+void bbEndGraphics(void) { snd_quit(); rend_quit(); CloseWindow(); }
 int bbGraphicsWidth(void) { return GetScreenWidth(); }
 int bbGraphicsHeight(void) { return GetScreenHeight(); }
-void bbFlip(int vsync) { (void)vsync; bb_frame(); EndDrawing(); inframe = 0; }
+void bbFlip(int vsync) { (void)vsync; bb_frame(); EndDrawing(); inframe = 0; snd_update(); }
 void bbClsColor(int r, int g, int b) { clsc = (Color){r, g, b, 255}; }
 void bbCls(void) { bb_frame(); ClearBackground(clsc); }
 int bbMilliSecs(void) { return (int)(GetTime() * 1000); }

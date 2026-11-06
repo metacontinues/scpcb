@@ -239,3 +239,27 @@ int bbAnimating(ent e);
 void bbAnimate(ent e, int mode, float speed, int seq, float trans); // mode 0 stop 1 loop 2 pingpong 3 once
 int bbExtractAnimSeq(ent e, int first, int last, int seq);
 const char *bbEntityClass(ent e);
+
+// ---- sound (snd.c). channels from PlaySound are independent voices; pan -1 left .. 1 right, pitch in hz
+int bbLoadSound(const char *p);
+void bbFreeSound(int s);
+void bbLoopSound(int s);
+void bbSoundVolume(int s, float v);
+void bbSoundPan(int s, float p);
+void bbSoundPitch(int s, float hz);
+int bbPlaySound(int s);
+void bbStopChannel(int c);
+void bbPauseChannel(int c);
+void bbResumeChannel(int c);
+void bbChannelVolume(int c, float v);
+void bbChannelPan(int c, float p);
+void bbChannelPitch(int c, float hz);
+int bbChannelPlaying(int c);
+// music streams, standing in for the FSOUND_Stream_* calls (StreamSound_Strict & co)
+int bbStreamOpen(const char *p, int loop); // fmod Mode 2 = loop
+void bbStreamPlay(int s);
+void bbStreamPaused(int s, int paused);
+void bbStreamVolume(int s, float v);
+void bbStreamPan(int s, float p);
+int bbStreamPlaying(int s);
+void bbStreamClose(int s);

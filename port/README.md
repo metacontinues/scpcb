@@ -26,11 +26,13 @@ port/
     sys.c          window/frame/time, primitives
     coll.c         Collisions/UpdateWorld (swept ellipsoid), picks, EntityVisible
     anim.c         keyframes (lerp + slerp per channel), cpu skinning, SetAnimTime/Animate/seqs
+    snd.c          sounds/channels (raylib aliases) + music streams for the FSOUND_Stream_* calls
   src/fmt/         file formats: b3d.c (+ LoadMesh dispatch), x.c, rmesh.c
   src/game/        game code goes here (empty rn)
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
   tools/colltest.c collision + pick checks, `make -C port test`
+  tools/sndtest.c  sound/channel/stream checks (muted). w/o an audio device it only checks silent mode
 ```
 
 ## build + run
@@ -58,6 +60,12 @@ x11 only for now (works under xwayland). native wayland needs glfw's generated p
 
 ## how the blitz stuff maps
 
+- **audio**: the game does its own 3d (PlaySound2/UpdateSoundOrigin compute vol + pan from DeltaYaw), so
+  only the plain blitz api is needed. each PlaySound gets its own voice (a raylib sound alias); channel
+  handles carry a generation so stale ones go dead instead of steering a recycled voice. fmod streams
+  map to raylib Music, fed in bbFlip. no audio device -> LoadSound still returns handles, everything's silent.
+  all 894 referenced oggs decode (the 895th, SFX/SCP/970/fcveny.ogg, is a text-prefixed easter egg nobody loads).
+
 - **coords**: everything stays in blitz's left-handed space. the projection matrix maps lh view space
   straight to gl clip space, and since blitz front faces are cw we cull gl "front" faces. no mirroring anywhere.
 - **materials**: one shader does up to 4 texture layers, each w/ blitz TextureBlend (0-5), coord set,
@@ -72,16 +80,15 @@ x11 only for now (works under xwayland). native wayland needs glfw's generated p
 
 ## status
 
-works: entities/hierarchy/transforms, b3d animation + skinning, meshes, brushes, textures, cameras, lights, sprites, fog,
+works: entities/hierarchy/transforms, b3d animation + skinning, sound + music streams, meshes, brushes, textures, cameras, lights, sprites, fog,
 collisions + picking, b3d + .x meshes and node trees (.x: text, binary, and single-block mszip "bzip"), rmesh rooms w/ props.
 every .x in the repo loads. the only warnings are 2 broken asset paths (294.x wants a missing png, mug.x
 points at a folder on the modder's desktop), and blitz chokes on those too.
 
 next up, roughly in order:
-1. **audio**: `LoadSound`/`PlaySound`/channels + the 3d pan/volume the game does by hand (it uses fmod for music)
-2. **2d**: images, fonts (`AAText.bb`), `Text`/`Rect`/`Line`, `SetBuffer`/render-to-texture
-3. **input + ini** helpers
-4. then the actual game port: Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
+1. **2d**: images, fonts (`AAText.bb`), `Text`/`Rect`/`Line`, `SetBuffer`/render-to-texture
+2. **input + ini** helpers
+3. then the actual game port: Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested
