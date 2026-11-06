@@ -4,3 +4,6 @@
 [submodule "port/vendor/bdwgc"]
 	path = port/vendor/bdwgc
 	url = https://github.com/ivmai/bdwgc.git
+[submodule "port/vendor/mimalloc"]
+	path = port/vendor/mimalloc
+	url = https://github.com/microsoft/mimalloc.git

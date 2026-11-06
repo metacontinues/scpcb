@@ -14,6 +14,8 @@ port/
   meson.build      muon/meson build, builds raylib + bdwgc from vendor/ too
   vendor/raylib    submodule, pinned to 5.5
   vendor/bdwgc     submodule, boehm gc v8.2.12 (for blitz strings + Type objects)
+  vendor/mimalloc  submodule, v3.5.4, overrides malloc for the whole process (-Dmimalloc=false to skip)
+  setup.sh         configures port/build w/ clang + mold
   src/bb/          blitz runtime
     bb.h           public api, the only header game code should include
     in.h           internals shared w/ src/fmt
@@ -50,11 +52,13 @@ port/
 
 ## build + run
 
-needs a c compiler, [muon](https://muon.build) (or meson + ninja, same file), x11 dev headers. run stuff from the repo root so asset paths resolve.
+needs clang, [mold](https://github.com/rui314/mold), [muon](https://muon.build) (or meson + ninja, same file), x11 dev headers.
+`-Dlinker=` falls back to the compiler's default linker. llvm-ar isn't used: muon 0.8.0-dev detects it as a
+solaris ar and drops the archive name from the command, so the `.a`s go through gnu ar (fine w/o lto). run stuff from the repo root so asset paths resolve.
 
 ```sh
 git submodule update --init
-cd port && muon setup build && muon -C build samu && cd ..   # samu = muon's built-in ninja
+port/setup.sh && muon -C port/build samu   # samu = muon's built-in ninja
 muon -C port/build test
 port/build/scpcb                             # the game (launcher -> loading screen so far)
 port/build/rmview GFX/map/173_opt.rmesh     # wasd/qe + mouse, shift fast, f12 screenshot
@@ -65,7 +69,7 @@ by default it uses the system `libEGL`/`libGLESv2` (mesa). to run on ANGLE, poin
 ANGLE's `libEGL.so` + `libGLESv2.so` (chromium/electron ship them, or build angle w/ gn):
 
 ```sh
-cd port && muon setup -Dangle=/path/to/angle/out build   # adds an rpath (on an existing dir: muon -C build configure -Dangle=...)
+port/setup.sh -Dangle=/path/to/angle/out   # adds an rpath
 # or without rebuilding:
 LD_LIBRARY_PATH=/path/to/angle/out port/build/rmview ...
 ```
