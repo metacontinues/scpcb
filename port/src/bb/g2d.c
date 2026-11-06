@@ -204,7 +204,7 @@ int bbLoadAnimImage(const char *p, int fw, int fh, int first, int count) {
 	Image strip = GenImageColor(fw * count, fh, BLACK); // frames side by side
 	for (int i = 0; i < count; i++) {
 		int f = first + i;
-		ImageDraw(&strip, c, (Rectangle){(f % per) * fw, (f / per) * fh, fw, fh}, (Rectangle){i * fw, 0, fw, fh}, WHITE);
+		ImageDrawImagePro(&strip, c, (Rectangle){(f % per) * fw, (f / per) * fh, fw, fh}, (Rectangle){i * fw, 0, fw, fh}, (Vector2){0}, 0, WHITE);
 	}
 	UnloadImage(c);
 	int h = newimg(strip, fw, fh, count);

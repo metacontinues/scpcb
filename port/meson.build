@@ -35,16 +35,16 @@ endif
 add_project_arguments(cc.get_supported_arguments(opt), language: 'c')
 add_project_link_arguments(optl, language: 'c')
 
-# raylib's config.h is swapped for src/rlconfig.h (only the formats the game loads)
+# src/rlconfig.h overrides raylib's config.h flags (only the formats the game loads), force-included ahead of it
 rldefs = ['-DPLATFORM_DESKTOP_GLFW', '-DGRAPHICS_API_OPENGL_ES2', '-D_GLFW_X11',
-	'-DEXTERNAL_CONFIG_FLAGS', '-include', meson.current_source_dir() / 'src/rlconfig.h']
+	'-include', meson.current_source_dir() / 'src/rlconfig.h']
 sys = [cc.find_library('m'), cc.find_library('dl'), cc.find_library('rt'), cc.find_library('X11'), dependency('threads')]
 
 # vendored libs, built quiet
 rl = 'vendor/raylib/src'
 raylib = static_library('raylib',
 	files(rl / 'rcore.c', rl / 'rshapes.c', rl / 'rtextures.c', rl / 'rtext.c', rl / 'rmodels.c',
-		rl / 'raudio.c', rl / 'utils.c', rl / 'rglfw.c'),
+		rl / 'raudio.c', rl / 'rglfw.c'),
 	c_args: rldefs + ['-w'], include_directories: rl / 'external/glfw/include')
 # bdwgc as one tu, single threaded (only the main thread touches gc memory)
 gc = static_library('gc', 'vendor/bdwgc/extra/gc.c',
