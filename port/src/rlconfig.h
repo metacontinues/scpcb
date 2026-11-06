@@ -1,5 +1,5 @@
 // rlconfig.h: raylib 5.5's config.h, trimmed to what the game loads ("scpcb" marks the changes).
-// kept: png/jpg/bmp (stb_image), ogg (stb_vorbis), ttf. off: other image/audio/model formats, gif, clipboard.
+// kept: png/jpg/bmp (stb_image), dds, ogg (stb_vorbis), ttf. off: other image/audio/model formats, gif, clipboard.
 // passed to raylib + the runtime w/ -DEXTERNAL_CONFIG_FLAGS -include, see meson.build
 /**********************************************************************************************
 *
@@ -176,7 +176,7 @@
 // #define SUPPORT_FILEFORMAT_GIF      1   // scpcb: off
 // #define SUPPORT_FILEFORMAT_QOI      1   // scpcb: off
 //#define SUPPORT_FILEFORMAT_PSD      1
-// #define SUPPORT_FILEFORMAT_DDS      1   // scpcb: off
+#define SUPPORT_FILEFORMAT_DDS      1   // scpcb: on, the forest trees use one
 //#define SUPPORT_FILEFORMAT_HDR      1
 //#define SUPPORT_FILEFORMAT_PIC          1
 //#define SUPPORT_FILEFORMAT_KTX      1

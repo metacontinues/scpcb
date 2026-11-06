@@ -48,7 +48,10 @@ port/
     map.h          MapSystem types (rooms, templates, doors, waypoints, screens) + their globals
     rooms.c        materials, rmesh glue, room templates, CreateRoom, FillRoom's generic part, lights, overlap
     mapgen.c       CreateMap / SetRoom / GetZone           doors.c   CreateDoor, CreateButton
-    entities.c     LoadEntities (most of it)
+    entities.c     LoadEntities (most of it)              items.c   Items.bb: templates, CreateItem
+    fillroom1-3.c  FillRoom's 75 per-room cases (drafted by a throwaway script, reviewed by hand)
+    forest.c       SCP-860-1's forest: grid gen, PlaceForest, load_terrain
+    fx.c           particles, emitters, decals, security cams, elevator objs
     keyname.c difficulty.c achv.c             the small .bb files
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
@@ -109,6 +112,9 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
   exist in a c string, so the INI code that used it as a separator is rewritten w/ a line array.
 - **Types**: `typedef struct T { lnode n; ...fields } T;` + `TLIST(T)` in one .c. objects are gc'd, Delete just
   unlinks, so dangling refs stay readable (blitz would error). `bbObject(T, h)` is Null after Delete, like blitz.
+- **textures**: png/jpg/bmp/dds via raylib (sniffed by magic, the game hides jpgs as .dc/.pt), dxt1/3/5 dds
+  get decoded on the cpu. LoadAnimTexture keeps one gl texture per frame, EntityTexture/BrushTexture pick it.
+  ReadPixel outside a Lock reads a cached download (invalidated by any draw), so per-pixel loops stay fast.
 - **game porting rules**: float -> int goes through `bbInt` (blitz rounds to nearest, c truncates), Min/Max are
   float like blitz, `Dim a(n)` is `a[n+1]`, globals are declared once w/ `G(type, names)` in g.h, function
   default args become explicit. closing the window exits in bbFlip, like blitz.
@@ -146,14 +152,14 @@ KeyName, Difficulty, Achievements init, LoadEntities (most), room templates + rm
 generator), CreateRoom, CreateDoor. START builds the facility from the seed and drops you in a stand-in fly cam
 (wasd + mouse, esc back to the menu). dev env for it: `SCPCB_SEED=x` fixed seed, `SCPCB_TOPDOWN=1` whole map from
 above (ceilings are culled), `SCPCB_DUMP=1` room list on stderr.
-heads up: FillRoom's per-room part (the ~3400 line Select) isn't ported. it calls Rand too, so until it is, a seed
-gives the same corridor layout as blitz but different room picks after the first special room.
+heads up (unverified): blitz statements w/ several Rand/Rnd calls (eg CreateDecal(Rand(..), x+Rnd(..), ...)) are
+split into temps evaluated left to right. if blitz evaluated call args in another order, seeds drift from there on.
 stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), Dreamfilter,
 borderless windowed + ScreenGamma (blitz did these w/ the fresize_* camera, not ported), ResizeImage2 is a plain ResizeImage,
 TextureLodBias is a no-op (es2), "antialiased text" only flips the ini value, bump maps, LoadWorld (.b3d rooms, unused),
-light cones, the blur cam overlays, items/particles/NPC/event setup, loading saves.
-next up: FillRoom's per-room cases (needs Items.bb's CreateItem, NPCs, emitters, levers, security cams), UpdateRooms/
-UpdateDoors, then the player (MovePlayer/MouseLook) so the fly cam can go.
+light cones, the blur cam overlays, NPC/event setup, the 1499 chunks, loading saves.
+next up: UpdateRooms/UpdateDoors/UpdateItems, then the player (MovePlayer/MouseLook) so the fly cam can go,
+then NPCs.bb and UpdateEvents.bb (hand-ported).
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested

@@ -208,9 +208,11 @@ Rooms *CreateRoom(int zone, int shape, float x, float y, float z, const char *na
 	return r; // blitz falls off the end here too, w/ a template-less room
 }
 
-// the per-room Select (~3400 lines in blitz) isn't ported yet, only the generic part after it.
-// NOTE: those cases also call Rand, so until they're in, the rest of a seed's map rolls differently
+// the per-room Select lives in fillroom1-3.c, the generic part that follows it is here
 void FillRoom(Rooms *r) {
+	const FillEntry *tabs[] = {Fills1, Fills2, Fills3};
+	for (int k = 0; k < 3; k++) for (const FillEntry *f = tabs[k]; f->name; f++)
+		if (bbSeq(r->RoomTemplate->Name, f->name)) { f->fn(r); k = 3; break; }
 	each(LightTemplates, lt) if (lt->roomtemplate == r->RoomTemplate) {
 		int l = AddLight(r, r->x + lt->x, r->y + lt->y, r->z + lt->z, lt->ltype, lt->range, lt->r, lt->g, lt->b);
 		if (l && lt->ltype == 3) { bbLightConeAngles(l, lt->innerconeangle, lt->outerconeangle); bbRotateEntity(l, lt->pitch, lt->yaw, 0, 0); }
