@@ -118,9 +118,16 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
 - **game porting rules**: float -> int goes through `bbInt` (blitz rounds to nearest, c truncates), Min/Max are
   float like blitz, `Dim a(n)` is `a[n+1]`, globals are declared once w/ `G(type, names)` in g.h, function
   default args become explicit. closing the window exits in bbFlip, like blitz.
-- **rng**: Rand/Rnd/SeedRnd use blitz3d's park-miller generator. the step is checked against c++'s
-  minstd_rand (10000th value). the float mapping + default seed 0x1234 are from blitz3d's source as i
-  remember it, not checked against a real blitz build yet. worth verifying w/ a known map seed.
+- **rng**: Rand/Rnd/SeedRnd match blitz3d's bbruntime/bbmath.cpp exactly (park-miller, same float mapping,
+  default seed 0x1234; also checked against c++'s minstd_rand). note `Rnd(x)` is `Rnd(x, 0)` (= x - u*x)
+  and `Rand(x)` is `Rand(x, 1)`, so ports keep those argument orders.
+- **rng order**: seeds only reproduce if the Rand/Rnd calls run in blitz's order, and blitz doesn't run call
+  args left to right. from compiler/codegen_x86 (blitz3d source): args become a right-nested SEQ of moves, every
+  tile gets a sethi-ullman register "need", and Tile::eval runs the needier child first (ties: left). a const
+  arg is an immediate store (need 1), so heavier args later in the list go first: in FillRoom,
+  `CreateDecal(Rand(2,3), x+Rnd(..)*s, 3*s+Rnd(..), z+Rnd(..)*s, 90, Rnd(360), 0)` runs the y Rnd, then z, Rnd(360),
+  x and finally Rand(2,3). C leaves arg order unspecified, so any statement w/ 2+ rng calls (incl. CreateItem/
+  CreateDoor/AddLight, which roll inside) is split into temps in that order, w/ a comment.
 - **audio**: the game does its own 3d (PlaySound2/UpdateSoundOrigin compute vol + pan from DeltaYaw), so
   only the plain blitz api is needed. each PlaySound gets its own voice (a raylib sound alias); channel
   handles carry a generation so stale ones go dead instead of steering a recycled voice. fmod streams
@@ -152,8 +159,7 @@ KeyName, Difficulty, Achievements init, LoadEntities (most), room templates + rm
 generator), CreateRoom, CreateDoor. START builds the facility from the seed and drops you in a stand-in fly cam
 (wasd + mouse, esc back to the menu). dev env for it: `SCPCB_SEED=x` fixed seed, `SCPCB_TOPDOWN=1` whole map from
 above (ceilings are culled), `SCPCB_DUMP=1` room list on stderr.
-heads up (unverified): blitz statements w/ several Rand/Rnd calls (eg CreateDecal(Rand(..), x+Rnd(..), ...)) are
-split into temps evaluated left to right. if blitz evaluated call args in another order, seeds drift from there on.
+statements w/ several rng calls follow blitz's evaluation order, see "rng order" below.
 stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), Dreamfilter,
 borderless windowed + ScreenGamma (blitz did these w/ the fresize_* camera, not ported), ResizeImage2 is a plain ResizeImage,
 TextureLodBias is a no-op (es2), "antialiased text" only flips the ini value, bump maps, LoadWorld (.b3d rooms, unused),

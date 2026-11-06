@@ -25,8 +25,10 @@ static void drawcwm(LoadingScreens *ls, int percent, int shortloading, int first
 	}
 	// only the last Replace survives, the loop just burns rng like the original
 	s = ls->txt[0];
-	for (int i = 0, n = bbRand(10, 15); i <= n; i++)
-		s = bbReplace(ls->txt[0], bbMid(ls->txt[0], bbRand(1, bbLen(s) - 1), 1), bbChr(bbRand(130, 250)));
+	for (int i = 0, n = bbRand(10, 15); i <= n; i++) { // Mid's Rand runs before Chr's in blitz: pinned, C arg order is unspecified
+		int a = bbRand(1, bbLen(s) - 1), c = bbRand(130, 250);
+		s = bbReplace(ls->txt[0], bbMid(ls->txt[0], a, 1), bbChr(c));
+	}
 	AASetFont(Font1);
 	RowText(s, GraphicWidth / 2 - 200, GraphicHeight / 2 + 120, 400, 300, 1, 1);
 }

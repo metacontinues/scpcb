@@ -15,7 +15,7 @@ Particles *CreateParticle(float x, float y, float z, int image, float size, floa
 	p->obj = bbCreateSprite(0);
 	bbPositionEntity(p->obj, x, y, z, 1);
 	bbEntityTexture(p->obj, ParticleTextures[image], 0, 0);
-	bbRotateEntity(p->obj, 0, 0, bbRnd(0, 360), 0);
+	bbRotateEntity(p->obj, 0, 0, bbRnd(360, 0), 0); // blitz Rnd(x) is Rnd(x, 0)
 	bbEntityFX(p->obj, 1 + 8);
 	bbSpriteViewMode(p->obj, 3);
 	if (image == 0 || image == 5 || image == 6) bbEntityBlend(p->obj, 1);

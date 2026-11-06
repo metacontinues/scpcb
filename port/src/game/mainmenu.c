@@ -48,7 +48,8 @@ static void background(void) {
 	MenuBlinkTimer[1] = R(MenuBlinkTimer[1] - FPSfactor);
 	if (MenuBlinkTimer[1] < MenuBlinkDuration[1]) {
 		bbColor(50, 50, 50);
-		AAText(MenuStrX + bbRand(-5, 5), MenuStrY + bbRand(-5, 5), MenuStr, 1, 0);
+		int dy = bbRand(-5, 5), dx = bbRand(-5, 5); // blitz evaluates the y arg first here
+		AAText(MenuStrX + dx, MenuStrY + dy, MenuStr, 1, 0);
 		if (MenuBlinkTimer[1] < 0) {
 			MenuBlinkTimer[1] = bbRand(700, 800);
 			MenuBlinkDuration[1] = bbRand(10, 35);

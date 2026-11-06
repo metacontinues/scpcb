@@ -1,6 +1,6 @@
 // fillroom3.c: FillRoom's per-room cases room2ccont .. dimension1499 (MapSystem.bb's big Select, same order)
 // drafted w/ a throwaway translator, then reviewed by hand against the .bb. rng calls that share one
-// blitz statement are split into temps, left to right (blitz's own arg order is unverified)
+// blitz statement are split into temps in blitz3d's codegen order (see README, "rng order")
 #include "g.h"
 
 #define U __attribute__((unused))
@@ -23,7 +23,7 @@ static void f_room2ccont(Rooms *r) {
 		r->Levers[n] = r->Objects[n * 2 + 1];
 		for (i = 0; i <= 1; i += 1) {
 			bbScaleEntity(r->Objects[n * 2 + i], 0.04f, 0.04f, 0.04f, 0);
-			bbPositionEntity(r->Objects[n * 2 + i], r->x - 240.0f * RoomScale, r->y + 1104.0f * RoomScale, r->z + ((632.0f - 64.0f * n)) * RoomScale, 1);
+			bbPositionEntity(r->Objects[n * 2 + i], r->x - 240.0f * RoomScale, r->y + 1104.0f * RoomScale, r->z + (632.0f - 64.0f * n) * RoomScale, 1);
 			bbEntityParent(r->Objects[n * 2 + i], r->obj, 1);
 		}
 		bbRotateEntity(r->Objects[n * 2], 0, -90, 0, 0);
@@ -50,20 +50,20 @@ static void f_room106(Rooms *r) {
 	bbEntityParent(it->collider, r->obj, 1);
 	it = CreateItem("Recall Protocol RP-106-N", "paper", r->x + 268.0f * RoomScale, r->y - 576 * RoomScale, r->z + 2593.0f * RoomScale, 0, 0, 0, 1, 0);
 	bbEntityParent(it->collider, r->obj, 1);
-	d = CreateDoor(r->zone, r->x - 968.0f * RoomScale, (-764.0f) * RoomScale, r->z + 1392.0f * RoomScale, 0, r, 0, 0, 4, "", 0);
+	d = CreateDoor(r->zone, r->x - 968.0f * RoomScale, -764.0f * RoomScale, r->z + 1392.0f * RoomScale, 0, r, 0, 0, 4, "", 0);
 	d->AutoClose = 0;
 	d->open = 0;
 	d = CreateDoor(r->zone, r->x, 0, r->z - 464.0f * RoomScale, 0, r, 0, 0, 4, "", 0);
 	d->AutoClose = 0;
 	d->open = 0;
-	d = CreateDoor(r->zone, r->x - 624.0f * RoomScale, (-1280.0f) * RoomScale, r->z, 90, r, 0, 0, 4, "", 0);
+	d = CreateDoor(r->zone, r->x - 624.0f * RoomScale, -1280.0f * RoomScale, r->z, 90, r, 0, 0, 4, "", 0);
 	d->AutoClose = 0;
 	d->open = 0;
 	r->Objects[6] = LoadMesh_Strict("GFX\\map\\room1062.b3d", 0);
 	bbScaleEntity(r->Objects[6], RoomScale, RoomScale, RoomScale, 0);
 	bbEntityType(r->Objects[6], HIT_MAP, 0);
 	bbEntityPickMode(r->Objects[6], 3, 1);
-	bbPositionEntity(r->Objects[6], r->x + 784.0f * RoomScale, (-980.0f) * RoomScale, r->z + 720.0f * RoomScale, 1);
+	bbPositionEntity(r->Objects[6], r->x + 784.0f * RoomScale, -980.0f * RoomScale, r->z + 720.0f * RoomScale, 1);
 	bbEntityParent(r->Objects[6], r->obj, 1);
 	for (n = 0; n <= 2; n += 2) {
 		r->Objects[n] = bbCopyEntity(LeverBaseOBJ, 0);
@@ -71,7 +71,7 @@ static void f_room106(Rooms *r) {
 		r->Levers[n / 2] = r->Objects[n + 1];
 		for (i = 0; i <= 1; i += 1) {
 			bbScaleEntity(r->Objects[n + i], 0.04f, 0.04f, 0.04f, 0);
-			bbPositionEntity(r->Objects[n + i], r->x - ((555.0f - 81.0f * ((n / 2)))) * RoomScale, r->y - 576.0f * RoomScale, r->z + 3040.0f * RoomScale, 1);
+			bbPositionEntity(r->Objects[n + i], r->x - (555.0f - 81.0f * (n / 2)) * RoomScale, r->y - 576.0f * RoomScale, r->z + 3040.0f * RoomScale, 1);
 			bbEntityParent(r->Objects[n + i], r->obj, 1);
 		}
 		bbRotateEntity(r->Objects[n], 0, 0, 0, 0);
@@ -90,7 +90,7 @@ static void f_room106(Rooms *r) {
 	bbEntityParent(sc->obj, r->obj, 1);
 	r->Objects[7] = sc->CameraObj;
 	r->Objects[8] = sc->obj;
-	bbPositionEntity(sc->ScrObj, r->x - 272.0f * RoomScale, (-544.0f) * RoomScale, r->z + 3020.0f * RoomScale, 0);
+	bbPositionEntity(sc->ScrObj, r->x - 272.0f * RoomScale, -544.0f * RoomScale, r->z + 3020.0f * RoomScale, 0);
 	bbTurnEntity(sc->ScrObj, 0, -10, 0, 0);
 	bbEntityParent(sc->ScrObj, r->obj, 1);
 	sc->CoffinEffect = 0;
@@ -176,9 +176,9 @@ static void f_room1archive(Rooms *r) {
 					}
 					tempstr2 = (str)"misc";
 				}
-				x = ((-672.0f + 864.0f * xtemp)) * RoomScale;
-				y = ((96.0f + 96.0f * ytemp)) * RoomScale;
-				z = ((480.0f - 352.0f * ztemp + bbRnd(-96.0f, 96.0f))) * RoomScale;
+				x = (-672.0f + 864.0f * xtemp) * RoomScale;
+				y = (96.0f + 96.0f * ytemp) * RoomScale;
+				z = (480.0f - 352.0f * ztemp + bbRnd(-96.0f, 96.0f)) * RoomScale;
 				it = CreateItem(tempstr, tempstr2, r->x + x, y, r->z + z, 0, 0, 0, 1, 0);
 				bbEntityParent(it->collider, r->obj, 1);
 			}
@@ -281,7 +281,7 @@ static void f_room1123(Rooms *r) {
 	bbScaleEntity(r->Objects[8], 45.0f * RoomScale, 45.0f * RoomScale, 80.0f * RoomScale, 1);
 	bbEntityParent(r->Objects[8], r->obj, 1);
 	r->Objects[9] = LoadMesh_Strict("GFX\\map\\forest\\door.b3d", 0);
-	bbPositionEntity(r->Objects[9], r->x - 272.0f * RoomScale, 512.0f * RoomScale, r->z + ((288.0f - 70)) * RoomScale, 1);
+	bbPositionEntity(r->Objects[9], r->x - 272.0f * RoomScale, 512.0f * RoomScale, r->z + (288.0f - 70) * RoomScale, 1);
 	bbRotateEntity(r->Objects[9], 0, 10, 0, 1);
 	bbEntityType(r->Objects[9], HIT_MAP, 0);
 	bbScaleEntity(r->Objects[9], 46.0f * RoomScale, 45.0f * RoomScale, 46.0f * RoomScale, 1);
@@ -292,7 +292,7 @@ static void f_room1123(Rooms *r) {
 	bbScaleEntity(r->Objects[10], 45.0f * RoomScale, 45.0f * RoomScale, 80.0f * RoomScale, 1);
 	bbEntityParent(r->Objects[10], r->obj, 1);
 	r->Objects[11] = bbCopyEntity(r->Objects[9], 0);
-	bbPositionEntity(r->Objects[11], r->x - 272.0f * RoomScale, 512.0f * RoomScale, r->z + ((736.0f - 70)) * RoomScale, 1);
+	bbPositionEntity(r->Objects[11], r->x - 272.0f * RoomScale, 512.0f * RoomScale, r->z + (736.0f - 70) * RoomScale, 1);
 	bbRotateEntity(r->Objects[11], 0, 90, 0, 1);
 	bbEntityType(r->Objects[11], HIT_MAP, 0);
 	bbScaleEntity(r->Objects[11], 46.0f * RoomScale, 45.0f * RoomScale, 46.0f * RoomScale, 1);
@@ -303,7 +303,7 @@ static void f_room1123(Rooms *r) {
 	bbScaleEntity(r->Objects[12], 45.0f * RoomScale, 45.0f * RoomScale, 80.0f * RoomScale, 1);
 	bbEntityParent(r->Objects[12], r->obj, 1);
 	r->Objects[13] = bbCopyEntity(r->Objects[9], 0);
-	bbPositionEntity(r->Objects[13], r->x - ((592.0f + 70.0f)) * RoomScale, 512.0f * RoomScale, r->z - 704.0f * RoomScale, 1);
+	bbPositionEntity(r->Objects[13], r->x - (592.0f + 70.0f) * RoomScale, 512.0f * RoomScale, r->z - 704.0f * RoomScale, 1);
 	bbRotateEntity(r->Objects[13], 0, 0, 0, 1);
 	bbEntityType(r->Objects[13], HIT_MAP, 0);
 	bbScaleEntity(r->Objects[13], 46.0f * RoomScale, 45.0f * RoomScale, 46.0f * RoomScale, 1);
@@ -372,14 +372,14 @@ static void f_pocketdimension(Rooms *r) {
 	for (i = 1; i <= 8; i += 1) {
 		r->Objects[i - 1] = bbCopyEntity(hallway, 0);
 		bbScaleEntity(r->Objects[i - 1], RoomScale, RoomScale, RoomScale, 0);
-		angle = ((i - 1)) * ((360.0f / 8.0f));
+		angle = (i - 1) * (360.0f / 8.0f);
 		bbEntityType(r->Objects[i - 1], HIT_MAP, 0);
 		bbEntityPickMode(r->Objects[i - 1], 2, 1);
 		bbRotateEntity(r->Objects[i - 1], 0, angle - 90, 0, 0);
-		bbPositionEntity(r->Objects[i - 1], r->x + cosf((angle) * DTOR) * ((512.0f * RoomScale)), 0.0f, r->z + sinf((angle) * DTOR) * ((512.0f * RoomScale)), 0);
+		bbPositionEntity(r->Objects[i - 1], r->x + cosf((angle) * DTOR) * (512.0f * RoomScale), 0.0f, r->z + sinf((angle) * DTOR) * (512.0f * RoomScale), 0);
 		bbEntityParent(r->Objects[i - 1], r->obj, 1);
 		if (i < 6) {
-			de = CreateDecal(i + 7, r->x + cosf((angle) * DTOR) * ((512.0f * RoomScale)) * 3.0f, 0.02f, r->z + sinf((angle) * DTOR) * ((512.0f * RoomScale)) * 3.0f, 90, angle - 90, 0);
+			de = CreateDecal(i + 7, r->x + cosf((angle) * DTOR) * (512.0f * RoomScale) * 3.0f, 0.02f, r->z + sinf((angle) * DTOR) * (512.0f * RoomScale) * 3.0f, 90, angle - 90, 0);
 			de->Size = bbRnd(0.5f, 0.5f);
 			de->blendmode = 2;
 			de->fx = 1 + 8;
@@ -445,7 +445,7 @@ static void f_room1lifts(Rooms *r) {
 	bbEntityParent(r->Objects[0], r->obj, 1);
 	r->Objects[1] = CreateButton(r->x - 96.0f * RoomScale, r->y + 160.0f * RoomScale, r->z + 64.0f * RoomScale, 0, 0, 0);
 	bbEntityParent(r->Objects[1], r->obj, 1);
-	sc = CreateSecurityCam(r->x + 384.0f * RoomScale, r->y + ((448 - 64)) * RoomScale, r->z - 960.0f * RoomScale, r, 1);
+	sc = CreateSecurityCam(r->x + 384.0f * RoomScale, r->y + (448 - 64) * RoomScale, r->z - 960.0f * RoomScale, r, 1);
 	sc->angle = 45;
 	sc->turn = 45;
 	sc->room = r;
@@ -462,13 +462,13 @@ static void f_room2servers2(Rooms *r) {
 	bbPositionEntity(d->buttons[0], r->x + 224.0f * RoomScale, bbEntityY(d->buttons[0], 1), r->z + 510.0f * RoomScale, 1);
 	bbPositionEntity(d->buttons[1], r->x + 304.0f * RoomScale, bbEntityY(d->buttons[1], 1), r->z + 840.0f * RoomScale, 1);
 	bbTurnEntity(d->buttons[1], 0, 0, 0, 1);
-	d = CreateDoor(r->zone, r->x - 512.0f * RoomScale, (-768.0f) * RoomScale, r->z - 336.0f * RoomScale, 0, r, 0, 0, 3, "", 0);
-	d = CreateDoor(r->zone, r->x - 509.0f * RoomScale, (-768.0f) * RoomScale, r->z - 1037.0f * RoomScale, 0, r, 0, 0, 3, "", 0);
+	d = CreateDoor(r->zone, r->x - 512.0f * RoomScale, -768.0f * RoomScale, r->z - 336.0f * RoomScale, 0, r, 0, 0, 3, "", 0);
+	d = CreateDoor(r->zone, r->x - 509.0f * RoomScale, -768.0f * RoomScale, r->z - 1037.0f * RoomScale, 0, r, 0, 0, 3, "", 0);
 	d->locked = 1;
 	d->DisableWaypoint = 1;
 	it = CreateItem("Night Vision Goggles", "nvgoggles", r->x + 56.0154f * RoomScale, r->y - 648.0f * RoomScale, r->z + 749.638f * RoomScale, 0, 0, 0, 1, 0);
 	it->state = 200;
-	bbRotateEntity(it->collider, 0, r->angle + bbRand(1, 245), 0, 0);
+	bbRotateEntity(it->collider, 0, r->angle + bbRand(245, 1), 0, 0);
 	bbEntityParent(it->collider, r->obj, 1);
 }
 
@@ -479,8 +479,8 @@ static void f_room2gw(Rooms *r) {
 	U Rooms * r2 = NULL;
 	if (bbSeq(r->RoomTemplate->Name, "room2gw_b")) {
 		r->Objects[2] = bbCreatePivot(r->obj);
-		bbPositionEntity(r->Objects[2], r->x - 156.825f * RoomScale, (-37.3458f) * RoomScale, r->z + 121.364f * RoomScale, 1);
-		de = CreateDecal(3, r->x - 156.825f * RoomScale, (-37.3458f) * RoomScale, r->z + 121.364f * RoomScale, 90, bbRnd(0, 360), 0);
+		bbPositionEntity(r->Objects[2], r->x - 156.825f * RoomScale, -37.3458f * RoomScale, r->z + 121.364f * RoomScale, 1);
+		de = CreateDecal(3, r->x - 156.825f * RoomScale, -37.3458f * RoomScale, r->z + 121.364f * RoomScale, 90, bbRnd(360, 0), 0);
 		de->Size = 0.5f;
 		bbScaleSprite(de->obj, de->Size, de->Size);
 		bbEntityParent(de->obj, r->obj, 1);
@@ -530,7 +530,7 @@ static void f_room2gw(Rooms *r) {
 		}
 		if ((((((room2gw_brokendoor == 0) & (bbRand(1, 2) == 1)))) | (bd_temp))) {
 			r->Objects[1] = bbCopyEntity(DoorOBJ, 0);
-			bbScaleEntity(r->Objects[1], (204.0f * RoomScale) / (bbMeshWidth(r->Objects[1])), 312.0f * RoomScale / (bbMeshHeight(r->Objects[1])), 16.0f * RoomScale / (bbMeshDepth(r->Objects[1])), 0);
+			bbScaleEntity(r->Objects[1], (204.0f * RoomScale) / bbMeshWidth(r->Objects[1]), 312.0f * RoomScale / bbMeshHeight(r->Objects[1]), 16.0f * RoomScale / bbMeshDepth(r->Objects[1]), 0);
 			bbEntityType(r->Objects[1], HIT_MAP, 0);
 			bbPositionEntity(r->Objects[1], r->x + 336.0f * RoomScale, 0.0f, r->z + 462.0f * RoomScale, 0);
 			bbRotateEntity(r->Objects[1], 0, 180 + 180, 0, 0);
@@ -726,27 +726,27 @@ static void f_room2sl(Rooms *r) {
 		}
 	}
 	for (i = 0; i <= 2; i += 1) {
-		bbPositionEntity(r->Objects[i], r->x - 207.94f * RoomScale, r->y + ((648.0f + (112 * i))) * RoomScale, r->z - 60.0686f * RoomScale, 0);
+		bbPositionEntity(r->Objects[i], r->x - 207.94f * RoomScale, r->y + (648.0f + (112 * i)) * RoomScale, r->z - 60.0686f * RoomScale, 0);
 		bbRotateEntity(r->Objects[i], 0, 105 + r->angle, 0, 0);
 		bbEntityParent(r->Objects[i], r->obj, 1);
 	}
 	for (i = 3; i <= 5; i += 1) {
-		bbPositionEntity(r->Objects[i], r->x - 231.489f * RoomScale, r->y + ((648.0f + (112 * ((i - 3))))) * RoomScale, r->z + 95.7443f * RoomScale, 0);
+		bbPositionEntity(r->Objects[i], r->x - 231.489f * RoomScale, r->y + (648.0f + (112 * (i - 3))) * RoomScale, r->z + 95.7443f * RoomScale, 0);
 		bbRotateEntity(r->Objects[i], 0, 90 + r->angle, 0, 0);
 		bbEntityParent(r->Objects[i], r->obj, 1);
 	}
 	for (i = 6; i <= 8; i += 2) {
-		bbPositionEntity(r->Objects[i], r->x - 231.489f * RoomScale, r->y + ((648.0f + (112 * ((i - 6))))) * RoomScale, r->z + 255.744f * RoomScale, 0);
+		bbPositionEntity(r->Objects[i], r->x - 231.489f * RoomScale, r->y + (648.0f + (112 * (i - 6))) * RoomScale, r->z + 255.744f * RoomScale, 0);
 		bbRotateEntity(r->Objects[i], 0, 90 + r->angle, 0, 0);
 		bbEntityParent(r->Objects[i], r->obj, 1);
 	}
 	for (i = 9; i <= 11; i += 1) {
-		bbPositionEntity(r->Objects[i], r->x - 231.489f * RoomScale, r->y + ((648.0f + (112 * ((i - 9))))) * RoomScale, r->z + 415.744f * RoomScale, 0);
+		bbPositionEntity(r->Objects[i], r->x - 231.489f * RoomScale, r->y + (648.0f + (112 * (i - 9))) * RoomScale, r->z + 415.744f * RoomScale, 0);
 		bbRotateEntity(r->Objects[i], 0, 90 + r->angle, 0, 0);
 		bbEntityParent(r->Objects[i], r->obj, 1);
 	}
 	for (i = 12; i <= 14; i += 1) {
-		bbPositionEntity(r->Objects[i], r->x - 208.138f * RoomScale, r->y + ((648.0f + (112 * ((i - 12))))) * RoomScale, r->z + 571.583f * RoomScale, 0);
+		bbPositionEntity(r->Objects[i], r->x - 208.138f * RoomScale, r->y + (648.0f + (112 * (i - 12))) * RoomScale, r->z + 571.583f * RoomScale, 0);
 		bbRotateEntity(r->Objects[i], 0, 75 + r->angle, 0, 0);
 		bbEntityParent(r->Objects[i], r->obj, 1);
 	}
@@ -886,7 +886,7 @@ static void f_room2cpit(Rooms *r) {
 	U Doors * d = NULL;
 	U Emitters * em = NULL;
 	U Items * it = NULL;
-	em = CreateEmitter(r->x + 512.0f * RoomScale, (-76) * RoomScale, r->z - 688 * RoomScale, 0);
+	em = CreateEmitter(r->x + 512.0f * RoomScale, -76 * RoomScale, r->z - 688 * RoomScale, 0);
 	bbTurnEntity(em->Obj, -90, 0, 0, 0);
 	bbEntityParent(em->Obj, r->obj, 1);
 	em->RandAngle = 55;

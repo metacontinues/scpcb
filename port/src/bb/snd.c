@@ -6,7 +6,8 @@
 #include "in.h"
 
 typedef struct { Sound s; int used, loop; float vol, pan, hz, rate; } snd;
-typedef struct { Sound a; int used, gen, snd, loop, paused; } chan;
+typedef struct { Sound a; int used, gen, snd, loop, paused; unsigned seq; } chan;
+static unsigned chseq; // play order, for voice stealing
 typedef struct { Music m; int used, gen, paused; } strm;
 
 static snd *ss; static int nss, css;
@@ -78,10 +79,14 @@ int bbPlaySound(int h) {
 	for (int k = 0; k < NCH && i < 0; k++) if (!ch[k].used) i = k;
 	for (int k = 0; k < NCH && i < 0; k++) // recycle a finished voice
 		if (!ch[k].paused && !ch[k].loop && !IsSoundPlaying(ch[k].a)) { UnloadSoundAlias(ch[k].a); ch[k].used = 0; i = k; }
-	if (i < 0) return 0;
+	if (i < 0) { // all busy: steal the oldest one-shot, like fmod does, instead of failing
+		for (int k = 0; k < NCH; k++) if (!ch[k].loop && !ch[k].paused && (i < 0 || ch[k].seq - ch[i].seq > 0x80000000u)) i = k;
+		if (i < 0) return 0;
+		StopSound(ch[i].a); UnloadSoundAlias(ch[i].a); ch[i].used = 0;
+	}
 	chan *c = &ch[i];
 	c->a = LoadSoundAlias(s->s);
-	c->used = 1; c->gen = (c->gen + 1) & 0x7ffff; c->snd = h; c->loop = s->loop; c->paused = 0;
+	c->used = 1; c->gen = (c->gen + 1) & 0x7ffff; c->snd = h; c->loop = s->loop; c->paused = 0; c->seq = chseq++;
 	SetSoundVolume(c->a, s->vol);
 	SetSoundPan(c->a, rlpan(s->pan));
 	if (s->hz > 0) SetSoundPitch(c->a, s->hz / s->rate);
