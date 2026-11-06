@@ -155,14 +155,15 @@ static void details(Forest *fr, int tile, int hmap, float tempf3) {
 			}
 			bbScaleEntity(de, t2 * 1.1f, t2, t2 * 1.1f, 1);
 			bbPositionEntity(de, px, cr * .03f - bbRnd(3, 3.2f), pz, 1);
-			float rp = bbRnd(-5, 5), ry = bbRnd(0, 360);
+			// blitz codegen runs the needier Rnd(360) arg first (see README "rng order")
+			float ry = bbRnd(360, 0), rp = bbRnd(-5, 5);
 			bbRotateEntity(de, rp, ry, 0, 1);
 		} else { // rock
 			de = bbCopyEntity(fr->DetailMesh[2], 0);
 			bbRnd(.01f, .012f); // tempf2, unused for rocks but still rolled
 			bbPositionEntity(de, px, cr * .03f - 1.3f, pz, 1);
 			bbEntityFX(de, 1);
-			bbRotateEntity(de, 0, bbRnd(0, 360), 0, 1);
+			bbRotateEntity(de, 0, bbRnd(360, 0), 0, 1);
 		}
 		bbEntityFX(de, 1);
 		bbEntityParent(de, tile, 1);
