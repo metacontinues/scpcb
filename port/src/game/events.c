@@ -1,3 +1,4 @@
+#include <stdio.h>
 // events.c: Main.bb's CreateEvent/InitEvents/RemoveEvent. TODO UpdateEvents.bb (the per-event logic)
 #include "g.h"
 
@@ -122,7 +123,7 @@ void RemoveEvent(Events *e) {
 
 // ---- UpdateEvents.bb's loop. events not in the table yet just sit there (TODO: the other ~90)
 static const EvEntry evs0[] = {{"173", Ev173}, {"alarm", EvAlarm}, {NULL, NULL}};
-static const EvEntry *tables[] = {evs0, Evs1};
+static const EvEntry *tables[] = {evs0, Evs1, Evs2};
 
 static int (*evfn(const char *name))(Events *) {
 	for (size_t t = 0; t < sizeof tables / sizeof *tables; t++)
@@ -164,7 +165,13 @@ static void explosion(void) { // the 294 drinks' explosion, kept here like blitz
 void UpdateEvents(void) {
 	CurrStepSFX = 0;
 	UpdateRooms();
+	static const char *watch; static int wf;
+	if (!watch) watch = getenv("SCPCB_EV") ? getenv("SCPCB_EV") : "";
+	int trace = *watch && wf++ % 70 == 0; // dev: SCPCB_EV=name prints that event's state about once a second
 	each(Events, e) {
+		if (trace && bbSeq(e->EventName, watch))
+			fprintf(stderr, "ev %s: %.2f %.2f %.2f str=%s in=%d dist=%.1f ql=%d\n", e->EventName, e->EventState, e->EventState2, e->EventState3,
+				bbLen(e->EventStr) ? e->EventStr : "", PlayerRoom == e->room, e->room ? e->room->dist : -1, QuickLoadPercent);
 		int (*f)(Events *) = evfn(e->EventName);
 		if (f && f(e)) break; // blitz Exit
 	}
