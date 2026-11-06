@@ -151,7 +151,7 @@ void UpdateGame(void) {
 	DrawMessages();
 	bbColor(255, 255, 255);
 	if (ShowFPS) { AASetFont(ConsoleFont); AAText(20, 20, cat("FPS: ", bbStr(FPS)), 0, 0); AASetFont(Font1); }
-	// TODO DrawQuickLoading
+	DrawQuickLoading();
 	UpdateAchievementMsg();
 }
 

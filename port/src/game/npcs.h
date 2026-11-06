@@ -96,7 +96,9 @@ void RemoveEvent(Events *e);
 Events *FindEvent(const char *name); // first event w/ that name, the "For e = Each Events: If name Exit" idiom
 void UpdateEvents(void);
 typedef struct { const char *name; int (*fn)(Events *); } EvEntry; // event tables end w/ {NULL, NULL}
-extern const EvEntry Evs1[]; // ev1.c
+extern const EvEntry Evs1[], Evs2[]; // ev1.c, ev2.c
+G(Events *, QuickLoad_CurrEvent); // the event DrawQuickLoading is loading for (ev2.c)
+G(int, Using294); // TODO Update294/Use294: nothing reads it outside the cafeteria event yet
 int Ev173(Events *e); // ev173.c
 int EvAlarm(Events *e);
 // evlib.c

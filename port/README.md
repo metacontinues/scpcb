@@ -58,7 +58,7 @@ port/
     events.c       Events type, CreateEvent/InitEvents (UpdateEvents.bb itself isn't ported yet)
     inv.c          DrawGUI's inventory screen (drag, drop, combine into clipboard/wallet, batteries), the inventory key
     use.c          DrawGUI's item-in-hand part: documents, kits, wearables, pills... (not yet: radio, nav, 1499, 294 cup, 1025)
-    ev173.c ev1.c  UpdateEvents.bb's events (evlib.c: their helpers), one name -> fn table per file
+    ev173.c ev1.c ev2.c  UpdateEvents.bb's events (ev2.c also has DrawQuickLoading/QuickLoadEvents) (evlib.c: their helpers), one name -> fn table per file
     keyname.c difficulty.c achv.c             the small .bb files (achv.c also has the unlock popups)
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
@@ -179,7 +179,7 @@ generator), CreateRoom, CreateDoor, FillRoom, the player (MovePlayer/MouseLook/h
 FindPath, CreateNPC (every type) + UpdateNPCs w/ SCP-173 and SCP-106, InitEvents, decals, achievement popups.
 START builds the facility from the seed and you walk it; 173 and 106 hunt you (106 drags you to the pocket dimension,
 whose event isn't in yet). esc = a stub pause screen (q quits). dev env for it: `SCPCB_SEED=x` fixed seed, `SCPCB_TOPDOWN=1` whole map from
-above (ceilings are culled), `SCPCB_DUMP=1` room list on stderr, `SCPCB_ROOM=name` start in the first room w/ that template name, `SCPCB_173=d` / `SCPCB_106=d` drop 173 / an already risen
+above (ceilings are culled), `SCPCB_EV=name` prints that event's state once a second, `SCPCB_ROOM=name` start in the first room w/ that template name, `SCPCB_173=d` / `SCPCB_106=d` drop 173 / an already risen
 106 d units in front of you after loading (note u start mid-blink, so 173 at 2 snaps ur neck on the first frames, like blitz would).
 statements w/ several rng calls follow blitz's evaluation order, see "rng order" below.
 stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), Dreamfilter,
