@@ -98,6 +98,7 @@ void surf_upload(surf *s);
 
 typedef struct {
 	Texture2D t;
+	RenderTexture2D rt; int hasrt; // once it's been a SetBuffer target, t is rt.texture
 	int used, rc, w, h, flags, blend, coords;
 	float su, sv, u0, v0;
 	char name[256];
@@ -113,6 +114,8 @@ m3 qmat(float w, float x, float y, float z); // blitz Quat::getMatrix
 void anim_pose(ent e, float t);
 void anim_step(float k);
 ent bb_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly);
+void bb_frame(void); // BeginDrawing once per frame
+void g2d_end(void); // leave any texture/image target, back to the screen
 void snd_update(void);
 void snd_quit(void);
 void rend_init(void);

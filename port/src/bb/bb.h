@@ -263,3 +263,66 @@ void bbStreamVolume(int s, float v);
 void bbStreamPan(int s, float p);
 int bbStreamPlaying(int s);
 void bbStreamClose(int s);
+
+// ---- 2d (g2d.c). buffers: BackBuffer/ImageBuffer/TextureBuffer, 0 in CopyRect/pixels = current
+int bbBackBuffer(void);
+int bbFrontBuffer(void);
+int bbImageBuffer(int img, int frame);
+int bbTextureBuffer(htex t, int frame);
+int bbGraphicsBuffer(void);
+void bbSetBuffer(int b);
+void bbColor(int r, int g, int b);
+int bbColorRed(void);
+int bbColorGreen(void);
+int bbColorBlue(void);
+void bbClsColor(int r, int g, int b);
+void bbCls(void);
+void bbOrigin(int x, int y);
+void bbViewport(int x, int y, int w, int h);
+void bbPlot(int x, int y);
+void bbLine(int x1, int y1, int x2, int y2);
+void bbRect(int x, int y, int w, int h, int solid);
+void bbOval(int x, int y, int w, int h, int solid);
+int bbLoadFont(const char *p, int height, int bold, int italic, int underline);
+void bbFreeFont(int f);
+void bbSetFont(int f);
+int bbFontHeight(void);
+int bbFontWidth(void);
+int bbStringWidth(const char *s);
+int bbStringHeight(const char *s);
+void bbText(int x, int y, const char *s, int cx, int cy);
+void bbTextA(int x, int y, const char *s, int cx, int cy, float alpha); // AAText's replacement
+int bbLoadImage(const char *p);
+int bbLoadAnimImage(const char *p, int fw, int fh, int first, int count);
+int bbCreateImage(int w, int h, int frames);
+int bbCopyImage(int img);
+void bbFreeImage(int img);
+int bbImageWidth(int img);
+int bbImageHeight(int img);
+void bbMaskImage(int img, int r, int g, int b);
+void bbHandleImage(int img, float x, float y);
+void bbMidHandle(int img);
+void bbAutoMidHandle(int on);
+void bbResizeImage(int img, float w, float h);
+void bbScaleImage(int img, float sx, float sy);
+void bbRotateImage(int img, float ang);
+void bbDrawImage(int img, int x, int y, int frame);
+void bbDrawBlock(int img, int x, int y, int frame);
+void bbDrawImageRect(int img, int x, int y, int rx, int ry, int rw, int rh, int frame);
+int bbImageRectOverlap(int img, int x, int y, int rx, int ry, int rw, int rh);
+void bbCopyRect(int sx, int sy, int w, int h, int dx, int dy, int src, int dst);
+void bbLockBuffer(int b);
+void bbUnlockBuffer(int b);
+int bbReadPixel(int x, int y, int b); // argb; Fast variants are the same thing
+void bbWritePixel(int x, int y, int argb, int b);
+#define bbReadPixelFast bbReadPixel
+#define bbWritePixelFast bbWritePixel
+int bbCountGfxModes3D(void);
+int bbGfxModeWidth(int i);
+int bbGfxModeHeight(int i);
+void bbHidePointer(void);
+void bbShowPointer(void);
+void bbMoveMouse(int x, int y);
+void bbAppTitle(const char *t);
+int bbTotalVidMem(void);
+int bbAvailVidMem(void);

@@ -259,7 +259,7 @@ static void lights(void) {
 	SetShaderValue(sh, U_amb, bb_amb, SHADER_UNIFORM_VEC3);
 }
 
-void bb_frame(void);
+
 static void rendcam(ent ce) {
 	cam *c = bb_c(ce);
 	if (!c->proj) return;
@@ -314,6 +314,7 @@ static void rendcam(ent ce) {
 void bbRenderWorld(float tween) {
 	(void)tween;
 	bb_frame();
+	g2d_end(); // TODO: blitz renders into the current buffer; scpcb only uses the backbuffer
 	rlDrawRenderBatchActive();
 	ntris = 0;
 	for (int e = 1; e < bb_nents; e++)
