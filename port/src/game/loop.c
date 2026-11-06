@@ -15,8 +15,9 @@ static void FlyCam(void) {
 		bbCameraRange(Camera, .05f, 400);
 		if (getenv("SCPCB_DUMP")) each(Rooms, r) fprintf(stderr, "%s %g %g %g / %g %g %g a%d\n", r->RoomTemplate ? r->RoomTemplate->Name : "?", r->x, r->y, r->z, bbEntityX(r->obj, 1), bbEntityY(r->obj, 1), bbEntityZ(r->obj, 1), r->angle);
 		if (getenv("SCPCB_TOPDOWN")) { // dev: whole map from above (ceilings are back-face culled)
-			bbPositionEntity(Camera, MapWidth * 4, 170, MapHeight * 4, 0);
-			bbRotateEntity(Camera, atof(getenv("SCPCB_TOPDOWN")) ? atof(getenv("SCPCB_TOPDOWN")) : 90, 0, 0, 0);
+			bbPositionEntity(Camera, MapWidth * 4, getenv("SCPCB_TOPY") ? atof(getenv("SCPCB_TOPY")) : 170, MapHeight * 4, 0);
+			float p = atof(getenv("SCPCB_TOPDOWN")); // 1 = straight down, else the pitch to use
+			bbRotateEntity(Camera, p == 1 ? 90 : p, 0, 0, 0);
 		}
 		bbCameraFogMode(Camera, 0);
 		bbHidePointer();

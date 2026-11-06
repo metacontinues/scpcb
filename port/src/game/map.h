@@ -48,7 +48,8 @@ struct Rooms {
 	struct Grids *grid;
 	Rooms *Adjacent[5];
 	Doors *AdjDoor[5];
-	int NonFreeAble[11], Textures[11];
+	surf *NonFreeAble[11]; // blitz stored surface handles in an int field
+	int Textures[11];
 	int MaxLights;
 	int LightSpriteHidden[MaxRoomLights + 1], LightSpritesPivot[MaxRoomLights + 1], LightSprites2[MaxRoomLights + 1];
 	int LightHidden[MaxRoomLights + 1], LightFlicker[MaxRoomLights + 1];
@@ -103,10 +104,18 @@ struct Doors {
 };
 TLIST_DECL(Doors);
 
+enum { gridsize = 10 };
+typedef struct Forest { lnode n; int TileMesh[7], DetailMesh[7], TileTexture[11], grid[gridsize * gridsize + 12], TileEntities[gridsize * gridsize + 2], Forest_Pivot, Door[3], DetailEntities[3], ID; } Forest;
+TLIST_DECL(Forest);
+void GenForestGrid(Forest *fr);
+void PlaceForest(Forest *fr, float x, float y, float z, Rooms *r);
+
 typedef struct MapZones { lnode n; int Transition[2], HasCustomForest, HasCustomMT; } MapZones;
 TLIST_DECL(MapZones);
 
 // ---- globals
+G(int, room2gw_brokendoor);
+G(float, room2gw_x, room2gw_z);
 G(int, RoomTempID, MapWidth, MapHeight, RoomAmbience[21], Sky, RemoteDoorOn, Contained106);
 G(float, RoomScale, HideDistance, SecondaryLightOn, PrevSecondaryLightOn, LightVolume, TempLightVolume);
 G(int, *MapTemp, *MapFound, MapRoomID[ROOM4 + 2], MaxRooms_);
@@ -148,6 +157,8 @@ void LoadRoomTemplates(const char *file);
 void LoadRoomMesh(RoomTemplates *rt);
 Rooms *CreateRoom(int zone, int shape, float x, float y, float z, const char *name);
 void FillRoom(Rooms *r);
+typedef struct { const char *name; void (*fn)(Rooms *); } FillEntry;
+extern const FillEntry Fills1[], Fills2[], Fills3[]; // fillroom1-3.c
 int AddLight(Rooms *room, float x, float y, float z, int ltype, float range, int r, int g, int b);
 LightTemplates *AddTempLight(RoomTemplates *rt, float x, float y, float z, int ltype, float range, int r, int g, int b);
 WayPoints *CreateWaypoint(float x, float y, float z, Doors *door, Rooms *room);

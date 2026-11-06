@@ -66,8 +66,12 @@ void g2d_end(void) {
 	// blitz masks images at draw time: pull the drawing back + re-key the mask color
 	if (was >> 24 == 2 && (was & 0xffffff) < nis && is[was & 0xffffff].used) { img *m = &is[was & 0xffffff]; sync(m); upload(m); }
 }
+// bumped by anything that can change a texture's pixels; ReadPixel's cache keys on it
+static unsigned pxgen;
+void bb_g2dtouch(void) { pxgen++; }
 static void target(void) {
 	bb_frame();
+	pxgen++;
 	if (active == cur) return;
 	g2d_end();
 	if (cur == BACKBUF) return;
@@ -292,6 +296,7 @@ static void put(int b, Image src, int dx, int dy) { // blit into an image/textur
 		r = c;
 	}
 	g2d_end();
+	pxgen++;
 	UpdateTextureRec(t, r, src.data);
 	if (b >> 24 == 2) gi(b & 0xffffff)->stale = 1;
 }
@@ -312,18 +317,24 @@ void bbUnlockBuffer(int b) {
 	if (lkdirty) put(lkb, lk, 0, 0);
 	UnloadImage(lk); lkb = 0;
 }
-// argb ints like blitz
+// argb ints like blitz. outside a Lock, reads go through a few cached downloads (one gpu readback
+// per buffer until something draws), images just read their cpu copy
+static struct { int b; unsigned gen; Image im; } pxc[4];
+static int pxn;
+static Image *pxsrc(int b) {
+	if (lkb == b) return &lk;
+	if (b >> 24 == 2) { img *m = gi(b & 0xffffff); if (m->stale) { g2d_end(); rlDrawRenderBatchActive(); } sync(m); return &m->cpu; }
+	for (int i = 0; i < 4; i++) if (pxc[i].b == b && pxc[i].gen == pxgen) return &pxc[i].im;
+	int i = pxn++ % 4;
+	UnloadImage(pxc[i].im);
+	pxc[i].im = grab(b); pxc[i].b = b; pxc[i].gen = pxgen;
+	return &pxc[i].im;
+}
 int bbReadPixel(int x, int y, int b) {
-	b = b ? b : cur;
-	int own = lkb != b;
-	if (own) bbLockBuffer(b);
-	int r = 0;
-	if (x >= 0 && y >= 0 && x < lk.width && y < lk.height) {
-		unsigned char *p = (unsigned char *)lk.data + (y * lk.width + x) * 4;
-		r = p[3] << 24 | p[0] << 16 | p[1] << 8 | p[2];
-	}
-	if (own) bbUnlockBuffer(b);
-	return r;
+	Image *im = pxsrc(b ? b : cur);
+	if (x < 0 || y < 0 || x >= im->width || y >= im->height) return 0;
+	unsigned char *p = (unsigned char *)im->data + (y * im->width + x) * 4;
+	return p[3] << 24 | p[0] << 16 | p[1] << 8 | p[2];
 }
 void bbWritePixel(int x, int y, int argb, int b) {
 	b = b ? b : cur;

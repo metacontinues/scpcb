@@ -103,8 +103,11 @@ typedef struct {
 	RenderTexture2D rt; int hasrt; // once it's been a SetBuffer target, t is rt.texture
 	int used, rc, w, h, flags, blend, coords;
 	float su, sv, u0, v0;
+	htex *fr; int nf; // LoadAnimTexture: frames 1.. (frame 0 is this texture)
 	char name[256];
 } tex;
+htex bb_texframe(htex t, int f);
+void bb_g2dtouch(void); // g2d.c: pixels of some buffer changed
 tex *bb_t(htex t); // NULL for 0
 void tex_ref(htex t);
 void tex_unref(htex t);

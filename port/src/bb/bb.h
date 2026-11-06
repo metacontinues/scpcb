@@ -152,6 +152,7 @@ int bbTriangleVertex(surf *s, int t, int c);
 
 // ---- textures
 htex bbLoadTexture(const char *p, int flags);
+htex bbLoadAnimTexture(const char *p, int flags, int fw, int fh, int first, int count);
 htex bbCreateTexture(int w, int h, int flags, int frames);
 void bbFreeTexture(htex t);
 void bbTextureBlend(htex t, int bl);

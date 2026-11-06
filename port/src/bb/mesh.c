@@ -41,7 +41,7 @@ void bbBrushColor(hbrush h, float r, float g, float b) { brush *x = bb_brp(h); x
 void bbBrushAlpha(hbrush h, float a) { bb_brp(h)->a = a; }
 void bbBrushFX(hbrush h, int fx) { bb_brp(h)->fx = fx; }
 void bbBrushBlend(hbrush h, int bl) { bb_brp(h)->blend = bl; }
-void bbBrushTexture(hbrush h, htex t, int fr, int i) { (void)fr; br_settex(bb_brp(h), t, i); }
+void bbBrushTexture(hbrush h, htex t, int fr, int i) { br_settex(bb_brp(h), bb_texframe(t, fr), i); }
 htex bbGetBrushTexture(hbrush h, int i) { return i >= 0 && i < BB_NTEX ? bb_brp(h)->tex[i] : 0; }
 hbrush bbGetSurfaceBrush(surf *s) { return br_new(s->br); }
 hbrush bbGetEntityBrush(ent e) { return br_new(bb_e(e)->br); }
@@ -51,7 +51,7 @@ void bbEntityAlpha(ent e, float a) { bb_e(e)->br.a = a; }
 void bbEntityShininess(ent e, float s) { bb_e(e)->br.shine = s; }
 void bbEntityFX(ent e, int fx) { bb_e(e)->br.fx = fx; }
 void bbEntityBlend(ent e, int bl) { bb_e(e)->br.blend = bl; }
-void bbEntityTexture(ent e, htex t, int fr, int i) { (void)fr; E *x = bb_e(e); br_settex(&x->br, t, i); x->hasbr = 1; }
+void bbEntityTexture(ent e, htex t, int fr, int i) { E *x = bb_e(e); br_settex(&x->br, bb_texframe(t, fr), i); x->hasbr = 1; }
 void bbEntityOrder(ent e, int o) { bb_e(e)->order = o; }
 void bbPaintEntity(ent e, hbrush h) { E *x = bb_e(e); br_assign(&x->br, *bb_brp(h)); x->hasbr = 1; }
 
