@@ -98,9 +98,10 @@ collisions + picking, b3d + .x meshes and node trees (.x: text, binary, and sing
 every .x in the repo loads. the only warnings are 2 broken asset paths (294.x wants a missing png, mug.x
 points at a folder on the modder's desktop), and blitz chokes on those too.
 
-next up: the game itself. Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
-the runtime covers the blitz commands those files use (see the usage counts in git history); the open
-design questions are strings (blitz `$` is a gc'd value type) and blitz `Type` lists (New/Each/Delete/Before/After).
+next up: the game itself, hand-ported (no transpiler) into `src/game/`, roughly one .c per .bb file.
+Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ... start w/ Main.bb's init path
+(globals, options/INI, Graphics3D, menu) so something runs early. still open: how to do blitz strings
+(gc'd value type: vendored bdwgc vs a small refcounted string). `Type` lists -> a small intrusive list helper.
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested
