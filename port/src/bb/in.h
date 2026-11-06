@@ -21,6 +21,7 @@ struct surf {
 	brush br;
 	Mesh gpu;
 	int dirty;
+	unsigned ver; // bumped on every edit, for collision caches
 };
 
 // mesh data, shared by CopyEntity, deep copied by CopyMesh
@@ -61,6 +62,10 @@ typedef struct {
 	float rx, ry; v3 boxo, boxs;
 	// anim keys (b3d), not interpreted yet
 	key *keys; int nk;
+	// collision state (coll.c)
+	v3 opos; int ohas;
+	struct hit *hits; int nhit, chit;
+	struct ctri *ct; int nct; tf ctf; unsigned cver; v3 clo, chi; // world tri cache + aabb
 } E;
 
 extern E *bb_ents;
@@ -96,5 +101,7 @@ void tex_unref(htex t);
 // format loaders (src/fmt): return the root node tree
 ent b3d_load(const char *p, ent par);
 ent x_load(const char *p, ent par);
+void coll_free(E *x);
+ent bb_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly);
 void rend_init(void);
 void rend_quit(void);

@@ -22,7 +22,7 @@ RLOBJ := $(RLSRC:%=$(B)/raylib/%.o)
 BBSRC := $(wildcard src/bb/*.c) $(wildcard src/fmt/*.c)
 BBOBJ := $(BBSRC:%.c=$(B)/%.o)
 
-all: $(B)/rmview
+all: $(B)/rmview $(B)/colltest
 
 $(B)/libraylib.a: $(RLOBJ)
 	ar rcs $@ $^
@@ -37,7 +37,13 @@ $(B)/%.o: %.c $(wildcard src/*/*.h)
 $(B)/rmview: $(B)/tools/rmview.o $(BBOBJ) $(B)/libraylib.a
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+$(B)/colltest: $(B)/tools/colltest.o $(BBOBJ) $(B)/libraylib.a
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
+test: $(B)/colltest
+	$(B)/colltest
+
 clean:
 	rm -rf $(B)
 
-.PHONY: all clean
+.PHONY: all clean test

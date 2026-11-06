@@ -195,3 +195,37 @@ int bbGetEntityType(ent e);
 void bbEntityRadius(ent e, float rx, float ry);
 void bbEntityBox(ent e, float x, float y, float z, float w, float h, float d);
 void bbEntityPickMode(ent e, int mode, int obscurer);
+
+// ---- collisions (coll.c). methods: 1 sphere, 2 polygon, 3 box. responses: 1 stop, 2 slide, 3 slide w/o going down slopes
+void bbCollisions(int src, int dst, int method, int response);
+void bbClearCollisions(void);
+void bbUpdateWorld(float anim);
+void bbResetEntity(ent e);
+int bbCountCollisions(ent e);
+float bbCollisionX(ent e, int i); // i is 1-based like blitz
+float bbCollisionY(ent e, int i);
+float bbCollisionZ(ent e, int i);
+float bbCollisionNX(ent e, int i);
+float bbCollisionNY(ent e, int i);
+float bbCollisionNZ(ent e, int i);
+float bbCollisionTime(ent e, int i);
+ent bbCollisionEntity(ent e, int i);
+surf *bbCollisionSurface(ent e, int i);
+int bbCollisionTriangle(ent e, int i);
+ent bbEntityCollided(ent e, int type);
+
+// ---- picking. pick modes: 1 sphere, 2 polygon, 3 box
+ent bbLinePick(float x, float y, float z, float dx, float dy, float dz, float radius);
+ent bbEntityPick(ent e, float range);
+ent bbCameraPick(ent cam, float x, float y);
+int bbEntityVisible(ent a, ent b);
+float bbPickedX(void);
+float bbPickedY(void);
+float bbPickedZ(void);
+float bbPickedNX(void);
+float bbPickedNY(void);
+float bbPickedNZ(void);
+float bbPickedTime(void);
+ent bbPickedEntity(void);
+surf *bbPickedSurface(void);
+int bbPickedTriangle(void);

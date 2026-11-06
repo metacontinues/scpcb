@@ -73,6 +73,14 @@ void bbCameraProject(ent e, float x, float y, float z) {
 	float a = (float)vw / vh;
 	proj = v3n(vx + vw * (0.5f + 0.5f * p.x * c->zoom / p.z), vy + vh * (0.5f - 0.5f * p.y * c->zoom * a / p.z), p.z);
 }
+ent bbCameraPick(ent e, float sx, float sy) {
+	cam *c = bb_c(e);
+	int vx, vy, vw, vh; vp(c, &vx, &vy, &vw, &vh);
+	float a = (float)vw / vh, nx = (sx - vx) / vw * 2 - 1, ny = 1 - (sy - vy) / vh * 2;
+	tf w = bb_wt(e);
+	v3 d = m3v(m3ortho(w.m), v3mul(v3n(nx / c->zoom, ny / (c->zoom * a), 1), c->f));
+	return bb_pick(w.v, d, 0, 0, 0, 0);
+}
 float bbProjectedX(void) { return proj.x; }
 float bbProjectedY(void) { return proj.y; }
 float bbProjectedZ(void) { return proj.z; }
