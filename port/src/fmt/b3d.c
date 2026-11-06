@@ -1,4 +1,4 @@
-// b3d.c: .b3d loader. LoadAnimMesh keeps the node tree, LoadMesh bakes it flat.
+// b3d.c: .b3d loader + LoadMesh/LoadAnimMesh dispatch. LoadAnimMesh keeps the node tree, LoadMesh bakes it flat.
 // skinning (BONE) is parsed but not applied yet.
 #include <stdlib.h>
 #include <string.h>
@@ -164,9 +164,8 @@ static ent node(ctx *c, ent par) {
 	return e;
 }
 
-static int isb3d(const char *p) { size_t n = strlen(p); return n > 4 && !strcasecmp(p + n - 4, ".b3d"); }
 
-static ent load(const char *p, ent par) {
+ent b3d_load(const char *p, ent par) {
 	const char *rp = bbPath(p);
 	if (!rp) return 0;
 	ctx c = {.r = {.f = fopen(rp, "rb")}};
@@ -192,8 +191,16 @@ static ent load(const char *p, ent par) {
 	return root;
 }
 
+// dispatch on extension
+static ent load(const char *p, ent par) {
+	size_t n = strlen(p);
+	if (n > 2 && !strcasecmp(p + n - 2, ".x")) return x_load(p, par);
+	if (n > 4 && !strcasecmp(p + n - 4, ".b3d")) return b3d_load(p, par);
+	fprintf(stderr, "bb: don't know how to load %s\n", p);
+	return 0;
+}
+
 ent bbLoadAnimMesh(const char *p, ent par) {
-	if (!isb3d(p)) { fprintf(stderr, "bb: LoadAnimMesh %s: only .b3d so far\n", p); return 0; }
 	ent e = load(p, par);
 	if (e && !bb_e(e)->md) { E *x = bb_e(e); x->kind = EK_MESH; x->md = md_new(); }
 	return e;
@@ -220,7 +227,6 @@ static void bake(ent e, ent dst, tf t) {
 	}
 }
 ent bbLoadMesh(const char *p, ent par) {
-	if (!isb3d(p)) { fprintf(stderr, "bb: LoadMesh %s: only .b3d so far (.x is TODO)\n", p); return 0; }
 	ent root = load(p, 0);
 	if (!root) return 0;
 	ent m = bbCreateMesh(par);

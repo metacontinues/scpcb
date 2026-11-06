@@ -93,5 +93,8 @@ typedef struct {
 tex *bb_t(htex t); // NULL for 0
 void tex_ref(htex t);
 void tex_unref(htex t);
+// format loaders (src/fmt): return the root node tree
+ent b3d_load(const char *p, ent par);
+ent x_load(const char *p, ent par);
 void rend_init(void);
 void rend_quit(void);
