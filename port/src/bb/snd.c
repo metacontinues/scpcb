@@ -37,7 +37,8 @@ int bbLoadSound(const char *p) {
 	if (!r || DirectoryExists(r)) return 0;
 	Sound so = {0}; int rate = 44100;
 	if (up()) {
-		Wave w = LoadWave(r);
+		const char *q = bb_media(r, "qoa");
+		Wave w = q ? LoadWave(q) : (Wave){0};
 		if (!w.data) return 0;
 		so = LoadSoundFromWave(w); rate = w.sampleRate;
 		UnloadWave(w);
@@ -114,7 +115,8 @@ int bbStreamOpen(const char *p, int loop) {
 	int i = -1;
 	for (int k = 0; k < NST && i < 0; k++) if (!st[k].used) i = k;
 	if (i < 0) return 0;
-	Music m = LoadMusicStream(r);
+	const char *q = bb_media(r, "qoa");
+	Music m = q ? LoadMusicStream(q) : (Music){0};
 	if (!m.stream.buffer) return 0;
 	m.looping = loop;
 	st[i] = (strm){m, 1, (st[i].gen + 1) & 0x7ffff, 1};

@@ -381,3 +381,4 @@ int bbDeleteDir(const char *p);
 const char *bbCurrentDate(void);
 const char *bbCurrentTime(void);
 void bbDelay(int ms);
+int bbSavePNG(const char *p, int w, int h, const void *rgba); // rgba8, top row first

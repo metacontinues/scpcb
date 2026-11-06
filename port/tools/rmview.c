@@ -16,9 +16,9 @@
 // raylib's TakeScreenshot multiplies by dpi scale even when the fb isn't scaled
 static void shot(const char *p) {
 	int w = GetRenderWidth(), h = GetRenderHeight();
-	Image im = {rlReadScreenPixels(w, h), w, h, 1, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
-	ExportImage(im, p);
-	UnloadImage(im);
+	unsigned char *px = rlReadScreenPixels(w, h);
+	bbSavePNG(p, w, h, px);
+	RL_FREE(px);
 }
 
 // largest mesh extent in a node tree, for auto-scaling anim meshes

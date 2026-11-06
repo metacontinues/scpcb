@@ -1,5 +1,6 @@
 // rlconfig.h: raylib 5.5's config.h, trimmed to what the game loads ("scpcb" marks the changes).
-// kept: png/jpg/bmp (stb_image), dds, ogg (stb_vorbis), ttf. off: other image/audio/model formats, gif, clipboard.
+// kept: qoi, qoa, ttf. the game's assets are converted by tools/assetconv.c (which has its own decoders),
+// so no png/jpg/bmp/dds/ogg/mp3/wav decoders end up in the game. off: all other formats, gif, clipboard.
 // passed to raylib + the runtime w/ -DEXTERNAL_CONFIG_FLAGS -include, see meson.build
 /**********************************************************************************************
 *
@@ -167,16 +168,16 @@
 // Module: rtextures - Configuration Flags
 //------------------------------------------------------------------------------------
 // Selecte desired fileformats to be supported for image data loading
-#define SUPPORT_FILEFORMAT_PNG      1
-#define SUPPORT_FILEFORMAT_JPG      1   // scpcb: on, the game is mostly jpg
-#define SUPPORT_FILEFORMAT_BMP      1   // scpcb: on
+// #define SUPPORT_FILEFORMAT_PNG      1   // scpcb: off, assets are qoi/qoa
+// #define SUPPORT_FILEFORMAT_JPG      1   // scpcb: off, assets are qoi/qoa
+// #define SUPPORT_FILEFORMAT_BMP      1   // scpcb: off, assets are qoi/qoa
 //#define SUPPORT_FILEFORMAT_BMP      1
 //#define SUPPORT_FILEFORMAT_TGA      1
 //#define SUPPORT_FILEFORMAT_JPG      1
 // #define SUPPORT_FILEFORMAT_GIF      1   // scpcb: off
-// #define SUPPORT_FILEFORMAT_QOI      1   // scpcb: off
+#define SUPPORT_FILEFORMAT_QOI      1   // scpcb: the only formats the game loads
 //#define SUPPORT_FILEFORMAT_PSD      1
-#define SUPPORT_FILEFORMAT_DDS      1   // scpcb: on, the forest trees use one
+// #define SUPPORT_FILEFORMAT_DDS      1   // scpcb: off, assets are qoi/qoa
 //#define SUPPORT_FILEFORMAT_HDR      1
 //#define SUPPORT_FILEFORMAT_PIC          1
 //#define SUPPORT_FILEFORMAT_KTX      1
@@ -249,9 +250,9 @@
 //------------------------------------------------------------------------------------
 // Desired audio fileformats to be supported for loading
 // #define SUPPORT_FILEFORMAT_WAV          1   // scpcb: off
-#define SUPPORT_FILEFORMAT_OGG          1
+// #define SUPPORT_FILEFORMAT_OGG          1   // scpcb: off, assets are qoi/qoa
 // #define SUPPORT_FILEFORMAT_MP3          1   // scpcb: off
-// #define SUPPORT_FILEFORMAT_QOA          1   // scpcb: off
+#define SUPPORT_FILEFORMAT_QOA          1   // scpcb: the only formats the game loads
 //#define SUPPORT_FILEFORMAT_FLAC         1
 // #define SUPPORT_FILEFORMAT_XM           1   // scpcb: off
 // #define SUPPORT_FILEFORMAT_MOD          1   // scpcb: off
@@ -293,7 +294,7 @@
     #endif
 
     #ifndef SUPPORT_FILEFORMAT_PNG // Wayland uses png for prints, at least it was on 22 LTS ubuntu
-//         #define SUPPORT_FILEFORMAT_PNG 1
+        #define SUPPORT_FILEFORMAT_PNG 1
     #endif
 
     #ifndef SUPPORT_FILEFORMAT_JPG
