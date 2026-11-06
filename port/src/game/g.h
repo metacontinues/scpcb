@@ -230,3 +230,4 @@ void SaveOptionsINI(void);
 int StartGame(const char *how);
 
 #include "map.h"
+#include "items.h"

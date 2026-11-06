@@ -1,5 +1,5 @@
 // entities.c: Main.bb's LoadEntities. TODO: the ark_blur_cam overlays (fog, gas mask, infect, nv),
-// InitItemTemplates, particles + templates, SetChunkDataValues, user tracks
+// particles + templates, SetChunkDataValues, user tracks
 #include "g.h"
 
 static int hid(int e) { bbHideEntity(e); return e; }
@@ -150,6 +150,8 @@ void LoadEntities(void) {
 		bbEntityTexture(DTextures[i], tex, 0, 0);
 		bbFreeTexture(tex);
 	}
+	InitItemTemplates();
+	// TODO ParticleTextures, SetChunkDataValues (Particles.bb / 1499 chunks)
 	LoadMaterials_("DATA\\materials.ini");
 	static const char *mt[] = {"mt1", "mt2", "mt2c", "mt3", "mt4", "mt_elevator", "mt_generator"};
 	for (int i = 0; i < 7; i++) OBJTunnel[i] = hid(LoadRMesh(cat("GFX\\map\\", mt[i], ".rmesh"), NULL));
