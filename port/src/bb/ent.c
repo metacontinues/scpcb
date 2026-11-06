@@ -76,7 +76,7 @@ static void freerec(ent e) {
 }
 void bbFreeEntity(ent e) { if (e) freerec(e); }
 
-ent bbCopyEntity(ent e, ent par) {
+static ent copyrec(ent e, ent par) {
 	E src = *bb_e(e); // copy, pool may move
 	ent n = bb_new(src.kind, 0), f; // linked below, once (bb_new(.., par) + link made a cycle)
 	E *x = bb_e(n);
@@ -91,9 +91,12 @@ ent bbCopyEntity(ent e, ent par) {
 	br_ref(&x->br);
 	if (x->cam) { cam *c = malloc(sizeof *c); *c = *src.cam; x->cam = c; }
 	if (x->keys) { key *k = malloc(sizeof *k * x->nk); memcpy(k, src.keys, sizeof *k * x->nk); x->keys = k; }
-	for (f = src.first; f; f = bb_e(f)->next) bbCopyEntity(f, n);
+	for (f = src.first; f; f = bb_e(f)->next) copyrec(f, n);
 	return n;
 }
+// the copy itself always starts shown: the game hides its templates (GuardObj, ClassDObj...) and relies on copies
+// of them being visible (it even re-hides the DTextures copies, Main.bb 8240). children keep their own flags
+ent bbCopyEntity(ent e, ent par) { ent n = copyrec(e, par); bb_e(n)->hidden = 0; return n; }
 
 void bbEntityParent(ent e, ent par, int glob) {
 	tf w = bb_wt(e);
