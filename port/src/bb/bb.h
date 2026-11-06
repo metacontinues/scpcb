@@ -326,3 +326,48 @@ void bbMoveMouse(int x, int y);
 void bbAppTitle(const char *t);
 int bbTotalVidMem(void);
 int bbAvailVidMem(void);
+
+// ---- input (input.c). keys are directinput scancodes like blitz; mouse buttons 1 l, 2 r, 3 m
+int bbKeyDown(int sc);
+int bbKeyHit(int sc);
+void bbFlushKeys(void);
+int bbGetKey(void);
+int bbWaitKey(void);
+int bbMouseDown(int b);
+int bbMouseHit(int b);
+int bbMouseX(void);
+int bbMouseY(void);
+int bbMouseXSpeed(void);
+int bbMouseYSpeed(void);
+int bbMouseZSpeed(void);
+void bbFlushMouse(void);
+
+// ---- misc (misc.c). rng is blitz's exact generator, so seeds build the same maps
+float bbRnd(float from, float to);
+int bbRand(int from, int to);
+void bbSeedRnd(int seed);
+int bbRndSeed(void);
+FILE *bbWriteFile(const char *p);
+FILE *bbOpenFile(const char *p);
+void bbCloseFile(FILE *f);
+int bbEof(FILE *f);
+int bbFilePos(FILE *f);
+int bbSeekFile(FILE *f, int pos);
+void bbWriteByte(FILE *f, int v);
+void bbWriteShort(FILE *f, int v);
+void bbWriteInt(FILE *f, int v);
+void bbWriteFloat(FILE *f, float v);
+void bbWriteString(FILE *f, const char *s);
+void bbWriteLine(FILE *f, const char *s);
+int bbFileType(const char *p);
+int bbFileSize(const char *p);
+int bbCreateDir(const char *p);
+int bbDeleteFile(const char *p);
+int bbCopyFile(const char *from, const char *to);
+const char *bbCurrentDir(void);
+void *bbReadDir(const char *p);
+const char *bbNextFile(void *d);
+void bbCloseDir(void *d);
+const char *bbCurrentDate(void);
+const char *bbCurrentTime(void);
+void bbDelay(int ms);

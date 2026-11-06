@@ -19,7 +19,7 @@ int bbGraphics3D(int w, int h, int depth, int mode) {
 void bbEndGraphics(void) { snd_quit(); rend_quit(); CloseWindow(); }
 int bbGraphicsWidth(void) { return GetScreenWidth(); }
 int bbGraphicsHeight(void) { return GetScreenHeight(); }
-void bbFlip(int vsync) { (void)vsync; bb_frame(); g2d_end(); EndDrawing(); inframe = 0; snd_update(); }
+void bbFlip(int vsync) { (void)vsync; bb_frame(); g2d_end(); EndDrawing(); inframe = 0; input_update(); snd_update(); } // EndDrawing polled events
 
 int bbMilliSecs(void) { return (int)(GetTime() * 1000); }
 int bbAppClosing(void) { return WindowShouldClose(); }

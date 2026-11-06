@@ -116,6 +116,7 @@ void anim_step(float k);
 ent bb_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly);
 void bb_frame(void); // BeginDrawing once per frame
 void g2d_end(void); // leave any texture/image target, back to the screen
+void input_update(void);
 void snd_update(void);
 void snd_quit(void);
 void rend_init(void);
