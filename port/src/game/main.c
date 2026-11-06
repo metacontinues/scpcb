@@ -218,6 +218,7 @@ void InitLateGlobals(void) {
 	DrawLoading(35, 1);
 	// TODO Items.bb, Particles.bb (HissSFX), doors, MapSystem.bb (LoadRoomTemplates), NPCs.bb, UpdateEvents.bb
 	DrawLoading(40, 1);
+	InitMapGlobals(); // MapSystem.bb's top level
 	DrawLoading(80, 1);
 	bbCollisions(HIT_PLAYER, HIT_MAP, 2, 2);
 	bbCollisions(HIT_PLAYER, HIT_PLAYER, 1, 3);
@@ -236,8 +237,12 @@ void InitLateGlobals(void) {
 	LoopDelay = bbMilliSecs();
 }
 
-// TODO LoadEntities/LoadAllSounds/InitNewGame (new) and LoadGame/InitLoadGame (load)
+// new game: LoadEntities + CreateMap so far, then loop.c's fly cam stands in for the game.
+// TODO LoadAllSounds, the rest of InitNewGame, LoadGame/InitLoadGame
 int StartGame(const char *how) {
-	fprintf(stderr, "scpcb: can't start a game yet (%s), the game itself isn't ported\n", how);
-	return 0;
+	if (!bbSeq(how, "new")) { fprintf(stderr, "scpcb: loading saves isn't ported yet\n"); return 0; }
+	if (getenv("SCPCB_SEED")) RandomSeed = getenv("SCPCB_SEED"); // dev: fixed map
+	LoadEntities();
+	CreateMap();
+	return 1;
 }

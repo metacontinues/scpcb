@@ -54,7 +54,7 @@ static void piece(const char *s, int n, char *o, int on) { // Piece(s, n, " ")
 	o[k] = 0;
 }
 static float piecef(const char *s, int n) { char b[64]; piece(s, n, b, sizeof b); return atof(b); }
-static char *rs(FILE *f, char *o, int n) { char *s = bbReadString(f); snprintf(o, n, "%s", s); free(s); return o; }
+static char *rs(FILE *f, char *o, int n) { char *s = bbReadString(f); snprintf(o, n, "%s", s); return o; } // gc string, no free
 
 int rmesh_load(const char *file, htex amb, rmesh *out) {
 	*out = (rmesh){0};

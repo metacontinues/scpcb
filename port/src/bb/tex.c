@@ -38,7 +38,7 @@ static htex upload(Image im, int flags, const char *name) {
 htex bbLoadTexture(const char *p, int flags) {
 	const char *r = bbPath(p);
 	if (!r || DirectoryExists(r)) return 0;
-	Image im = LoadImage(r);
+	Image im = bb_loadimg(r);
 	if (!im.data) return 0;
 	int hasa = im.format == PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 || im.format == PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA;
 	ImageFormat(&im, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
@@ -84,3 +84,15 @@ int bbTextureWidth(htex h) { return bb_t(h)->w; }
 int bbTextureHeight(htex h) { return bb_t(h)->h; }
 const char *bbTextureName(htex h) { return h ? bb_t(h)->name : ""; }
 void bbTextureLodBias(float b) { (void)b; }
+
+// raylib picks the decoder by extension, but the game hides jpgs as .dc/.pt, so sniff the magic
+Image bb_loadimg(const char *path) {
+	int n = 0;
+	unsigned char *d = LoadFileData(path, &n);
+	if (!d) return (Image){0};
+	const char *ext = n > 3 && d[0] == 0x89 && d[1] == 'P' ? ".png" : n > 2 && d[0] == 0xff && d[1] == 0xd8 ? ".jpg"
+		: n > 2 && d[0] == 'B' && d[1] == 'M' ? ".bmp" : GetFileExtension(path);
+	Image im = LoadImageFromMemory(ext, d, n);
+	UnloadFileData(d);
+	return im;
+}

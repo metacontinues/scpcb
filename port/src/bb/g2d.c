@@ -184,7 +184,7 @@ static void sync(img *m) { // pull gpu drawing back into cpu
 int bbLoadImage(const char *p) {
 	const char *r = bbPath(p);
 	if (!r || DirectoryExists(r)) return 0;
-	Image c = LoadImage(r);
+	Image c = bb_loadimg(r);
 	if (!c.data) return 0;
 	int h = newimg(c, c.width, c.height, 1);
 	upload(&is[h]);
@@ -193,7 +193,7 @@ int bbLoadImage(const char *p) {
 int bbLoadAnimImage(const char *p, int fw, int fh, int first, int count) {
 	const char *r = bbPath(p);
 	if (!r || fw <= 0 || fh <= 0) return 0;
-	Image c = LoadImage(r);
+	Image c = bb_loadimg(r);
 	if (!c.data) return 0;
 	int per = c.width / fw;
 	if (per <= 0) { UnloadImage(c); return 0; }

@@ -2,6 +2,9 @@
 // globals are G(type, names...) so they're declared once: main.c defines G_DEFINE first.
 // porting rules: float -> int goes through bbInt (blitz rounds), Min/Max are float like blitz,
 // Dim x(n) is x[n+1], True/False are 1/0, strings are str (gc'd, see bb/str.h).
+// blitz arrays a[n] (Field/Global/Local) have n+1 slots like Dim, so they're a[n+1] here too.
+// And/Or are bitwise in blitz: on raw ints use & and |, && || only where both sides are 0/1.
+// game names that clash w/ raylib's exported symbols get a trailing _ (LoadMaterials_).
 // str globals/fields start NULL, not "": test them w/ bbLen/bbSeq, never *s.
 #pragma once
 #include <math.h>
@@ -56,7 +59,7 @@ G(int, KillAnim, RestoreSanity, Playable);
 G(float, BLINKFREQ, BlinkTimer, EyeIrritation, EyeStuck, BlinkEffect, BlinkEffectTimer);
 G(float, Stamina, StaminaEffect, StaminaEffectTimer, CameraShakeTimer, VomitTimer);
 G(int, Vomit, Regurgitate);
-G(float, SCP1025state[6], HeartBeatRate, HeartBeatTimer, HeartBeatVolume);
+G(float, SCP1025state[7], HeartBeatRate, HeartBeatTimer, HeartBeatVolume);
 G(int, WearingGasMask, WearingHazmat, WearingVest, Wearing714, WearingNightVision);
 G(float, NVTimer, SuperManTimer, Injuries, Bloodloss, Infect, HealTimer);
 G(int, SuperMan, RefinedItems);
@@ -71,7 +74,7 @@ G(float, StopHidingTimer, EndingTimer, MsgTimer, KeypadTimer);
 G(str, SelectedEnding, Msg, DeathMSG, KeypadInput, KeypadMSG);
 G(int, AccessCode, DrawHandIcon, DrawArrowIcon[5]);
 G(float, MTFtimer, RadioState[11]);
-G(int, MTFroomState[10], RadioState3[11], RadioState4[10], RadioCHN[9], OldAiPics[6]);
+G(int, MTFroomState[11], RadioState3[11], RadioState4[10], RadioCHN[9], OldAiPics[6]);
 G(int, PlayTime, ConsoleFlush, ConsoleFlushSnd, ConsoleMusFlush, ConsoleMusPlay);
 G(int, InfiniteStamina, NVBlink, IsNVGBlinking);
 // later in Main.bb, needed early
@@ -124,7 +127,7 @@ ent LoadMesh_Strict(const char *file, ent par);
 ent LoadAnimMesh_Strict(const char *file, ent par);
 htex LoadTexture_Strict(const char *file, int flags);
 int LoadFont_Strict(const char *file, int height, int bold, int italic, int underline);
-G(int, TempSounds[10], TempSoundIndex);
+G(int, TempSounds[11], TempSoundIndex);
 int LoadTempSound(const char *file); // Main.bb, ring of 10 one-shot sounds
 void UpdateMusic(void); // music.c
 void InitMusic(void);
@@ -225,3 +228,5 @@ int GenerateSeedNumber(const char *seed);
 void SaveOptionsINI(void);
 // not ported yet: these say so and keep you in the menu
 int StartGame(const char *how);
+
+#include "map.h"

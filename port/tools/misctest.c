@@ -41,6 +41,13 @@ int main(void) {
 	bbCloseFile(f);
 	CHECK(bbDeleteFile(p) && !bbFileType(p), "delete");
 	CHECK(strlen(bbCurrentDate()) == 11 && strlen(bbCurrentTime()) == 8, "date %s time %s", bbCurrentDate(), bbCurrentTime());
+	// CopyEntity w/ children used to link copies into their parent twice (cycle in the child list)
+	ent root = bbCreatePivot(0), a = bbCreatePivot(root);
+	bbCreatePivot(a); bbCreatePivot(a);
+	ent c = bbCopyEntity(root, 0), c2 = bbCopyEntity(a, root);
+	CHECK(bbCountChildren(c) == 1 && bbCountChildren(bbGetChild(c, 1)) == 2, "copy keeps the tree");
+	CHECK(bbCountChildren(root) == 2 && bbCountChildren(c2) == 2 && bbGetParent(c2) == root, "copy into a parent: %d", bbCountChildren(root));
+	bbScaleEntity(c, 2, 2, 2, 0); // walks the copied tree, hung on the cycle
 	printf("%s (%d failed)\n", fails ? "FAILED" : "all good", fails);
 	return fails != 0;
 }

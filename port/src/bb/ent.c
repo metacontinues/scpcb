@@ -78,13 +78,12 @@ void bbFreeEntity(ent e) { if (e) freerec(e); }
 
 ent bbCopyEntity(ent e, ent par) {
 	E src = *bb_e(e); // copy, pool may move
-	ent n = bb_new(src.kind, par);
+	ent n = bb_new(src.kind, 0), f; // linked below, once (bb_new(.., par) + link made a cycle)
 	E *x = bb_e(n);
-	ent p = x->par, f;
 	*x = src;
 	x->par = x->first = x->last = x->next = x->prev = 0; x->wdirty = 1;
 	x->hits = NULL; x->nhit = x->chit = 0; x->ct = NULL; x->nct = 0; x->ohas = 0;
-	link(n, p);
+	link(n, par);
 	if (x->md && x->md->sk) x->md = md_copy(x->md); // skinned: each copy poses its own verts
 	else if (x->md) x->md->rc++;
 	x->bones = NULL; x->nbones = 0;
