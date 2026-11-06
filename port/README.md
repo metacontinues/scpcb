@@ -11,11 +11,11 @@ handles are ints and 0 is null, same as blitz, so game code that stores entities
 
 ```
 port/
-  meson.build      muon/meson build, builds raylib + bdwgc from vendor/ too
+  meson.build      meson build (plain syntax, muon works too), builds raylib + bdwgc + mimalloc from vendor/ too
   vendor/raylib    submodule, pinned to 5.5
   vendor/bdwgc     submodule, boehm gc v8.2.12 (for blitz strings + Type objects)
   vendor/mimalloc  submodule, v3.5.4, overrides malloc for the whole process (-Dmimalloc=false to skip)
-  setup.sh         configures port/build w/ clang + mold
+  setup.sh         configures port/build w/ the llvm toolchain (clang, llvm-ar, lld)
   src/bb/          blitz runtime
     bb.h           public api, the only header game code should include
     in.h           internals shared w/ src/fmt
@@ -44,7 +44,7 @@ port/
     keyname.c difficulty.c achv.c             the small .bb files
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
-  tools/colltest.c collision + pick checks, `muon -C port/build test`
+  tools/colltest.c collision + pick checks, `meson test -C port/build`
   tools/sndtest.c  sound/channel/stream checks (muted). w/o an audio device it only checks silent mode
   tools/g2dtest.c  every 2d path once + pixel io; `port/build/g2dtest out.png` to eyeball it
   tools/misctest.c rng + file io
@@ -52,14 +52,19 @@ port/
 
 ## build + run
 
-needs clang, [mold](https://github.com/rui314/mold), [muon](https://muon.build) (or meson + ninja, same file), x11 dev headers.
-`-Dlinker=` falls back to the compiler's default linker. llvm-ar isn't used: muon 0.8.0-dev detects it as a
-solaris ar and drops the archive name from the command, so the `.a`s go through gnu ar (fine w/o lto). run stuff from the repo root so asset paths resolve.
+needs clang + lld + llvm-ar, meson + ninja (or [muon](https://muon.build), the file sticks to plain meson so
+both work), x11 dev headers. run stuff from the repo root so asset paths resolve.
+
+defaults: `buildtype=release` (-O3), thin lto, `-march=native`, `-fno-plt -fno-semantic-interposition
+-fno-math-errno`, section gc + `--icf=all` at link. no `-ffast-math`, the game relies on inf/nan.
+knobs: `-Dlto=full|thin|` `-Dmarch=x86-64-v3|` (native builds only run on cpus like yours) `-Dlinker=mold|`
+`-Dmimalloc=false`. w/ muon use `MESON=muon AR=ar port/setup.sh`: muon 0.8.0-dev misdetects llvm-ar, and gnu ar
+handles the lto bitcode fine through LLVMgold.so.
 
 ```sh
 git submodule update --init
-port/setup.sh && muon -C port/build samu   # samu = muon's built-in ninja
-muon -C port/build test
+port/setup.sh && ninja -C port/build
+meson test -C port/build
 port/build/scpcb                             # the game (launcher -> loading screen so far)
 port/build/rmview GFX/map/173_opt.rmesh     # wasd/qe + mouse, shift fast, f12 screenshot
 port/build/rmview GFX/apache.b3d
