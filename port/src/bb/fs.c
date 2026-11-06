@@ -44,19 +44,20 @@ int bbReadInt(FILE *f) {
 	return (int)((unsigned)b[0] | (unsigned)b[1] << 8 | (unsigned)b[2] << 16 | (unsigned)b[3] << 24);
 }
 float bbReadFloat(FILE *f) { int i = bbReadInt(f); float r; memcpy(&r, &i, 4); return r; }
-char *bbReadString(FILE *f) {
+str bbReadString(FILE *f) {
 	int n = bbReadInt(f);
 	if (n < 0 || n > 1 << 24) n = 0;
-	char *s = malloc(n + 1);
+	str s = GC_MALLOC_ATOMIC(n + 1);
 	n = fread(s, 1, n, f);
 	s[n] = 0;
 	return s;
 }
-char *bbReadLine(FILE *f) {
-	size_t n = 0, cap = 0; char *s = NULL; int c;
-	while ((c = fgetc(f)) != EOF && c != '\n') { grow(s, n + 1, cap); s[n++] = c; }
-	if (c == EOF && !n) { free(s); return NULL; }
-	grow(s, n + 1, cap);
+str bbReadLine(FILE *f) {
+	size_t n = 0, cap = 64; str s = GC_MALLOC_ATOMIC(cap); int c;
+	while ((c = fgetc(f)) != EOF && c != '\n') {
+		if (n + 1 >= cap) s = GC_REALLOC(s, cap *= 2);
+		s[n++] = c;
+	}
 	if (n && s[n-1] == '\r') n--;
 	s[n] = 0;
 	return s;
