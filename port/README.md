@@ -56,6 +56,8 @@ port/
     npcs.h/.c      NPCs.bb: the NPCs type, CreateNPC (all 22 types), RemoveNPC, the UpdateNPCs frame + gravity, helpers
     npc173.c       UpdateNPCs' 173 + 106 cases          waypoints.c InitWayPoints + FindPath (a*)
     events.c       Events type, CreateEvent/InitEvents (UpdateEvents.bb itself isn't ported yet)
+    inv.c          DrawGUI's inventory screen (drag, drop, combine into clipboard/wallet, batteries), the inventory key
+    use.c          DrawGUI's item-in-hand part: documents, kits, wearables, pills... (not yet: radio, nav, 1499, 294 cup, 1025)
     keyname.c difficulty.c achv.c             the small .bb files (achv.c also has the unlock popups)
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
@@ -100,7 +102,7 @@ glfw dlopens `libEGL.so.1`, so if the angle build only has `libEGL.so` symlink i
 x11 only for now (works under xwayland). native wayland needs glfw's generated protocol headers.
 
 dev hooks: `BB_SHOT=out.png BB_SHOT_FRAME=n` saves the nth Flip to a png and exits. `BB_INPUT="11:c13,14:m250x225,15:l"`
-plays input at given flips: `m<x>x<y>` virtual mouse move, `l` left click, `k<scancode>` key hit, `c<ascii>` typed char.
+plays input at given flips: `m<x>x<y>` virtual mouse move, `l` left click, `d` left button held this flip (drags), `k<scancode>` key hit, `c<ascii>` typed char.
 eg `BB_INPUT="11:c13,14:m250x365,15:l" BB_SHOT=o.png BB_SHOT_FRAME=22` gets past the loading screen and opens options at 720p. to try the game w/o
 touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data, Loadingscreens and has its own options.ini
 (the launcher rewrites options.ini on LAUNCH, like the original).

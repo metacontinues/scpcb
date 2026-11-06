@@ -30,7 +30,7 @@ static float mdx, mdy, mdz;
 static void push(int c) { if (nkq < 64) keyq[nkq++] = c; }
 
 // dev hook: BB_INPUT="frame:ev ev,frame:ev" plays input at flip n (counted like BB_SHOT_FRAME).
-// ev: m<x>x<y> move the mouse (virtual, the real pointer isn't touched), l left click,
+// ev: m<x>x<y> move the mouse (virtual, the real pointer isn't touched), l left click, d left button held (drags),
 //     k<scancode> key hit, h<scancode> key held this flip, c<ascii> typed char. eg BB_INPUT="12:c13,20:m300x400 l"
 static int sx = -1, sy, sdown, sframe, shold[256];
 static void script(void) {
@@ -45,6 +45,7 @@ static void script(void) {
 			if (f == sframe) switch (*e) {
 				case 'm': sx = atoi(e + 1); sy = atoi(strchr(e, 'x') ? strchr(e, 'x') + 1 : e + 1); break;
 				case 'l': mhit[1]++; sdown = 1; break;
+				case 'd': sdown = 1; break; // left button held, no new hit
 				case 'k': { int k = atoi(e + 1); if (k > 0 && k < 256) khit[k]++; } break;
 				case 'c': push(atoi(e + 1)); break;
 				case 'h': { int k = atoi(e + 1); if (k > 0 && k < 256) shold[k] = 1; } break;

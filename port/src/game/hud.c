@@ -1,5 +1,5 @@
 // hud.c: the parts of Main.bb's DrawGUI that exist so far (hand icons, door buttons, blink/stamina meters)
-// + the message text from the main loop. TODO the rest of DrawGUI: inventory, items in hand, 294, debug hud
+// + the message text from the main loop. the inventory part is inv.c/use.c. TODO 294, keypad, debug hud
 #include "g.h"
 
 // screen pos for a hand icon pointing at yaw/pitch offsets, clamped to the screen edge like blitz
@@ -19,9 +19,9 @@ static void meter(int x, int y, float frac, int img) {
 }
 
 void DrawGUI(void) {
-	if (MenuOpen || ConsoleOpen || SelectedDoor || InvOpen || EndingTimer < 0) bbShowPointer(); else bbHidePointer(); // TODO OtherOpen
+	if (MenuOpen || ConsoleOpen || SelectedDoor || InvOpen || OtherOpen || EndingTimer < 0) bbShowPointer(); else bbHidePointer();
 	// TODO pocket dimension faces (needs events)
-	if (ClosestButton && !SelectedDoor && !InvOpen && !MenuOpen) {
+	if (ClosestButton && !SelectedDoor && !InvOpen && !MenuOpen && !OtherOpen) {
 		int t = bbCreatePivot(0);
 		bbPositionEntity(t, bbEntityX(Camera, 0), bbEntityY(Camera, 0), bbEntityZ(Camera, 0), 0);
 		bbPointEntity(t, ClosestButton, 0);
@@ -58,6 +58,8 @@ void DrawGUI(void) {
 		bbColor(255, 255, 255); bbRect(x - 51, y - 1, 32, 32, 0);
 		bbDrawImage(Crouch ? CrouchIcon : SprintIcon, x - 50, y, 0);
 	}
+	// TODO SelectedScreen, the keypad (SelectedDoor)
+	DrawInventory(InvOpen);
 }
 
 // main loop's Msg text (fades w/ MsgTimer)

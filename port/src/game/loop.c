@@ -104,7 +104,7 @@ void UpdateGame(void) {
 	// TODO UpdateSecurityCams
 	ambience();
 	UpdateCheckpoint1 = UpdateCheckpoint2 = 0;
-	if (!MenuOpen && !InvOpen && !SelectedDoor && !ConsoleOpen && !SelectedScreen && EndingTimer >= 0) { // TODO OtherOpen, Using294
+	if (!MenuOpen && !InvOpen && !OtherOpen && !SelectedDoor && !ConsoleOpen && !SelectedScreen && EndingTimer >= 0) { // TODO Using294
 		LightVolume = CurveValue(TempLightVolume, LightVolume, 50);
 		bbCameraFogRange(Camera, CameraFogNear * LightVolume, CameraFogFar * LightVolume);
 		bbCameraFogColor(Camera, 0, 0, 0);
@@ -143,14 +143,9 @@ void UpdateGame(void) {
 		LightFlash = Max(LightFlash - FPSfactor / 70, 0);
 	} else bbHideEntity(Light);
 	bbEntityColor(Light, 255, 255, 255);
-	// TODO inventory key (InvOpen + Pause/ResumeSounds), quick save, console key
+	InventoryKey();
+	// TODO quick save, console key
 	DrawGUI();
-	if (bbKeyHit(1) && EndingTimer == 0) { // DrawGUI's tail in blitz. TODO Pause/ResumeSounds, OptionsMenu save, DropItem
-		if (MenuOpen || InvOpen) { bbMouseXSpeed(); bbMouseYSpeed(); bbMouseZSpeed(); mouse_x_speed_1 = mouse_y_speed_1 = 0; }
-		MenuOpen = !MenuOpen;
-		AchievementsMenu = OptionsMenu = QuitMSG = 0;
-		SelectedDoor = NULL; SelectedScreen = NULL; SelectedMonitor = NULL;
-	}
 	if (EndingTimer >= 0 && MenuOpen) pausestub(); // TODO DrawEnding when EndingTimer < 0
 	// TODO UpdateConsole, the 173 intro document hint
 	DrawMessages();
@@ -170,8 +165,8 @@ void MainLoop(void) {
 		PrevFPSFactor = FPSfactor;
 		FPSfactor = Max(Min(ElapsedTime * 70, 5), .2f);
 		FPSfactor2 = FPSfactor;
-		// TODO OtherOpen, SelectedDoor, SelectedScreen, Using294 once those exist
-		if (MenuOpen || InvOpen || ConsoleOpen) FPSfactor = 0;
+		// TODO SelectedDoor, SelectedScreen, Using294 once those exist
+		if (MenuOpen || InvOpen || ConsoleOpen || OtherOpen) FPSfactor = 0;
 		if (Framelimit > 0) {
 			bbDelay(bbInt(1000.0f / Framelimit - (MilliSecs2() - LoopDelay)));
 			LoopDelay = MilliSecs2();
