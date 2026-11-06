@@ -1,0 +1,85 @@
+# scpcb c port
+
+c rewrite of scpcb on raylib, rendering through gles2 so it runs on [ANGLE](https://chromium.googlesource.com/angle/angle).
+
+plan: write a blitz3d-alike runtime first (`src/bb`), then port the game `.bb` files on top of it
+almost line by line. runtime fns are named after the blitz commands with a `bb` prefix (that's what
+blitz3d's own runtime calls them): `PositionEntity e,x,y,z` -> `bbPositionEntity(e, x, y, z, 0)`.
+handles are ints and 0 is null, same as blitz, so game code that stores entities in fields keeps working.
+
+## layout
+
+```
+port/
+  Makefile         plain make, builds raylib from vendor/ too
+  vendor/raylib    submodule, pinned to 5.5
+  src/bb/          blitz runtime
+    bb.h           public api, the only header game code should include
+    in.h           internals shared w/ src/fmt
+    m3.h           lh math (blitz conventions: yaw*pitch*roll, +z fwd)
+    ent.c          entity pool, hierarchy, transforms, TForm*
+    mesh.c         brushes, surfaces, mesh ops
+    tex.c          textures + blitz flags, refcounted so FreeTexture on a used tex is fine
+    rend.c         cameras, lights, sprites, RenderWorld
+    shd.h          the fixed-function-ish glsl es 100 shader
+    fs.c           blitz paths (backslashes, any case) + ReadInt/ReadString/etc
+    sys.c          window/frame/time, primitives
+  src/fmt/         file formats: b3d.c, rmesh.c
+  src/game/        game code goes here (empty rn)
+  tools/rmview.c   room/model viewer, the current test bed
+```
+
+## build + run
+
+needs a c compiler, make, x11 dev headers. run stuff from the repo root so asset paths resolve.
+
+```sh
+git submodule update --init
+make -C port
+port/build/rmview GFX/map/173_opt.rmesh     # wasd/qe + mouse, shift fast, f12 screenshot
+port/build/rmview GFX/apache.b3d
+```
+
+by default it uses the system `libEGL`/`libGLESv2` (mesa). to run on ANGLE, point it at a dir with
+ANGLE's `libEGL.so` + `libGLESv2.so` (chromium/electron ship them, or build angle w/ gn):
+
+```sh
+make -C port ANGLE=/path/to/angle/out   # adds an rpath
+# or without rebuilding:
+LD_LIBRARY_PATH=/path/to/angle/out port/build/rmview ...
+```
+
+glfw dlopens `libEGL.so.1`, so if the angle build only has `libEGL.so` symlink it.
+x11 only for now (works under xwayland). native wayland needs glfw's generated protocol headers.
+
+## how the blitz stuff maps
+
+- **coords**: everything stays in blitz's left-handed space. the projection matrix maps lh view space
+  straight to gl clip space, and since blitz front faces are cw we cull gl "front" faces. no mirroring anywhere.
+- **materials**: one shader does up to 4 texture layers, each w/ blitz TextureBlend (0-5), coord set,
+  ScaleTexture/PositionTexture, masking. plus brush color/alpha, EntityFX (fullbright, vertex color,
+  vertex alpha, nofog, 2-sided), up to 8 hw-style lights, linear fog.
+- **sorting**: per surface, not per entity. opaque near->far, alpha far->near w/o depth writes,
+  EntityOrder != 0 draws w/o depth test.
+- **textures**: resized to pow2 and mipmapped like blitz did (also needed for es2 wrap/mips).
+  alpha flag w/o an alpha channel derives alpha from brightness, mask flag keys out pure black.
+- **rooms**: `rmesh_load` follows `LoadRMesh` exactly (same child pivot layout, collision copies,
+  AmbientLightRoomTex slot, FX 3 on the opaque mesh). game-side point entities come back as `rpoint` records.
+
+## status
+
+works: entities/hierarchy/transforms, meshes, brushes, textures, cameras, lights, sprites, fog,
+b3d static meshes + node trees, rmesh rooms.
+
+next up, roughly in order:
+1. **.x loader**: doors, buttons, items, props are all `.x` (text, one bzip'd). rooms show up w/o props rn
+2. **collisions**: blitz sphere/ellipsoid vs poly sliding (`Collisions`, `UpdateWorld`, `EntityCollided`, ...)
+3. **picking**: `LinePick`, `EntityPick`, `CameraPick`, `EntityVisible`
+4. **animation**: b3d keys are parsed already. needs `Animate`/`SetAnimTime`/`AnimTime` + cpu skinning (BONE)
+5. **audio**: `LoadSound`/`PlaySound`/channels + the 3d pan/volume the game does by hand (it uses fmod for music)
+6. **2d**: images, fonts (`AAText.bb`), `Text`/`Rect`/`Line`, `SetBuffer`/render-to-texture
+7. **input + ini** helpers
+8. then the actual game port: Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
+
+known gaps: CameraClsMode only does both-or-neither, ortho proj mode is ignored, light attenuation
+is a guess (`1/(1+d/range)`), bump maps from materials.ini are skipped.
