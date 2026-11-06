@@ -151,7 +151,8 @@ void LoadEntities(void) {
 		bbFreeTexture(tex);
 	}
 	InitItemTemplates();
-	// TODO ParticleTextures, SetChunkDataValues (Particles.bb / 1499 chunks)
+	LoadParticleTextures();
+	// TODO SetChunkDataValues (1499 chunks)
 	LoadMaterials_("DATA\\materials.ini");
 	static const char *mt[] = {"mt1", "mt2", "mt2c", "mt3", "mt4", "mt_elevator", "mt_generator"};
 	for (int i = 0; i < 7; i++) OBJTunnel[i] = hid(LoadRMesh(cat("GFX\\map\\", mt[i], ".rmesh"), NULL));

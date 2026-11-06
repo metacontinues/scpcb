@@ -231,3 +231,4 @@ int StartGame(const char *how);
 
 #include "map.h"
 #include "items.h"
+#include "fx.h"
