@@ -13,6 +13,7 @@ handles are ints and 0 is null, same as blitz, so game code that stores entities
 port/
   Makefile         plain make, builds raylib from vendor/ too
   vendor/raylib    submodule, pinned to 5.5
+  vendor/bdwgc     submodule, boehm gc v8.2.12 (for blitz strings + Type objects)
   src/bb/          blitz runtime
     bb.h           public api, the only header game code should include
     in.h           internals shared w/ src/fmt
@@ -30,8 +31,15 @@ port/
     g2d.c          buffers, images, Text/Rect/Line/Oval, fonts, CopyRect, Read/WritePixel
     input.c        keyboard (directinput scancodes) + mouse, hit/speed counters like blitz
     misc.c         blitz's exact rng, file writing, dirs, dates
+    str.h/.c       blitz strings: gc'd char*, Left/Mid/Instr/Str/Int/... + cat(...)
+    tl.h/.c        blitz Types: bbNew/bbDelete/each/First/After/Insert + Handle/Object
   src/fmt/         file formats: b3d.c (+ LoadMesh dispatch), x.c, rmesh.c
-  src/game/        game code goes here (empty rn)
+  src/game/        the game, hand-ported. g.h has every shared global/type/fn
+    main.c         Main.bb top level (init order), console msgs, misc Main.bb fns
+    ini.c          Main.bb INI-functions      strict.c  StrictLoads.bb (+ LoadTempSound)
+    menu.c         launcher                   loading.c DrawLoading
+    widgets.c      buttons/ticks/frames/RowText/InputBox
+    keyname.c difficulty.c achv.c             the small .bb files
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
   tools/colltest.c collision + pick checks, `make -C port test`
@@ -47,6 +55,7 @@ needs a c compiler, make, x11 dev headers. run stuff from the repo root so asset
 ```sh
 git submodule update --init
 make -C port
+port/build/scpcb                             # the game (launcher -> loading screen so far)
 port/build/rmview GFX/map/173_opt.rmesh     # wasd/qe + mouse, shift fast, f12 screenshot
 port/build/rmview GFX/apache.b3d
 ```
@@ -63,6 +72,10 @@ LD_LIBRARY_PATH=/path/to/angle/out port/build/rmview ...
 glfw dlopens `libEGL.so.1`, so if the angle build only has `libEGL.so` symlink it.
 x11 only for now (works under xwayland). native wayland needs glfw's generated protocol headers.
 
+dev hook: `BB_SHOT=out.png BB_SHOT_FRAME=n` saves the nth Flip to a png and exits. to try the game w/o
+touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data, Loadingscreens and has its own options.ini
+(the launcher rewrites options.ini on LAUNCH, like the original).
+
 ## how the blitz stuff maps
 
 - **2d**: SetBuffer on an image/texture lazily turns it into a render texture drawn w/ a y-flipped ortho,
@@ -70,6 +83,15 @@ x11 only for now (works under xwayland). native wayland needs glfw's generated p
   alpha ignored) and get re-keyed after being drawn into. AAText.bb's sprite-camera font hack isn't
   needed: raylib text is antialiased already, so AAText -> bbTextA (text w/ alpha). CopyRect and pixel
   ops go through cpu readback (TODO: glCopyTexSubImage2D for the per-frame Dreamfilter grab).
+- **strings**: `str` is a gc'd `char *` (bdwgc), NULL reads as "". results are fresh, never freed.
+  `cat(a, b, ...)` is blitz `+`, `bbStr`/`bbInt`/`bbFloat` dispatch on the arg type. gc pointers must sit in
+  globals, locals, or gc memory (Type objects), never in malloc'd memory, or they get collected. Chr(0) can't
+  exist in a c string, so the INI code that used it as a separator is rewritten w/ a line array.
+- **Types**: `typedef struct T { lnode n; ...fields } T;` + `TLIST(T)` in one .c. objects are gc'd, Delete just
+  unlinks, so dangling refs stay readable (blitz would error). `bbObject(T, h)` is Null after Delete, like blitz.
+- **game porting rules**: float -> int goes through `bbInt` (blitz rounds to nearest, c truncates), Min/Max are
+  float like blitz, `Dim a(n)` is `a[n+1]`, globals are declared once w/ `G(type, names)` in g.h, function
+  default args become explicit. closing the window exits in bbFlip, like blitz.
 - **rng**: Rand/Rnd/SeedRnd use blitz3d's park-miller generator. the step is checked against c++'s
   minstd_rand (10000th value). the float mapping + default seed 0x1234 are from blitz3d's source as i
   remember it, not checked against a real blitz build yet. worth verifying w/ a known map seed.
@@ -98,10 +120,13 @@ collisions + picking, b3d + .x meshes and node trees (.x: text, binary, and sing
 every .x in the repo loads. the only warnings are 2 broken asset paths (294.x wants a missing png, mug.x
 points at a folder on the modder's desktop), and blitz chokes on those too.
 
-next up: the game itself, hand-ported (no transpiler) into `src/game/`, roughly one .c per .bb file.
-Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ... start w/ Main.bb's init path
-(globals, options/INI, Graphics3D, menu) so something runs early. still open: how to do blitz strings
-(gc'd value type: vendored bdwgc vs a small refcounted string). `Type` lists -> a small intrusive list helper.
+game: hand-ported (no transpiler) into `src/game/`. done so far: Main.bb's init up to the first DrawLoading +
+the early globals, INI, StrictLoads, launcher, loading screens, widgets, KeyName, Difficulty, Achievements init.
+`build/scpcb` shows the launcher, then the loading screen at 100% and exits on a key.
+stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), UpdateMusic,
+borderless windowed + ScreenGamma (blitz did these w/ the fresize_* camera, not ported), ResizeImage2 is a plain ResizeImage.
+next up: the rest of Main.bb's top level (sounds via LoadAllSounds, materials, Items/Particles/MapSystem/NPCs includes)
+and Menu.bb's UpdateMainMenu, so the main loop runs into the menu.
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested

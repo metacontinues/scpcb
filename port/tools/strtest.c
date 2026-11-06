@@ -39,8 +39,15 @@ int main(void) {
 	s = 0; each(Thing, t) s = s * 10 + t->v;
 	CHECK(s == 24 && bbLast(Thing) == l, "insert after: %d", s);
 	SEQ(bbAfter(bbFirst(Thing))->name, "t2");
+	int h = bbHandle(l);
+	CHECK(h && bbHandle(l) == h && bbObject(Thing, h) == l && !bbObject(Thing, 0) && !bbObject(Thing, 999), "handles");
+	bbDelete(l);
+	CHECK(!bbObject(Thing, h), "deleted handle is null");
 	bbDeleteEach(Thing);
 	CHECK(!bbFirst(Thing) && !bbLast(Thing), "delete each");
+
+	k = 0; each(Thing, t) k++;
+	CHECK(k == 0, "left %d", k);
 
 	// churn a lot of garbage, heap should stay small
 	str keep = "";

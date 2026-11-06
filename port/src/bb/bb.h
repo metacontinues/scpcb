@@ -31,6 +31,11 @@ void bbCls(void);
 void bbClsColor(int r, int g, int b);
 int bbMilliSecs(void);
 int bbAppClosing(void);
+int bbCountGfxDrivers(void);
+const char *bbGfxDriverName(int i);
+void bbAntiAlias(int on);
+int bbDesktopWidth(void);  // 0 before the first Graphics3D
+int bbDesktopHeight(void);
 
 // ---- files: blitz paths (backslashes, any case) -> real paths
 const char *bbPath(const char *p); // static buf, NULL if missing
