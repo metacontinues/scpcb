@@ -24,7 +24,7 @@ port/
     shd.h          the fixed-function-ish glsl es 100 shader
     fs.c           blitz paths (backslashes, any case) + ReadInt/ReadString/etc
     sys.c          window/frame/time, primitives
-  src/fmt/         file formats: b3d.c, rmesh.c
+  src/fmt/         file formats: b3d.c (+ LoadMesh dispatch), x.c, rmesh.c
   src/game/        game code goes here (empty rn)
   tools/rmview.c   room/model viewer, the current test bed
 ```
@@ -69,17 +69,18 @@ x11 only for now (works under xwayland). native wayland needs glfw's generated p
 ## status
 
 works: entities/hierarchy/transforms, meshes, brushes, textures, cameras, lights, sprites, fog,
-b3d static meshes + node trees, rmesh rooms.
+b3d + .x meshes and node trees (.x: text, binary, and single-block mszip "bzip"), rmesh rooms w/ props.
+every .x in the repo loads. the only warnings are 2 broken asset paths (294.x wants a missing png, mug.x
+points at a folder on the modder's desktop), and blitz chokes on those too.
 
 next up, roughly in order:
-1. **.x loader**: doors, buttons, items, props are all `.x` (text, one bzip'd). rooms show up w/o props rn
-2. **collisions**: blitz sphere/ellipsoid vs poly sliding (`Collisions`, `UpdateWorld`, `EntityCollided`, ...)
-3. **picking**: `LinePick`, `EntityPick`, `CameraPick`, `EntityVisible`
-4. **animation**: b3d keys are parsed already. needs `Animate`/`SetAnimTime`/`AnimTime` + cpu skinning (BONE)
-5. **audio**: `LoadSound`/`PlaySound`/channels + the 3d pan/volume the game does by hand (it uses fmod for music)
-6. **2d**: images, fonts (`AAText.bb`), `Text`/`Rect`/`Line`, `SetBuffer`/render-to-texture
-7. **input + ini** helpers
-8. then the actual game port: Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
+1. **collisions**: blitz sphere/ellipsoid vs poly sliding (`Collisions`, `UpdateWorld`, `EntityCollided`, ...)
+2. **picking**: `LinePick`, `EntityPick`, `CameraPick`, `EntityVisible`
+3. **animation**: b3d keys are parsed already. needs `Animate`/`SetAnimTime`/`AnimTime` + cpu skinning (BONE)
+4. **audio**: `LoadSound`/`PlaySound`/channels + the 3d pan/volume the game does by hand (it uses fmod for music)
+5. **2d**: images, fonts (`AAText.bb`), `Text`/`Rect`/`Line`, `SetBuffer`/render-to-texture
+6. **input + ini** helpers
+7. then the actual game port: Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
 
 known gaps: CameraClsMode only does both-or-neither, ortho proj mode is ignored, light attenuation
-is a guess (`1/(1+d/range)`), bump maps from materials.ini are skipped.
+is a guess (`1/(1+d/range)`), bump maps from materials.ini are skipped. .x SkinWeights (21 files) + AnimationSet (6) are skipped, so those render in bind pose.
