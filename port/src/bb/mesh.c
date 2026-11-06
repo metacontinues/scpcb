@@ -76,6 +76,7 @@ static void gpu_free(surf *s) {
 static void surf_free(surf *s) {
 	gpu_free(s); br_unref(&s->br);
 	free(s->pos); free(s->nrm); free(s->uv0); free(s->uv1); free(s->col); free(s->idx);
+	free(s->bpos); free(s->bnrm); free(s->bw); free(s->bi);
 	free(s);
 }
 #define DUP(p, n) ((p) ? memcpy(malloc(n), (p), (n)) : NULL)
@@ -86,10 +87,19 @@ static surf *surf_copy(surf *s) {
 	d->pos = DUP(s->pos, s->nv * 12); d->nrm = DUP(s->nrm, s->nv * 12);
 	d->uv0 = DUP(s->uv0, s->nv * 8); d->uv1 = DUP(s->uv1, s->nv * 8);
 	d->col = DUP(s->col, s->nv * 4); d->idx = DUP(s->idx, s->nt * 6);
+	d->bpos = DUP(s->bpos, s->nv * 12); d->bnrm = DUP(s->bnrm, s->nv * 12);
+	d->bw = DUP(s->bw, s->nv * 16); d->bi = DUP(s->bi, s->nv * 4);
+	return d;
+}
+static skin *sk_copy(skin *k) {
+	if (!k) return NULL;
+	skin *d = malloc(sizeof *d);
+	d->nb = k->nb; d->name = DUP(k->name, k->nb * 64); d->binv = DUP(k->binv, k->nb * sizeof(tf));
 	return d;
 }
 mdat *md_copy(mdat *m) {
 	mdat *d = md_new();
+	d->sk = sk_copy(m->sk);
 	for (int i = 0; i < m->ns; i++) {
 		d->s = realloc(d->s, sizeof *d->s * (d->ns + 1));
 		d->s[d->ns++] = surf_copy(m->s[i]);
@@ -99,6 +109,7 @@ mdat *md_copy(mdat *m) {
 void md_unref(mdat *m) {
 	if (--m->rc > 0) return;
 	for (int i = 0; i < m->ns; i++) surf_free(m->s[i]);
+	if (m->sk) { free(m->sk->name); free(m->sk->binv); free(m->sk); }
 	free(m->s); free(m);
 }
 void md_bounds(mdat *m) {

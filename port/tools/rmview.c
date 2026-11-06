@@ -1,6 +1,7 @@
 // rmview: fly around a room (or any .b3d) using the bb runtime. run from repo root:
 //   port/build/rmview GFX/map/lockroom_opt.rmesh
 // wasd + mouse, shift = fast, tab = walk/fly, space = jump, f12 = screenshot, esc = quit
+// rmview model.b3d shot.png yaw anim [frame]  -> LoadAnimMesh, plays (or poses at frame for the shot)
 // scripted: rmview room shot.png yaw walk  -> walks forward 2s w/ collisions, prints where it ended up
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,10 +21,20 @@ static void shot(const char *p) {
 	UnloadImage(im);
 }
 
+// largest mesh extent in a node tree, for auto-scaling anim meshes
+static float biggest(ent e) {
+	float m = 0;
+	if (!strcmp(bbEntityClass(e), "Mesh") && bbCountSurfaces(e))
+		m = fmaxf(bbMeshWidth(e), fmaxf(bbMeshHeight(e), bbMeshDepth(e))) * bbEntityScaleX(e, 1);
+	for (int i = 1; i <= bbCountChildren(e); i++) m = fmaxf(m, biggest(bbGetChild(e, i)));
+	return m;
+}
+
 int main(int argc, char **argv) {
 	if (argc < 2) { fprintf(stderr, "usage: rmview file.rmesh|file.b3d [shot.png [yaw]]\n"); return 1; }
 	if (!bbGraphics3D(1280, 720, 0, 2)) return 1;
 	bbAmbientLight(127, 127, 127);
+	ent sun = bbCreateLight(1, 0); bbRotateEntity(sun, 40, 30, 0, 0); // so models aren't flat black
 	htex amb = bbCreateTexture(2, 2, TF_COLOR | TF_VRAM, 1);
 	bbTextureBlend(amb, TB_MUL2);
 	bbTextureFill(amb, 0, 0, 0, 255);
@@ -32,6 +43,9 @@ int main(int argc, char **argv) {
 	bbCameraRange(cam, 0.05f, 60);
 	bbCameraClsColor(cam, 20, 20, 28);
 	rmesh rm = {0};
+	int anim = argc > 4 && !strcmp(argv[4], "anim");
+	float frame = argc > 5 ? atof(argv[5]) : 0;
+	ent model = 0;
 	size_t n = strlen(argv[1]);
 	if (n > 6 && !strcasecmp(argv[1] + n - 6, ".rmesh")) {
 		if (!rmesh_load(argv[1], amb, &rm)) return 1;
@@ -43,6 +57,14 @@ int main(int argc, char **argv) {
 			bbPositionEntity(cam, rm.pts[i].x, rm.pts[i].y + 0.4f, rm.pts[i].z, 0);
 			break;
 		}
+	} else if (anim) {
+		model = bbLoadAnimMesh(argv[1], 0);
+		if (!model) { fprintf(stderr, "load failed\n"); return 1; }
+		float sz = biggest(model);
+		float s = sz > 0 ? 4 / sz : 1;
+		bbScaleEntity(model, s, s, s, 0);
+		bbPositionEntity(cam, 0, 1, -5, 0);
+		printf("%d frames\n", bbAnimLength(model));
 	} else {
 		ent m = bbLoadMesh(argv[1], 0);
 		if (!m) { fprintf(stderr, "load failed\n"); return 1; }
@@ -85,6 +107,7 @@ int main(int argc, char **argv) {
 			float sp = (IsKeyDown(KEY_LEFT_SHIFT) ? 8.0f : 2.0f) * dt;
 			bbMoveEntity(cam, sd * sp, (IsKeyDown(KEY_E) - IsKeyDown(KEY_Q)) * sp, fw * sp);
 		}
+		if (model) { if (!doshot) frame += 30 * dt; if (bbAnimLength(model)) frame = fmodf(frame, bbAnimLength(model)); bbSetAnimTime(model, frame, 0); }
 		bbRenderWorld(1);
 		DrawText(TextFormat("%d fps  %d tris  pos %.2f %.2f %.2f", GetFPS(), bbTrisRendered(),
 		         bbEntityX(cam, 1), bbEntityY(cam, 1), bbEntityZ(cam, 1)), 8, 8, 20, RAYWHITE);

@@ -245,7 +245,7 @@ static void collide(ent e) {
 }
 
 void bbUpdateWorld(float anim) {
-	(void)anim; // TODO: animation step
+	anim_step(anim); // blitz animates first, then collides
 	for (ent e = 1; e < bb_nents; e++) if (bb_ents[e].used) bb_ents[e].nhit = 0;
 	for (ent e = 1; e < bb_nents; e++) {
 		E *x = &bb_ents[e];

@@ -229,3 +229,13 @@ float bbPickedTime(void);
 ent bbPickedEntity(void);
 surf *bbPickedSurface(void);
 int bbPickedTriangle(void);
+
+// ---- animation (anim.c). times are in frames, like blitz
+void bbSetAnimTime(ent e, float t, int seq);
+float bbAnimTime(ent e);
+int bbAnimSeq(ent e);
+int bbAnimLength(ent e);
+int bbAnimating(ent e);
+void bbAnimate(ent e, int mode, float speed, int seq, float trans); // mode 0 stop 1 loop 2 pingpong 3 once
+int bbExtractAnimSeq(ent e, int first, int last, int seq);
+const char *bbEntityClass(ent e);

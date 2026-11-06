@@ -69,7 +69,7 @@ static void freerec(ent e) {
 	x = bb_e(e);
 	if (x->md) md_unref(x->md);
 	br_unref(&x->br);
-	free(x->cam); free(x->keys); coll_free(x);
+	free(x->cam); free(x->keys); free(x->seqs); free(x->bones); coll_free(x);
 	x->used = 0;
 	grow(fl, nfl, cfl);
 	fl[nfl++] = e;
@@ -85,7 +85,10 @@ ent bbCopyEntity(ent e, ent par) {
 	x->par = x->first = x->last = x->next = x->prev = 0; x->wdirty = 1;
 	x->hits = NULL; x->nhit = x->chit = 0; x->ct = NULL; x->nct = 0; x->ohas = 0;
 	link(n, p);
-	if (x->md) x->md->rc++;
+	if (x->md && x->md->sk) x->md = md_copy(x->md); // skinned: each copy poses its own verts
+	else if (x->md) x->md->rc++;
+	x->bones = NULL; x->nbones = 0;
+	if (x->seqs) x->seqs = memcpy(malloc(sizeof *x->seqs * x->nseq), src.seqs, sizeof *x->seqs * x->nseq);
 	br_ref(&x->br);
 	if (x->cam) { cam *c = malloc(sizeof *c); *c = *src.cam; x->cam = c; }
 	if (x->keys) { key *k = malloc(sizeof *k * x->nk); memcpy(k, src.keys, sizeof *k * x->nk); x->keys = k; }

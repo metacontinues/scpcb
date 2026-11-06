@@ -1,5 +1,5 @@
 // b3d.c: .b3d loader + LoadMesh/LoadAnimMesh dispatch. LoadAnimMesh keeps the node tree, LoadMesh bakes it flat.
-// skinning (BONE) is parsed but not applied yet.
+// ANIM/KEYS/BONE get turned into anim + skin data for anim.c.
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -25,17 +25,16 @@ static void cstr(rd *r, char *o, int n) {
 static float rf(rd *r) { return bbReadFloat(r->f); }
 static int ri(rd *r) { return bbReadInt(r->f); }
 
-// blitz Quat::getMatrix
-static m3 qmat(float w, float x, float y, float z) {
-	float xx = x*x, yy = y*y, zz = z*z, xy = x*y, xz = x*z, yz = y*z, wx = w*x, wy = w*y, wz = w*z;
-	return (m3){{1-2*(yy+zz), 2*(xy-wz), 2*(xz+wy)}, {2*(xy+wz), 1-2*(xx+zz), 2*(yz-wx)}, {2*(xz-wy), 2*(yz+wx), 1-2*(xx+yy)}};
-}
+typedef struct { ent m; surf *s; int *map, nv; } smap; // MESH vertex id -> surface-local idx
+typedef struct { ent b, m; int n, *vid; float *w; } bone;
 
 typedef struct {
 	rd r;
 	char dir[512];
 	htex *tx; int ntx;
 	brush *br; int nbr;
+	smap *sm; int nsm;
+	bone *bn; int nbn;
 } ctx;
 
 static htex loadtex(ctx *c, const char *name, int flags) {
@@ -123,7 +122,8 @@ static void mesh(ctx *c, ent e) {
 				}
 				bbAddTriangle(s, ix[0], ix[1], ix[2]);
 			}
-			free(map);
+			c->sm = realloc(c->sm, sizeof *c->sm * (c->nsm + 1));
+			c->sm[c->nsm++] = (smap){e, s, map, nv}; // kept for BONE
 		}
 		leave(&c->r);
 	}
@@ -137,10 +137,10 @@ static void keys(ctx *c, ent e) {
 		E *x = bb_e(e);
 		x->keys = realloc(x->keys, sizeof *x->keys * (x->nk + 1));
 		key *k = &x->keys[x->nk++];
-		*k = (key){.t = ri(&c->r), .has = fl, .s = {1, 1, 1}, .r = m3id()};
+		*k = (key){.t = ri(&c->r), .has = fl, .s = {1, 1, 1}, .q = {1, 0, 0, 0}};
 		if (fl & 1) k->p = v3n(rf(&c->r), rf(&c->r), rf(&c->r));
 		if (fl & 2) k->s = v3n(rf(&c->r), rf(&c->r), rf(&c->r));
-		if (fl & 4) { float w = rf(&c->r), a = rf(&c->r), b = rf(&c->r), d = rf(&c->r); k->r = qmat(w, a, b, d); }
+		if (fl & 4) for (int i = 0; i < 4; i++) k->q[i] = rf(&c->r);
 	}
 }
 
@@ -158,12 +158,76 @@ static ent node(ctx *c, ent par) {
 		if (!strcmp(t, "MESH")) mesh(c, e);
 		else if (!strcmp(t, "KEYS")) keys(c, e);
 		else if (!strcmp(t, "NODE")) node(c, e);
-		leave(&c->r); // ANIM/BONE skipped for now
+		else if (!strcmp(t, "ANIM")) {
+			ri(&c->r); int fr = ri(&c->r); rf(&c->r); // flags, frames, fps
+			E *y = bb_e(e);
+			y->anim = 1; y->nseq = 1;
+			y->seqs = malloc(sizeof *y->seqs);
+			y->seqs[0].a = 0; y->seqs[0].b = fr;
+		} else if (!strcmp(t, "BONE")) {
+			bone b = {e, 0, 0, NULL, NULL};
+			for (ent q = bb_e(e)->par; q && !b.m; q = bb_e(q)->par) if (bb_e(q)->md) b.m = q;
+			while (more(&c->r)) {
+				b.vid = realloc(b.vid, sizeof(int) * (b.n + 1)); b.w = realloc(b.w, sizeof(float) * (b.n + 1));
+				b.vid[b.n] = ri(&c->r); b.w[b.n++] = rf(&c->r);
+			}
+			if (b.m) { c->bn = realloc(c->bn, sizeof *c->bn * (c->nbn + 1)); c->bn[c->nbn++] = b; }
+			else { free(b.vid); free(b.w); }
+		}
+		leave(&c->r);
 	}
 	bb_dirty(e);
 	return e;
 }
 
+
+// bones -> per-vertex weights (4 max, normalized) + bind inverses, per skinned mesh
+static void skins(ctx *c) {
+	for (int i = 0; i < c->nbn; i++) {
+		ent m = c->bn[i].m;
+		mdat *md = bb_md(m);
+		if (md->sk) continue; // done via an earlier bone
+		skin *k = md->sk = calloc(1, sizeof *k);
+		tf mi = tfinv(bb_wt(m));
+		for (int j = i; j < c->nbn; j++) {
+			if (c->bn[j].m != m) continue;
+			k->name = realloc(k->name, 64 * (k->nb + 1)); k->binv = realloc(k->binv, sizeof(tf) * (k->nb + 1));
+			snprintf(k->name[k->nb], 64, "%s", bbEntityName(c->bn[j].b));
+			k->binv[k->nb++] = tfinv(tfmul(mi, bb_wt(c->bn[j].b)));
+		}
+		for (int si = 0; si < md->ns; si++) {
+			surf *s = md->s[si];
+			s->bpos = memcpy(malloc(s->nv * 12), s->pos, s->nv * 12);
+			s->bnrm = memcpy(malloc(s->nv * 12), s->nrm, s->nv * 12);
+			s->bw = calloc(s->nv * 4, sizeof(float)); s->bi = calloc(s->nv * 4, 1);
+		}
+		int bi = 0;
+		for (int j = i; j < c->nbn; j++) {
+			if (c->bn[j].m != m) continue;
+			for (int sm = 0; sm < c->nsm; sm++) {
+				if (c->sm[sm].m != m) continue;
+				surf *s = c->sm[sm].s;
+				for (int w = 0; w < c->bn[j].n; w++) {
+					int v = c->bn[j].vid[w];
+					if (v < 0 || v >= c->sm[sm].nv || c->sm[sm].map[v] < 0) continue;
+					int l = c->sm[sm].map[v];
+					float *ww = s->bw + l*4; unsigned char *ii = s->bi + l*4;
+					int slot = 0; // empty slot, else replace the smallest
+					for (int q = 1; q < 4; q++) if (ww[q] < ww[slot]) slot = q;
+					if (c->bn[j].w[w] > ww[slot]) { ww[slot] = c->bn[j].w[w]; ii[slot] = bi; }
+				}
+			}
+			bi++;
+		}
+		for (int si = 0; si < md->ns; si++) {
+			surf *s = md->s[si];
+			for (int v = 0; v < s->nv; v++) {
+				float *ww = s->bw + v*4, t = ww[0] + ww[1] + ww[2] + ww[3];
+				if (t > 0) for (int q = 0; q < 4; q++) ww[q] /= t;
+			}
+		}
+	}
+}
 
 ent b3d_load(const char *p, ent par) {
 	const char *rp = bbPath(p);
@@ -186,6 +250,10 @@ ent b3d_load(const char *p, ent par) {
 		}
 	}
 	fclose(c.r.f);
+	if (root) skins(&c);
+	for (int i = 0; i < c.nsm; i++) free(c.sm[i].map);
+	for (int i = 0; i < c.nbn; i++) { free(c.bn[i].vid); free(c.bn[i].w); }
+	free(c.sm); free(c.bn);
 	for (int i = 0; i < c.ntx; i++) bbFreeTexture(c.tx[i]); // brushes keep refs
 	free(c.tx); free(c.br);
 	return root;
