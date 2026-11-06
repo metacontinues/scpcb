@@ -12,6 +12,7 @@ handles are ints and 0 is null, same as blitz, so game code that stores entities
 ```
 port/
   meson.build      meson build (plain syntax, muon works too), builds raylib + bdwgc + mimalloc from vendor/ too
+  src/rlconfig.h   raylib's config.h trimmed to what the game loads (png/jpg/bmp, ogg, ttf)
   vendor/raylib    submodule, pinned to 5.5
   vendor/bdwgc     submodule, boehm gc v8.2.12 (for blitz strings + Type objects)
   vendor/mimalloc  submodule, v3.5.4, overrides malloc for the whole process (-Dmimalloc=false to skip)
