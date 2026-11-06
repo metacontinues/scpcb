@@ -37,6 +37,14 @@ G(int, BurntNote, ItemAmount, InvSelect, LastItemID);
 G(Items *, Inventory[MaxItemAmount + 2]);
 G(Items *, SelectedItem);
 G(Items *, ClosestItem);
+G(Items *, OtherOpen); // the clipboard/wallet whose sub-inventory is open
+// inv.c + use.c (DrawGUI's inventory + item-in-hand parts)
+void PauseSounds(void);
+void ResumeSounds(void);
+int CanUseItem(int hazmat, int gasmask, int eyewear);
+void InventoryKey(void);
+void DrawInventory(int prevInvOpen);
+int UseItem(void);
 
 ItemTemplates *CreateItemTemplate(const char *name, const char *tempname, const char *objpath, const char *invimgpath,
 	const char *imgpath, float scale, const char *texturepath, const char *invimgpath2, int anim, int texflags);
