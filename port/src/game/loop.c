@@ -98,7 +98,7 @@ static void pausestub(void) {
 
 // Main.bb's main loop, in-game side. what isn't ported yet is listed as TODOs in order
 void UpdateGame(void) {
-	// TODO UpdateStreamSounds
+	UpdateStreamSounds();
 	ShouldPlay = bbInt(Min(PlayerZone, 2));
 	DrawHandIcon = 0; RestoreSanity = 1; ShouldEntitiesFall = 1;
 	// TODO UpdateSecurityCams
@@ -119,11 +119,13 @@ void UpdateGame(void) {
 		MovePlayer();
 		// TODO InFacility = CheckForPlayerInFacility(), dimension1499, UpdateEndings at gate a/b
 		UpdateDoors();
-		// TODO UpdateEvents, UpdateScreens, TimeCheckpointMonitors, Update294, UpdateRoomLights
+		UpdateEvents();
+		// TODO UpdateScreens, TimeCheckpointMonitors, Update294, UpdateRoomLights
 		UpdateDecals();
 		// TODO UpdateMTF
 		UpdateNPCs();
-		// TODO UpdateItems, Use427, UpdateMonitorSaving, devil emitters
+		UpdateItems();
+		// TODO Use427, UpdateMonitorSaving, devil emitters
 		UpdateParticles();
 		UpdateRooms();
 	}

@@ -186,6 +186,7 @@ void SaveOptionsINI(void) {
 
 // Main.bb 1525-2809: what runs between the first loading screen and the main loop
 void InitLateGlobals(void) {
+	I_427 = bbNew(SCP427); // Main.bb 2794
 	BumpEnabled = GetINIInt("options.ini", "options", "bump mapping enabled", 0);
 	HUDenabled = GetINIInt("options.ini", "options", "HUD enabled", 0);
 	Brightness = bbInt(GetINIFloat("options.ini", "options", "brightness", 0));

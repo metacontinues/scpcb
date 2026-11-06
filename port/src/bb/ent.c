@@ -247,3 +247,5 @@ void bbEntityBox(ent e, float x, float y, float z, float w, float h, float d) {
 	E *p = bb_e(e); p->boxo = v3n(x, y, z); p->boxs = v3n(w, h, d);
 }
 void bbEntityPickMode(ent e, int m, int ob) { E *x = bb_e(e); x->pmode = m; x->pobsc = ob; }
+float bbVectorYaw(float x, float y, float z) { (void)y; return v3yaw(v3n(x, y, z)) * RTOD; }
+float bbVectorPitch(float x, float y, float z) { return v3pitch(v3n(x, y, z)) * RTOD; }

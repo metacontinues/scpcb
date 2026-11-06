@@ -43,3 +43,6 @@ ItemTemplates *CreateItemTemplate(const char *name, const char *tempname, const 
 void InitItemTemplates(void);
 Items *CreateItem(const char *name, const char *tempname, float x, float y, float z, int r, int g, int b, float a, int invSlots);
 void RemoveItem(Items *i);
+void UpdateItems(void);
+void PickItem(Items *item);
+void DropItem(Items *item, int playdropsound);

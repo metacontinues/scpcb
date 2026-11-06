@@ -32,6 +32,8 @@ static inline void *tl_new(tlist *l, size_t sz) { lnode *x = GC_MALLOC(sz); tl_i
 #define bbNew(T) ((T *)tl_new(&T##_l, sizeof(T)))
 #define bbDelete(p) tl_unlink(&(p)->n)
 #define bbDeleteEach(T) do { while (T##_l.first) tl_unlink(T##_l.first); } while (0)
+// blitz turns every ref to a deleted object into Null; here they stay readable, so read through bbLive where that matters
+#define bbLive(p) ((p) && (p)->n.ls ? (p) : NULL)
 #define bbFirst(T) ((T *)T##_l.first)
 #define bbLast(T) ((T *)T##_l.last)
 #define bbAfter(p) ((__typeof__(p))(p)->n.next)
