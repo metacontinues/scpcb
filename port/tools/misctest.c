@@ -37,7 +37,8 @@ int main(void) {
 	int i = bbReadInt(f); float fl = bbReadFloat(f); char *s = bbReadString(f); int b = bbReadByte(f), sh = bbReadShort(f); char *l = bbReadLine(f);
 	CHECK(i == -123456 && fl == 3.25f && !strcmp(s, "hello") && b == 200 && sh == 0xbeef && !strcmp(l, "line one"), "roundtrip");
 	CHECK(bbEof(f), "eof");
-	bbCloseFile(f); free(s); free(l);
+	CHECK(!*bbReadLine(f), "readline at eof is empty");
+	bbCloseFile(f);
 	CHECK(bbDeleteFile(p) && !bbFileType(p), "delete");
 	CHECK(strlen(bbCurrentDate()) == 11 && strlen(bbCurrentTime()) == 8, "date %s time %s", bbCurrentDate(), bbCurrentTime());
 	printf("%s (%d failed)\n", fails ? "FAILED" : "all good", fails);

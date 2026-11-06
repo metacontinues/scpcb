@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "m3.h"
+#include "str.h"
+#include "tl.h"
 
 typedef int ent;
 typedef int htex;
@@ -37,8 +39,8 @@ int bbReadByte(FILE *f);
 int bbReadShort(FILE *f);
 int bbReadInt(FILE *f);
 float bbReadFloat(FILE *f);
-char *bbReadString(FILE *f); // malloc'd, int len + bytes
-char *bbReadLine(FILE *f);   // malloc'd, NULL at eof
+str bbReadString(FILE *f); // int len + bytes
+str bbReadLine(FILE *f);   // "" at eof, like blitz
 
 // ---- entities
 ent bbCreatePivot(ent par);
