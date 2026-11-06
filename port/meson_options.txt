@@ -1,0 +1,1 @@
+option('angle', type: 'string', value: '', description: 'dir w/ angle libEGL.so + libGLESv2.so to rpath')
