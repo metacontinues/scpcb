@@ -38,7 +38,7 @@ ent bb_new(int kind, ent par) {
 	if (nfl) e = fl[--nfl];
 	else { grow(bb_ents, bb_nents, cap); e = bb_nents++; }
 	E *x = &bb_ents[e];
-	*x = (E){.used = 1, .kind = kind, .scl = {1,1,1}, .rot = m3id(), .wdirty = 1, .br = bb_brdef()};
+	*x = (E){.used = 1, .kind = kind, .scl = {1,1,1}, .rot = m3id(), .wdirty = 1, .br = bb_brdef(), .rx = 1, .ry = 1};
 	if (par) link(e, par);
 	return e;
 }
@@ -69,7 +69,7 @@ static void freerec(ent e) {
 	x = bb_e(e);
 	if (x->md) md_unref(x->md);
 	br_unref(&x->br);
-	free(x->cam); free(x->keys);
+	free(x->cam); free(x->keys); coll_free(x);
 	x->used = 0;
 	grow(fl, nfl, cfl);
 	fl[nfl++] = e;
@@ -83,6 +83,7 @@ ent bbCopyEntity(ent e, ent par) {
 	ent p = x->par, f;
 	*x = src;
 	x->par = x->first = x->last = x->next = x->prev = 0; x->wdirty = 1;
+	x->hits = NULL; x->nhit = x->chit = 0; x->ct = NULL; x->nct = 0; x->ohas = 0;
 	link(n, p);
 	if (x->md) x->md->rc++;
 	br_ref(&x->br);
@@ -235,6 +236,7 @@ float bbGetMatElement(ent e, int r, int c) {
 // ---- collision / pick fields
 void bbEntityType(ent e, int t, int rec) {
 	bb_e(e)->ctype = t;
+	bbResetEntity(e);
 	if (rec) for (ent c = bb_e(e)->first; c; c = bb_e(c)->next) bbEntityType(c, t, 1);
 }
 int bbGetEntityType(ent e) { return bb_e(e)->ctype; }

@@ -61,7 +61,7 @@ mdat *bb_md(ent e) { E *x = bb_e(e); if (!x->md) die("entity %d is not a mesh", 
 
 surf *md_addsurf(mdat *m, brush br) {
 	surf *s = calloc(1, sizeof *s);
-	br_ref(&br); s->br = br; s->dirty = 1;
+	br_ref(&br); s->br = br; s->dirty = 1, s->ver++;
 	m->s = realloc(m->s, sizeof *m->s * (m->ns + 1));
 	m->s[m->ns++] = s;
 	return s;
@@ -114,7 +114,7 @@ void md_bounds(mdat *m) {
 	if (lo.x > hi.x) lo = hi = v3n(0, 0, 0);
 	m->lo = lo; m->hi = hi; m->bdirty = 0;
 }
-static void touch(mdat *m) { m->bdirty = 1; for (int i = 0; i < m->ns; i++) m->s[i]->dirty = 1; }
+static void touch(mdat *m) { m->bdirty = 1; for (int i = 0; i < m->ns; i++) m->s[i]->dirty = 1, m->s[i]->ver++; }
 
 void surf_upload(surf *s) {
 	if (!s->dirty) return;
@@ -226,7 +226,7 @@ float bbMeshHeight(ent e) { return ext(e, 1); }
 float bbMeshDepth(ent e) { return ext(e, 2); }
 
 // ---- surface api
-void bbClearSurface(surf *s, int v, int t) { if (v) s->nv = 0; if (t) s->nt = 0; s->dirty = 1; }
+void bbClearSurface(surf *s, int v, int t) { if (v) s->nv = 0; if (t) s->nt = 0; s->dirty = 1, s->ver++; }
 int bbAddVertex(surf *s, float x, float y, float z, float u, float v, float w) {
 	(void)w;
 	if (s->nv >= s->cv) {
@@ -240,26 +240,26 @@ int bbAddVertex(surf *s, float x, float y, float z, float u, float v, float w) {
 	p[0] = x; p[1] = y; p[2] = z; n[0] = n[1] = n[2] = 0; // blitz default: no normal
 	s->uv0[i*2] = s->uv1[i*2] = u; s->uv0[i*2+1] = s->uv1[i*2+1] = v;
 	memset(s->col + i*4, 255, 4);
-	s->dirty = 1;
+	s->dirty = 1, s->ver++;
 	return i;
 }
 int bbAddTriangle(surf *s, int a, int b, int c) {
 	if (s->nt >= s->ct) { s->ct = s->ct ? s->ct * 2 : 64; s->idx = realloc(s->idx, s->ct * 6); }
 	unsigned short *ix = s->idx + s->nt*3;
 	ix[0] = a; ix[1] = b; ix[2] = c;
-	s->dirty = 1;
+	s->dirty = 1, s->ver++;
 	return s->nt++;
 }
-void bbVertexCoords(surf *s, int i, float x, float y, float z) { float *p = s->pos + i*3; p[0] = x; p[1] = y; p[2] = z; s->dirty = 1; }
-void bbVertexNormal(surf *s, int i, float x, float y, float z) { float *p = s->nrm + i*3; p[0] = x; p[1] = y; p[2] = z; s->dirty = 1; }
+void bbVertexCoords(surf *s, int i, float x, float y, float z) { float *p = s->pos + i*3; p[0] = x; p[1] = y; p[2] = z; s->dirty = 1, s->ver++; }
+void bbVertexNormal(surf *s, int i, float x, float y, float z) { float *p = s->nrm + i*3; p[0] = x; p[1] = y; p[2] = z; s->dirty = 1, s->ver++; }
 void bbVertexColor(surf *s, int i, float r, float g, float b, float a) {
 	unsigned char *c = s->col + i*4;
-	c[0] = r; c[1] = g; c[2] = b; c[3] = a * 255; s->dirty = 1;
+	c[0] = r; c[1] = g; c[2] = b; c[3] = a * 255; s->dirty = 1, s->ver++;
 }
 void bbVertexTexCoords(surf *s, int i, float u, float v, float w, int set) {
 	(void)w;
 	float *t = (set ? s->uv1 : s->uv0) + i*2;
-	t[0] = u; t[1] = v; s->dirty = 1;
+	t[0] = u; t[1] = v; s->dirty = 1, s->ver++;
 }
 int bbCountVertices(surf *s) { return s->nv; }
 int bbCountTriangles(surf *s) { return s->nt; }
