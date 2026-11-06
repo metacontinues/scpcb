@@ -95,6 +95,8 @@ void InitEvents(void);
 void RemoveEvent(Events *e);
 Events *FindEvent(const char *name); // first event w/ that name, the "For e = Each Events: If name Exit" idiom
 void UpdateEvents(void);
+typedef struct { const char *name; int (*fn)(Events *); } EvEntry; // event tables end w/ {NULL, NULL}
+extern const EvEntry Evs1[]; // ev1.c
 int Ev173(Events *e); // ev173.c
 int EvAlarm(Events *e);
 // evlib.c
