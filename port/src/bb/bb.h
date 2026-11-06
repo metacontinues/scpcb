@@ -82,6 +82,8 @@ float bbEntityScaleY(ent e, int glob);
 float bbEntityScaleZ(ent e, int glob);
 float bbEntityDistance(ent a, ent b);
 float bbDeltaYaw(ent a, ent b);
+float bbVectorYaw(float x, float y, float z);
+float bbVectorPitch(float x, float y, float z);
 float bbDeltaPitch(ent a, ent b);
 void bbTFormPoint(float x, float y, float z, ent src, ent dst);
 void bbTFormVector(float x, float y, float z, ent src, ent dst);

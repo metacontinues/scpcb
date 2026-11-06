@@ -119,3 +119,54 @@ void RemoveEvent(Events *e) {
 	if (e->img) bbFreeImage(e->img);
 	bbDelete(e);
 }
+
+// ---- UpdateEvents.bb's loop. events not in the table yet just sit there (TODO: the other ~90)
+typedef struct { const char *name; int (*fn)(Events *); } EvEntry;
+static const EvEntry evs[] = {
+	{"173", Ev173}, {"alarm", EvAlarm},
+};
+
+static void explosion(void) { // the 294 drinks' explosion, kept here like blitz does
+	if (ExplosionTimer <= 0) return;
+	ExplosionTimer += FPSfactor;
+	if (ExplosionTimer < 140) {
+		if (ExplosionTimer - FPSfactor < 5) {
+			ExplosionSFX = LoadSound_Strict("SFX\\Ending\\GateB\\Nuke1.ogg");
+			PlaySound_Strict(ExplosionSFX);
+			CameraShake = 10; ExplosionTimer = 5;
+		}
+		CameraShake = CurveValue(ExplosionTimer / 60, CameraShake, 50);
+		return;
+	}
+	CameraShake = Min(ExplosionTimer / 20, 20);
+	if (ExplosionTimer - FPSfactor < 140) {
+		BlinkTimer = 1;
+		ExplosionSFX = LoadSound_Strict("SFX\\Ending\\GateB\\Nuke2.ogg");
+		PlaySound_Strict(ExplosionSFX);
+		for (int i = 0; i <= 10 + 10 * (ParticleAmount + 1); i++) {
+			// codegen order: z's Rnd, the size, y's, then x's (the coord args need 3, the tail from z on needs 4)
+			float rz = bbRnd(-.5f, .5f), sz = bbRnd(.2f, .6f), ry = bbRnd(.2f, 1.5f), rx = bbRnd(-.5f, .5f);
+			Particles *p = CreateParticle(bbEntityX(Collider, 0) + rx, bbEntityY(Collider, 0) - ry, bbEntityZ(Collider, 0) + rz, 0, sz, 0, 350);
+			bbRotateEntity(p->pvt, -90, 0, 0, 1);
+			p->speed = bbRnd(.05f, .07f);
+		}
+	}
+	LightFlash = Min((ExplosionTimer - 140) / 10, 5);
+	if (ExplosionTimer > 160) KillTimer = Min(KillTimer, -.1f);
+	if (ExplosionTimer > 500) ExplosionTimer = 0;
+	bbPositionEntity(Collider, bbEntityX(Collider, 0), 200, bbEntityZ(Collider, 0), 0); // blitz's guard against falling back into the map
+}
+
+void UpdateEvents(void) {
+	CurrStepSFX = 0;
+	UpdateRooms();
+	each(Events, e) {
+		for (size_t k = 0; k < sizeof evs / sizeof *evs; k++) {
+			if (!bbSeq(e->EventName, evs[k].name)) continue;
+			if (evs[k].fn(e)) goto out; // blitz Exit
+			break;
+		}
+	}
+out:
+	explosion();
+}

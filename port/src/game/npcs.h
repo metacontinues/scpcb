@@ -64,6 +64,11 @@ void RemoveNPC(NPCs *n);
 void UpdateNPCs(void);
 void Update173(NPCs *n); // npc173.c
 void Update106(NPCs *n);
+void UpdateGuard(NPCs *n); // npcguard.c
+void UpdateClassD(NPCs *n);
+void Shoot(float x, float y, float z, float hitProb, int particles, int instaKill);
+void PlayMTFSound(int sound, NPCs *n);
+void ChangeNPCTextureID(NPCs *n, int id);
 void TeleportCloser(NPCs *n);
 int OtherNPCSeesMeNPC(NPCs *me, NPCs *other);
 int MeNPCSeesPlayer(NPCs *me, int disablesoundoncrouch);
@@ -89,3 +94,20 @@ Events *CreateEvent(const char *eventname, const char *roomname, int id, float p
 void InitEvents(void);
 void RemoveEvent(Events *e);
 Events *FindEvent(const char *name); // first event w/ that name, the "For e = Each Events: If name Exit" idiom
+void UpdateEvents(void);
+int Ev173(Events *e); // ev173.c
+int EvAlarm(Events *e);
+// evlib.c
+G(int, IntercomStreamCHN);
+int LoadEventSound(Events *e, const char *file, int num);
+float point_direction(float x1, float z1, float x2, float z2);
+float point_distance(float x1, float z1, float x2, float z2);
+float angleDist(float a0, float a1);
+str CheckTriggers(void);
+void PlayAnnouncement(const char *file);
+void UpdateStreamSounds(void);
+int UpdateLever(int obj, int locked);
+void UpdateButton(int obj);
+float UpdateElevators(float State, Doors *door1, Doors *door2, int room1, int room2, Events *ev, int ignorerot);
+void UpdateCheckpointMonitors(int numb);
+void TurnCheckpointMonitorsOff(int numb);

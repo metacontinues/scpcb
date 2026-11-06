@@ -351,6 +351,8 @@ void UpdateNPCs(void) {
 		switch (n->NPCtype) {
 		case NPCtype173: Update173(n); break;
 		case NPCtypeOldMan: Update106(n); break;
+		case NPCtypeGuard: UpdateGuard(n); break;
+		case NPCtypeD: case NPCtypeClerk: UpdateClassD(n); break;
 		default: break; // TODO the other types (NPCs.bb 1242-5122), they only spawn from events so far
 		}
 		if (n->IsDead) bbEntityType(n->Collider, HIT_DEAD, 0);

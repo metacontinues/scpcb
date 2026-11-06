@@ -235,9 +235,143 @@ void RemoveItem(Items *i) {
 		else if (bbSeq(t, "hazmatsuit") || bbSeq(t, "hazmatsuit2") || bbSeq(t, "hazmatsuit3")) WearingHazmat = 0;
 		else if (bbSeq(t, "scp714")) Wearing714 = 0;
 		else if (bbSeq(t, "scp1499") || bbSeq(t, "super1499")) Wearing1499 = 0;
-		// TODO scp427: I_427\Using = False
+		else if (bbSeq(t, "scp427")) I_427->Using = 0;
 		SelectedItem = NULL;
 	}
 	if (i->itemtemplate->img) { bbFreeImage(i->itemtemplate->img); i->itemtemplate->img = 0; }
 	bbDelete(i);
+}
+
+// ---- Items.bb: per frame (UpdateItems), PickItem, DropItem
+
+static int istemp(Items *it, const char *a) { return bbSeq(it->itemtemplate->tempname, a); }
+static int ishazmat(Items *it) { return istemp(it, "hazmatsuit") || istemp(it, "hazmatsuit2") || istemp(it, "hazmatsuit3"); }
+static int isvest(Items *it) { return istemp(it, "vest") || istemp(it, "finevest"); }
+
+void UpdateItems(void) {
+	int hd = bbInt(HideDistance * .5f); // blitz Local w/o suffix: int
+	ClosestItem = NULL;
+	each(Items, i) {
+		i->Dropped = 0;
+		if (i->Picked) { i->DropSpeed = 0; i->xspeed = i->zspeed = 0; continue; }
+		if (i->disttimer < MilliSecs2()) {
+			i->dist = bbEntityDistance(Camera, i->collider);
+			i->disttimer = MilliSecs2() + 700;
+			if (i->dist < hd) bbShowEntity(i->collider);
+		}
+		if (i->dist >= hd) { bbHideEntity(i->collider); continue; }
+		bbShowEntity(i->collider);
+		if (i->dist < 1.2f && (!ClosestItem || ClosestItem == i || i->dist < bbEntityDistance(Camera, ClosestItem->collider))
+			&& bbEntityInView(i->model, Camera) && bbEntityVisible(i->collider, Camera)) ClosestItem = i;
+		if (bbEntityCollided(i->collider, HIT_MAP)) { i->DropSpeed = 0; i->xspeed = i->zspeed = 0; }
+		else if (ShouldEntitiesFall && bbLinePick(bbEntityX(i->collider, 0), bbEntityY(i->collider, 0), bbEntityZ(i->collider, 0), 0, -10, 0, 0)) {
+			i->DropSpeed -= .0004f * FPSfactor;
+			bbTranslateEntity(i->collider, i->xspeed * FPSfactor, i->DropSpeed * FPSfactor, i->zspeed * FPSfactor, 0);
+			if (i->WontColl) bbResetEntity(i->collider);
+		} else { i->DropSpeed = 0; i->xspeed = i->zspeed = 0; }
+		if (i->dist < hd * .2f) each(Items, i2) { // push items apart that sit on top of each other
+			if (i == i2 || i2->Picked || i2->dist >= hd * .2f) continue;
+			float xt = bbEntityX(i2->collider, 1) - bbEntityX(i->collider, 1), yt = bbEntityY(i2->collider, 1) - bbEntityY(i->collider, 1);
+			float zt = bbEntityZ(i2->collider, 1) - bbEntityZ(i->collider, 1), ed = xt * xt + zt * zt;
+			if (!(ed < .07f && fabsf(yt) < .25f) || bbSeq(PlayerRoom->RoomTemplate->Name, "room2storage")) continue;
+			xt *= .07f - ed; zt *= .07f - ed;
+			while (fabsf(xt) + fabsf(zt) < .001f) { xt += bbRnd(-.002f, .002f); zt += bbRnd(-.002f, .002f); }
+			bbTranslateEntity(i2->collider, xt, 0, zt, 0);
+			bbTranslateEntity(i->collider, -xt, 0, -zt, 0);
+		}
+		if (bbEntityY(i->collider, 0) < -35) RemoveItem(i);
+	}
+	if (ClosestItem && MouseHit1) PickItem(ClosestItem);
+}
+
+// 0 can pick, 1 already wearing the same kind, 2 wearing the other kind (vest vs hazmat)
+static int wearclash(int (*same)(Items *), int (*other)(Items *)) {
+	for (int z = 0; z < MaxItemAmount; z++) {
+		Items *v = Inventory[z];
+		if (!v) continue;
+		if (same(v)) return 1;
+		if (other(v)) return 2;
+	}
+	return 0;
+}
+
+void PickItem(Items *item) {
+	int full = 1;
+	for (int n = 0; n < MaxItemAmount; n++) if (!Inventory[n]) { full = 0; break; }
+	if (WearingHazmat > 0) { Msg = "You cannot pick up any items while wearing a hazmat suit."; MsgTimer = 70 * 5; return; }
+	if (full) { Msg = "You cannot carry any more items."; MsgTimer = 70 * 5; return; }
+	int n = 0;
+	while (Inventory[n]) n++;
+	str t = item->itemtemplate->tempname;
+	if (bbSeq(t, "1123")) {
+		if (Wearing714 == 1) return;
+		if (!bbSeq(PlayerRoom->RoomTemplate->Name, "room1123")) {
+			bbShowEntity(Light); LightFlash = 7;
+			PlaySound_Strict(LoadTempSound("SFX\\SCP\\1123\\Touch.ogg"));
+			DeathMSG = "Subject D-9341 was shot dead after attempting to attack a member of Nine-Tailed Fox. Surveillance tapes show that the subject had been "
+				"wandering around the site approximately 9 minutes prior, shouting the phrase \"get rid of the four pests\""
+				" in chinese. SCP-1123 was found in [REDACTED] nearby, suggesting the subject had come into physical contact with it. How "
+				"exactly SCP-1123 was removed from its containment chamber is still unknown.";
+			Kill();
+		}
+		Events *e = FindEvent("room1123");
+		if (e) {
+			if (e->EventState == 0) { bbShowEntity(Light); LightFlash = 3; PlaySound_Strict(LoadTempSound("SFX\\SCP\\1123\\Touch.ogg")); }
+			e->EventState = Max(1, e->EventState);
+		}
+		return;
+	} else if (bbSeq(t, "killbat")) {
+		bbShowEntity(Light); LightFlash = 1;
+		PlaySound_Strict(IntroSFX[11]);
+		DeathMSG = "Subject D-9341 found dead inside SCP-914's output booth next to what appears to be an ordinary nine-volt battery. The subject is covered in severe "
+			"electrical burns, and assumed to be killed via an electrical shock caused by the battery. The battery has been stored for further study.";
+		Kill();
+	} else if (bbSeq(t, "scp148")) GiveAchievement(Achv148, 1);
+	else if (bbSeq(t, "scp513")) GiveAchievement(Achv513, 1);
+	else if (bbSeq(t, "scp860")) GiveAchievement(Achv860, 1);
+	else if (bbSeq(t, "key6")) GiveAchievement(AchvOmni, 1);
+	else if (bbSeq(t, "veryfinevest")) { Msg = "The vest is too heavy to pick up."; MsgTimer = 70 * 6; return; }
+	else if (bbSeq(t, "firstaid") || bbSeq(t, "finefirstaid") || bbSeq(t, "veryfinefirstaid") || bbSeq(t, "firstaid2")) item->state = 0;
+	else if (bbSeq(t, "navigator") || bbSeq(t, "nav")) { if (bbSeq(item->itemtemplate->name, "S-NAV Navigator Ultimate")) GiveAchievement(AchvSNAV, 1); }
+	else if (ishazmat(item)) {
+		int c = wearclash(ishazmat, isvest);
+		if (c == 1) { Msg = "You are not able to wear two hazmat suits at the same time."; MsgTimer = 70 * 5; return; }
+		if (c == 2) { Msg = "You are not able to wear a vest and a hazmat suit at the same time."; MsgTimer = 70 * 5; return; }
+		SelectedItem = item;
+	} else if (isvest(item)) {
+		int c = wearclash(isvest, ishazmat);
+		if (c == 1) { Msg = "You are not able to wear two vests at the same time."; MsgTimer = 70 * 5; return; }
+		if (c == 2) { Msg = "You are not able to wear a vest and a hazmat suit at the same time."; MsgTimer = 70 * 5; return; }
+		SelectedItem = item;
+	}
+	if (item->itemtemplate->sound != 66) PlaySound_Strict(PickSFX[item->itemtemplate->sound]);
+	item->Picked = 1; item->Dropped = -1;
+	item->itemtemplate->found = 1;
+	ItemAmount++;
+	Inventory[n] = item;
+	bbHideEntity(item->collider);
+}
+
+void DropItem(Items *item, int playdropsound) {
+	if (WearingHazmat > 0) { Msg = "You cannot drop any items while wearing a hazmat suit."; MsgTimer = 70 * 5; return; }
+	if (playdropsound && item->itemtemplate->sound != 66) PlaySound_Strict(PickSFX[item->itemtemplate->sound]);
+	item->Dropped = 1;
+	bbShowEntity(item->collider);
+	bbPositionEntity(item->collider, bbEntityX(Camera, 0), bbEntityY(Camera, 0), bbEntityZ(Camera, 0), 0);
+	bbRotateEntity(item->collider, bbEntityPitch(Camera, 0), bbEntityYaw(Camera, 0) + bbRnd(-20, 20), 0, 0);
+	bbMoveEntity(item->collider, 0, -.1f, .1f);
+	bbRotateEntity(item->collider, 0, bbEntityYaw(Camera, 0) + bbRnd(-110, 110), 0, 0);
+	bbResetEntity(item->collider);
+	item->Picked = 0;
+	for (int z = 0; z < MaxItemAmount; z++) if (Inventory[z] == item) Inventory[z] = NULL;
+	str t = item->itemtemplate->tempname;
+	if (bbSeq(t, "gasmask") || bbSeq(t, "supergasmask") || bbSeq(t, "gasmask3")) WearingGasMask = 0;
+	else if (ishazmat(item)) WearingHazmat = 0;
+	else if (isvest(item)) WearingVest = 0;
+	else if (bbSeq(t, "nvgoggles")) { if (WearingNightVision == 1) { CameraFogFar = StoredCameraFogFar; WearingNightVision = 0; } }
+	else if (bbSeq(t, "supernv")) { if (WearingNightVision == 2) { CameraFogFar = StoredCameraFogFar; WearingNightVision = 0; } }
+	else if (bbSeq(t, "finenvgoggles")) { if (WearingNightVision == 3) { CameraFogFar = StoredCameraFogFar; WearingNightVision = 0; } }
+	else if (bbSeq(t, "scp714")) Wearing714 = 0;
+	else if (bbSeq(t, "scp1499") || bbSeq(t, "super1499")) Wearing1499 = 0;
+	else if (bbSeq(t, "scp427")) I_427->Using = 0;
 }

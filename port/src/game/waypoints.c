@@ -96,7 +96,7 @@ int FindPath(NPCs *n, float x, float y, float z) {
 			WayPoints *w = sm;
 			w->state = 2;
 			for (int i = 0; i <= 4; i++) {
-				WayPoints *c = w->connected[i];
+				WayPoints *c = bbLive(w->connected[i]); // links to deleted waypoints (the intro's) read Null in blitz
 				if (!c || c->state >= 2) continue;
 				float g = w->Gcost + w->dist[i];
 				if (n->NPCtype == NPCtypeMTF && !c->door) g += .5f;
