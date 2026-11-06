@@ -161,6 +161,7 @@ void bbPositionTexture(htex t, float u, float v);
 int bbTextureWidth(htex t);
 int bbTextureHeight(htex t);
 const char *bbTextureName(htex t);
+void bbTextureLodBias(float b); // no-op: es2 has no lod bias (would need a shader bias)
 void bbTextureFill(htex t, int r, int g, int b, int a); // stand-in for SetBuffer+Cls
 
 // ---- cameras / lights / sprites / render
@@ -375,6 +376,7 @@ const char *bbCurrentDir(void);
 void *bbReadDir(const char *p);
 const char *bbNextFile(void *d);
 void bbCloseDir(void *d);
+int bbDeleteDir(const char *p);
 const char *bbCurrentDate(void);
 const char *bbCurrentTime(void);
 void bbDelay(int ms);

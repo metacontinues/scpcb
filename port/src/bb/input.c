@@ -1,5 +1,6 @@
 // input.c: blitz keyboard/mouse. keys are directinput scancodes (options.ini binds use them).
 // hits/speeds accumulate per frame in input_update (from bbFlip) and reset when read, like blitz.
+#include <stdlib.h>
 #include <string.h>
 #include "in.h"
 
@@ -26,6 +27,33 @@ static const short sc2rl[256] = {
 };
 static int khit[256], mhit[4], keyq[64], nkq;
 static float mdx, mdy, mdz;
+static void push(int c) { if (nkq < 64) keyq[nkq++] = c; }
+
+// dev hook: BB_INPUT="frame:ev ev,frame:ev" plays input at flip n (counted like BB_SHOT_FRAME).
+// ev: m<x>x<y> move the mouse (virtual, the real pointer isn't touched), l left click,
+//     k<scancode> key hit, c<ascii> typed char. eg BB_INPUT="12:c13,20:m300x400 l"
+static int sx = -1, sy, sdown, sframe;
+static void script(void) {
+	static const char *p; static int init;
+	if (!init) { init = 1; p = getenv("BB_INPUT"); }
+	sframe++; sdown = 0;
+	for (const char *c = p; c && *c;) {
+		int f = atoi(c);
+		const char *e = strchr(c, ':'), *nx = strchr(c, ',');
+		if (!e || (nx && e > nx)) break;
+		for (e++; *e && *e != ','; ) {
+			if (f == sframe) switch (*e) {
+				case 'm': sx = atoi(e + 1); sy = atoi(strchr(e, 'x') ? strchr(e, 'x') + 1 : e + 1); break;
+				case 'l': mhit[1]++; sdown = 1; break;
+				case 'k': { int k = atoi(e + 1); if (k > 0 && k < 256) khit[k]++; } break;
+				case 'c': push(atoi(e + 1)); break;
+			}
+			while (*e && *e != ' ' && *e != ',') e++;
+			while (*e == ' ') e++;
+		}
+		c = nx ? nx + 1 : NULL;
+	}
+}
 
 static int rl(int sc) { return sc > 0 && sc < 256 ? sc2rl[sc] : 0; }
 int bbKeyDown(int sc) { return rl(sc) && IsKeyDown(rl(sc)); }
@@ -40,16 +68,15 @@ int bbGetKey(void) { // ascii of next typed key, 0 if none
 int bbWaitKey(void) { int c; while (!(c = bbGetKey()) && !WindowShouldClose()) { PollInputEvents(); input_update(); WaitTime(0.01); } return c; }
 
 static int mb(int b) { return b == 1 ? MOUSE_BUTTON_LEFT : b == 2 ? MOUSE_BUTTON_RIGHT : MOUSE_BUTTON_MIDDLE; }
-int bbMouseDown(int b) { return b >= 1 && b <= 3 && IsMouseButtonDown(mb(b)); }
+int bbMouseDown(int b) { return (b == 1 && sdown) || (b >= 1 && b <= 3 && IsMouseButtonDown(mb(b))); }
 int bbMouseHit(int b) { if (b < 1 || b > 3) return 0; int n = mhit[b]; mhit[b] = 0; return n; }
-int bbMouseX(void) { return GetMouseX(); }
-int bbMouseY(void) { return GetMouseY(); }
+int bbMouseX(void) { return sx >= 0 ? sx : GetMouseX(); }
+int bbMouseY(void) { return sx >= 0 ? sy : GetMouseY(); }
 int bbMouseXSpeed(void) { int r = mdx; mdx -= r; return r; }
 int bbMouseYSpeed(void) { int r = mdy; mdy -= r; return r; }
 int bbMouseZSpeed(void) { int r = mdz; mdz -= r; return r; }
 void bbFlushMouse(void) { memset(mhit, 0, sizeof mhit); mdx = mdy = mdz = 0; }
 
-static void push(int c) { if (nkq < 64) keyq[nkq++] = c; }
 void input_update(void) {
 	for (int sc = 1; sc < 256; sc++) if (sc2rl[sc] && IsKeyPressed(sc2rl[sc])) khit[sc]++;
 	for (int b = 1; b <= 3; b++) if (IsMouseButtonPressed(mb(b))) mhit[b]++;
@@ -61,4 +88,5 @@ void input_update(void) {
 	if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) push(13);
 	if (IsKeyPressed(KEY_ESCAPE)) push(27);
 	for (int c; (c = GetCharPressed());) push(c < 256 ? c : '?'); // blitz is ascii/latin1
+	script();
 }

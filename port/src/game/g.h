@@ -2,9 +2,11 @@
 // globals are G(type, names...) so they're declared once: main.c defines G_DEFINE first.
 // porting rules: float -> int goes through bbInt (blitz rounds), Min/Max are float like blitz,
 // Dim x(n) is x[n+1], True/False are 1/0, strings are str (gc'd, see bb/str.h).
+// str globals/fields start NULL, not "": test them w/ bbLen/bbSeq, never *s.
 #pragma once
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "../bb/bb.h"
 
 #ifdef G_DEFINE
@@ -124,7 +126,8 @@ htex LoadTexture_Strict(const char *file, int flags);
 int LoadFont_Strict(const char *file, int height, int bold, int italic, int underline);
 G(int, TempSounds[10], TempSoundIndex);
 int LoadTempSound(const char *file); // Main.bb, ring of 10 one-shot sounds
-void UpdateMusic(void);
+void UpdateMusic(void); // music.c
+void InitMusic(void);
 void CollectGfxModes(void);
 
 // ---- AAText.bb: raylib text is already smooth, so these are thin
@@ -172,3 +175,53 @@ int DrawButton(int x, int y, int w, int h, const char *txt, int bigfont, int wai
 int DrawTick(int x, int y, int selected, int locked);
 void RowText(const char *a, int x, int y, int w, int h, int align, float leading);
 int LimitText(const char *txt, int x, int y, int w, int usingAA);
+int DrawButton2(int x, int y, int w, int h, const char *txt, int bigfont);
+float SlideBar(int x, int y, int w, float value);
+int SliderN(int x, int y, int w, int value, int id, int n, const char **vals);
+#define Slider3(x, y, w, v, id, a, b, c) SliderN(x, y, w, v, id, 3, (const char *[]){a, b, c})
+#define Slider4(x, y, w, v, id, a, b, c, d) SliderN(x, y, w, v, id, 4, (const char *[]){a, b, c, d})
+#define Slider5(x, y, w, v, id, a, b, c, d, e) SliderN(x, y, w, v, id, 5, (const char *[]){a, b, c, d, e})
+#define Slider7(x, y, w, v, id, a, b, c, d, e, f, g) SliderN(x, y, w, v, id, 7, (const char *[]){a, b, c, d, e, f, g})
+int Button(int x, int y, int w, int h, const char *txt, int disabled);
+float DrawScrollBar(int x, int y, int w, int h, int bx, int by, int bw, int bh, float bar, int dir);
+int GetLineAmount(const char *a, int w, int h, float leading);
+void DrawTooltip(const char *msg);
+void DrawOptionsTooltip(int x, int y, int w, int h, const char *option, float value, int ingame);
+void DrawMapCreatorTooltip(int x, int y, int w, int h, const char *mapname);
+G(int, OnSliderID, OnBar);
+G(float, ScrollBarY, ScrollMenuHeight);
+
+// ---- Menu.bb main menu (mainmenu.c, options.c)
+G(int, MenuBack, MenuText, Menu173, QuickLoadIcon, MenuBlinkTimer[3], MenuBlinkDuration[3], MenuStrX, MenuStrY, MainMenuTab, IntroEnabled);
+G(str, RandomSeed, MenuStr, SavePath, SaveMSG, CurrSave, SelectedMap);
+G(int, SaveGameAmount, SavedMapsAmount, CurrLoadGamePage, QuickLoadPercent);
+G(float, QuickLoadPercent_DisplayTimer);
+G(str, *SaveGames, *SaveGameTime, *SaveGameDate, *SaveGameVersion, *SavedMaps, *SavedMapsAuthor);
+void InitMenu(void);
+void UpdateMainMenu(void);
+void UpdateOptionsTab(int x, int y, int w);
+void DrawQuickLoading(void);
+
+// ---- Save.bb (save.c)
+void LoadSaveGames(void);
+void LoadSavedMaps(void);
+
+// ---- Main.bb: later globals (1525-2809), music (music.c), the loop (loop.c)
+G(float, BlurVolume, BlurTimer, LightBlink, LightFlash, CameraShake, CurrCameraZoom, CameraFogNear, CameraFogFar, StoredCameraFogFar);
+G(int, Camera, Brightness);
+G(str, Music[41]);
+G(int, CurrMusicStream, MusicCHN, NowPlaying, ShouldPlay, CurrMusic, PlayCustomMusic, CustomMusic);
+G(float, CurrMusicVolume, PrevMusicVolume, PrevSFXVolume);
+G(int, NVGImages, NavImages[6], NavBG, UserTrackCheck, UserTrackCheck2, UserTrackMusicAmount, CurrUserTrack, UserTrackFlag);
+G(int, EnableUserTracks, UserTrackMode, OptionsMenu, QuitMSG, InFacility, DeafPlayer, IsZombie, ParticleAmount, NoTarget, Wearing1499);
+G(float, DeafTimer, menuroomscale, MonitorTimer, MonitorTimer2, PrevInjuries, PrevBloodloss);
+G(int, UnableToMove, ShouldEntitiesFall, MTF_CameraCheckDetected);
+G(float, PlayerFallingPickDistance, Save_MSG_Timer, Save_MSG_Y, MTF_CameraCheckTimer, UpdateParticles_Time, Input_ResetTime);
+G(str, Save_MSG, CurrMenu_TestIMG);
+G(int, EndBreathSFX, EndBreathCHN, FPS);
+void InitLateGlobals(void);
+void MainLoop(void);
+int GenerateSeedNumber(const char *seed);
+void SaveOptionsINI(void);
+// not ported yet: these say so and keep you in the menu
+int StartGame(const char *how);

@@ -1,6 +1,7 @@
 // misc.c: blitz rng (exact, map gen depends on it), file writing, dirs, dates
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -67,10 +68,24 @@ int bbCopyFile(const char *a, const char *b) {
 	return 1;
 }
 const char *bbCurrentDir(void) { static char b[1024]; if (!getcwd(b, sizeof b - 1)) b[0] = 0; strcat(b, "/"); return b; }
-// ReadDir/NextFile: blitz yields "." and ".." too, then "" at the end
-void *bbReadDir(const char *p) { const char *r = bbPath(p); return r ? opendir(r) : NULL; }
-const char *bbNextFile(void *d) { struct dirent *e = d ? readdir(d) : NULL; return e ? e->d_name : ""; }
-void bbCloseDir(void *d) { if (d) closedir(d); }
+// ReadDir/NextFile: blitz yields "." and ".." too, then "" at the end. sorted case-insensitively,
+// which is the order ntfs hands them to FindNextFile (save/map lists show in that order)
+typedef struct { struct dirent **e; int n, i; } bdir;
+static int ci(const struct dirent **a, const struct dirent **b) { return strcasecmp((*a)->d_name, (*b)->d_name); }
+void *bbReadDir(const char *p) {
+	const char *r = bbPath(p);
+	bdir *d = r ? calloc(1, sizeof *d) : NULL;
+	if (d && (d->n = scandir(r, &d->e, NULL, ci)) < 0) { free(d); d = NULL; }
+	return d;
+}
+const char *bbNextFile(void *v) { bdir *d = v; return d && d->i < d->n ? d->e[d->i++]->d_name : ""; }
+void bbCloseDir(void *v) {
+	bdir *d = v;
+	if (!d) return;
+	for (int i = 0; i < d->n; i++) free(d->e[i]);
+	free(d->e); free(d);
+}
+int bbDeleteDir(const char *p) { const char *r = bbPath(p); return r && !rmdir(r); }
 
 const char *bbCurrentDate(void) { // "05 Nov 2026"
 	static char b[32]; time_t t = time(NULL);

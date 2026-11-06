@@ -83,3 +83,4 @@ void bbPositionTexture(htex h, float u, float v) { tex *t = bb_t(h); t->u0 = u; 
 int bbTextureWidth(htex h) { return bb_t(h)->w; }
 int bbTextureHeight(htex h) { return bb_t(h)->h; }
 const char *bbTextureName(htex h) { return h ? bb_t(h)->name : ""; }
+void bbTextureLodBias(float b) { (void)b; }
