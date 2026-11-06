@@ -129,7 +129,8 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
   x and finally Rand(2,3). C leaves arg order unspecified, so any statement w/ 2+ rng calls (incl. CreateItem/
   CreateDoor/AddLight, which roll inside) is split into temps in that order, w/ a comment.
 - **audio**: the game does its own 3d (PlaySound2/UpdateSoundOrigin compute vol + pan from DeltaYaw), so
-  only the plain blitz api is needed. each PlaySound gets its own voice (a raylib sound alias); channel
+  only the plain blitz api is needed. each PlaySound gets its own voice (a raylib sound alias, 256 of them; when all are busy the oldest
+  one-shot is stolen, like fmod); channel
   handles carry a generation so stale ones go dead instead of steering a recycled voice. fmod streams
   map to raylib Music, fed in bbFlip. no audio device -> LoadSound still returns handles, everything's silent.
   all 894 referenced oggs decode (the 895th, SFX/SCP/970/fcveny.ogg, is a text-prefixed easter egg nobody loads).
