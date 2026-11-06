@@ -353,8 +353,18 @@ static const int modes[][2] = {{640, 480}, {800, 600}, {1024, 768}, {1280, 720},
 int bbCountGfxModes3D(void) { return sizeof modes / sizeof *modes; }
 int bbGfxModeWidth(int i) { return i >= 1 && i <= bbCountGfxModes3D() ? modes[i-1][0] : 0; }
 int bbGfxModeHeight(int i) { return i >= 1 && i <= bbCountGfxModes3D() ? modes[i-1][1] : 0; }
-void bbHidePointer(void) { HideCursor(); }
-void bbShowPointer(void) { ShowCursor(); }
+// blitz kept the mouse in the window by warping it to the center every frame (MouseLook), which xwayland/wayland
+// don't allow, so a hidden pointer is a locked one here (glfw pointer lock, relative motion).
+// scripted runs (BB_INPUT) only hide it, so they never grab the real mouse
+static int locked;
+void bbHidePointer(void) {
+	if (getenv("BB_INPUT")) { HideCursor(); return; }
+	if (!locked) { DisableCursor(); locked = 1; }
+}
+void bbShowPointer(void) {
+	if (locked) { EnableCursor(); locked = 0; }
+	ShowCursor();
+}
 void bbMoveMouse(int x, int y) { SetMousePosition(x, y); }
 void bbAppTitle(const char *t) { if (IsWindowReady()) SetWindowTitle(t); }
 int bbTotalVidMem(void) { return 1 << 30; }
