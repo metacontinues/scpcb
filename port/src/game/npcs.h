@@ -101,6 +101,8 @@ G(Events *, QuickLoad_CurrEvent); // the event DrawQuickLoading is loading for (
 G(int, Using294); // TODO Update294/Use294: nothing reads it outside the cafeteria event yet
 int Ev173(Events *e); // ev173.c
 int EvAlarm(Events *e);
+int EvPocketDimension(Events *e); // evpd.c
+void PocketDimensionFaces(void);
 // evlib.c
 G(int, IntercomStreamCHN);
 int LoadEventSound(Events *e, const char *file, int num);

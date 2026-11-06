@@ -20,7 +20,7 @@ static void meter(int x, int y, float frac, int img) {
 
 void DrawGUI(void) {
 	if (MenuOpen || ConsoleOpen || SelectedDoor || InvOpen || OtherOpen || EndingTimer < 0) bbShowPointer(); else bbHidePointer();
-	// TODO pocket dimension faces (needs events)
+	PocketDimensionFaces();
 	if (ClosestButton && !SelectedDoor && !InvOpen && !MenuOpen && !OtherOpen) {
 		int t = bbCreatePivot(0);
 		bbPositionEntity(t, bbEntityX(Camera, 0), bbEntityY(Camera, 0), bbEntityZ(Camera, 0), 0);
