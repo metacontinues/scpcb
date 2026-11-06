@@ -4,6 +4,8 @@
 // Dim x(n) is x[n+1], True/False are 1/0, strings are str (gc'd, see bb/str.h).
 // blitz arrays a[n] (Field/Global/Local) have n+1 slots like Dim, so they're a[n+1] here too.
 // And/Or are bitwise in blitz: on raw ints use & and |, && || only where both sides are 0/1.
+// blitz precedence: And/Or/Xor are ONE level, left to right (a Or b And c = (a Or b) And c), and Not is the
+// lowest of all (Not a And b = Not (a And b)). both are below comparisons, like c's &&.
 // game names that clash w/ raylib's exported symbols get a trailing _ (LoadMaterials_).
 // str globals/fields start NULL, not "": test them w/ bbLen/bbSeq, never *s.
 #pragma once
@@ -218,10 +220,10 @@ G(float, CurrMusicVolume, PrevMusicVolume, PrevSFXVolume);
 G(int, NVGImages, NavImages[6], NavBG, UserTrackCheck, UserTrackCheck2, UserTrackMusicAmount, CurrUserTrack, UserTrackFlag);
 G(int, EnableUserTracks, UserTrackMode, OptionsMenu, QuitMSG, InFacility, DeafPlayer, IsZombie, ParticleAmount, NoTarget, Wearing1499);
 G(float, DeafTimer, menuroomscale, MonitorTimer, MonitorTimer2, PrevInjuries, PrevBloodloss);
-G(int, UnableToMove, ShouldEntitiesFall, MTF_CameraCheckDetected);
+G(int, UnableToMove, ShouldEntitiesFall, MTF_CameraCheckDetected, UpdateCheckpoint1, UpdateCheckpoint2);
 G(float, PlayerFallingPickDistance, Save_MSG_Timer, Save_MSG_Y, MTF_CameraCheckTimer, UpdateParticles_Time, Input_ResetTime);
 G(str, Save_MSG, CurrMenu_TestIMG);
-G(int, EndBreathSFX, EndBreathCHN, FPS);
+G(int, EndBreathSFX, EndBreathCHN, FPS, CurrTrisAmount);
 void InitLateGlobals(void);
 void MainLoop(void);
 int GenerateSeedNumber(const char *seed);
@@ -232,3 +234,5 @@ int StartGame(const char *how);
 #include "map.h"
 #include "items.h"
 #include "fx.h"
+#include "sounds.h"
+#include "player.h"

@@ -125,7 +125,8 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
 - **textures**: LoadAnimTexture keeps one gl texture per frame, EntityTexture/BrushTexture pick it.
   ReadPixel outside a Lock reads a cached download (invalidated by any draw), so per-pixel loops stay fast.
 - **game porting rules**: float -> int goes through `bbInt` (blitz rounds to nearest, c truncates), Min/Max are
-  float like blitz, `Dim a(n)` is `a[n+1]`, globals are declared once w/ `G(type, names)` in g.h, function
+  float like blitz, `Dim a(n)` is `a[n+1]`, And/Or/Xor share one precedence level (left to right)
+  and `Not` is the lowest of all (blitz3d compiler/parser.cpp), globals are declared once w/ `G(type, names)` in g.h, function
   default args become explicit. closing the window exits in bbFlip, like blitz.
 - **rng**: Rand/Rnd/SeedRnd match blitz3d's bbruntime/bbmath.cpp exactly (park-miller, same float mapping,
   default seed 0x1234; also checked against c++'s minstd_rand). note `Rnd(x)` is `Rnd(x, 0)` (= x - u*x)
@@ -149,6 +150,8 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
 - **materials**: one shader does up to 4 texture layers, each w/ blitz TextureBlend (0-5), coord set,
   ScaleTexture/PositionTexture, masking. plus brush color/alpha, EntityFX (fullbright, vertex color,
   vertex alpha, nofog, 2-sided), up to 8 hw-style lights, linear fog.
+- **cameras**: CameraProjMode 0 skips the camera, 2 is blitz's ortho (x*zoom/near across, like gxscene's
+  setOrthoProj). the game's screen overlays (fog vignette, gas mask, nv, blur) sit on an ortho camera.
 - **sorting**: per surface, not per entity. opaque near->far, alpha far->near w/o depth writes,
   EntityOrder != 0 draws w/o depth test.
 - **textures**: resized to pow2 and mipmapped like blitz did (also needed for es2 wrap/mips).
@@ -179,5 +182,5 @@ then NPCs.bb and UpdateEvents.bb (hand-ported).
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested
-where they are now (not swept), CameraClsMode only does both-or-neither, ortho proj mode is ignored, light attenuation
+where they are now (not swept), CameraClsMode only does both-or-neither, light attenuation
 is a guess (`1/(1+d/range)`), bump maps from materials.ini are skipped. .x SkinWeights (21 files) + AnimationSet (6) are skipped, so those render in bind pose.

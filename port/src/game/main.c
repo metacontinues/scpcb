@@ -238,12 +238,12 @@ void InitLateGlobals(void) {
 	LoopDelay = bbMilliSecs();
 }
 
-// new game: LoadEntities + CreateMap so far, then loop.c's fly cam stands in for the game.
-// TODO LoadAllSounds, the rest of InitNewGame, LoadGame/InitLoadGame
+// Menu.bb's START button: LoadEntities, LoadAllSounds, InitNewGame. TODO LoadGame/InitLoadGame
 int StartGame(const char *how) {
 	if (!bbSeq(how, "new")) { fprintf(stderr, "scpcb: loading saves isn't ported yet\n"); return 0; }
 	if (getenv("SCPCB_SEED")) RandomSeed = getenv("SCPCB_SEED"); // dev: fixed map
 	LoadEntities();
-	CreateMap();
+	LoadAllSounds();
+	InitNewGame();
 	return 1;
 }

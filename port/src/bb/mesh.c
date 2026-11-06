@@ -42,7 +42,8 @@ void bbBrushAlpha(hbrush h, float a) { bb_brp(h)->a = a; }
 void bbBrushFX(hbrush h, int fx) { bb_brp(h)->fx = fx; }
 void bbBrushBlend(hbrush h, int bl) { bb_brp(h)->blend = bl; }
 void bbBrushTexture(hbrush h, htex t, int fr, int i) { br_settex(bb_brp(h), bb_texframe(t, fr), i); }
-htex bbGetBrushTexture(hbrush h, int i) { return i >= 0 && i < BB_NTEX ? bb_brp(h)->tex[i] : 0; }
+// like blitz, the caller gets its own reference and is expected to FreeTexture it
+htex bbGetBrushTexture(hbrush h, int i) { htex t = i >= 0 && i < BB_NTEX ? bb_brp(h)->tex[i] : 0; tex_ref(t); return t; }
 hbrush bbGetSurfaceBrush(surf *s) { return br_new(s->br); }
 hbrush bbGetEntityBrush(ent e) { return br_new(bb_e(e)->br); }
 

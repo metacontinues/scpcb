@@ -412,3 +412,72 @@ str *MR(int t, int i) {
 	if (t < 0 || i < 0 || t > ROOM4 + 1 || i > MaxRooms_) RuntimeError(cat("MapRoom index out of bounds: ", bbStr(t), ", ", bbStr(i)));
 	return &MapRoom[t * (MaxRooms_ + 1) + i];
 }
+
+// ---- per frame (MapSystem.bb's UpdateRooms)
+int IsRoomAdjacent(Rooms *a, Rooms *b) {
+	if (!a) return 0;
+	if (a == b) return 1;
+	for (int i = 0; i <= 3; i++) if (b == a->Adjacent[i]) return 1;
+	return 0;
+}
+
+static int near4(Rooms *r) { return fabsf(r->x - bbEntityX(Collider, 1)) < 4 && fabsf(r->z - bbEntityZ(Collider, 1)) < 4; }
+
+void UpdateRooms(void) {
+	float cz = bbEntityZ(Collider, 0) / 8.0f;
+	int sm = !bbLen(SelectedMap); // blitz subtracts the boolean (SelectedMap = "")
+	PlayerZone = cz < I_Zone->Transition[1] - sm ? 2 : cz < I_Zone->Transition[0] - sm ? 1 : 0;
+	TempLightVolume = 0;
+	int found = 0;
+	if (PlayerRoom) {
+		if (fabsf(bbEntityY(Collider, 0) - bbEntityY(PlayerRoom->obj, 0)) < 1.5f) {
+			if (near4(PlayerRoom)) found = 1;
+			else for (int i = 0; i <= 3; i++) if (PlayerRoom->Adjacent[i] && near4(PlayerRoom->Adjacent[i])) {
+				found = 1; PlayerRoom = PlayerRoom->Adjacent[i];
+				break;
+			}
+		} else found = 1; // high up or deep down: PlayerRoom stays
+	}
+	each(Rooms, r) {
+		float x = fabsf(r->x - bbEntityX(Collider, 1)), z = fabsf(r->z - bbEntityZ(Collider, 1));
+		r->dist = Max(x, z);
+		if (x < 16 && z < 16) {
+			for (int i = 0; i < MaxRoomEmitters; i++) {
+				if (!r->SoundEmitter[i]) continue;
+				if (bbEntityDistance(r->SoundEmitterObj[i], Collider) < r->SoundEmitterRange[i])
+					r->SoundEmitterCHN[i] = LoopSound2(RoomAmbience[r->SoundEmitter[i]], r->SoundEmitterCHN[i], Camera, r->SoundEmitterObj[i], r->SoundEmitterRange[i], 1);
+			}
+			if (!found && PlayerRoom != r && x < 4 && z < 4) {
+				if (fabsf(bbEntityY(Collider, 0) - bbEntityY(r->obj, 0)) < 1.5f) PlayerRoom = r;
+				found = 1;
+			}
+		}
+		int hide = r != PlayerRoom && !IsRoomAdjacent(PlayerRoom, r);
+		if (hide) for (int i = 0; i <= 3; i++) if (IsRoomAdjacent(PlayerRoom->Adjacent[i], r)) { hide = 0; break; }
+		if (hide) { bbHideEntity(r->obj); continue; }
+		bbShowEntity(r->obj);
+		for (int i = 0; i < MaxRoomLights && r->Lights[i]; i++) {
+			float d = bbEntityDistance(Collider, r->Lights[i]);
+			if (d < HideDistance) TempLightVolume += r->LightIntensity[i] * r->LightIntensity[i] * ((HideDistance - d) / HideDistance);
+		}
+		for (int i = 0; i < r->TriggerboxAmount; i++) { bbEntityColor(r->Triggerbox[i], 255, 255, 255); bbEntityAlpha(r->Triggerbox[i], 0); } // TODO DebugHUD: yellow, .2
+	}
+	MapFound[(int)floorf(bbEntityX(PlayerRoom->obj, 0) / 8.0f) * (MapHeight + 2) + (int)floorf(bbEntityZ(PlayerRoom->obj, 0) / 8.0f)] = 1;
+	PlayerRoom->found = 1;
+	TempLightVolume = Max(TempLightVolume / 4.5f, 1);
+	// only draw the next room's opaque mesh through doors that are open + on screen
+	bbEntityAlpha(bbGetChild(PlayerRoom->obj, 2), 1);
+	for (int i = 0; i <= 3; i++) {
+		Rooms *a = PlayerRoom->Adjacent[i];
+		if (!a) continue;
+		Doors *d = PlayerRoom->AdjDoor[i];
+		if (d) bbEntityAlpha(bbGetChild(a->obj, 2), d->openstate == 0 || !bbEntityInView(d->frameobj, Camera) ? 0 : 1);
+		for (int j = 0; j <= 3; j++) if (a->Adjacent[j] && a->Adjacent[j] != PlayerRoom) bbEntityAlpha(bbGetChild(a->Adjacent[j]->obj, 2), 0);
+	}
+}
+
+void AmbientLightRooms(int value) {
+	if (value == AmbientLightRoomVal) return;
+	AmbientLightRoomVal = value;
+	bbTextureFill(AmbientLightRoomTex, value, value, value, 255); // blitz: SetBuffer + ClsColor + Cls
+}
