@@ -119,8 +119,11 @@ void UpdateGame(void) {
 		MovePlayer();
 		// TODO InFacility = CheckForPlayerInFacility(), dimension1499, UpdateEndings at gate a/b
 		UpdateDoors();
-		// TODO UpdateEvents, UpdateScreens, TimeCheckpointMonitors, Update294, UpdateRoomLights, UpdateDecals,
-		// UpdateMTF, UpdateNPCs, UpdateItems, Use427, UpdateMonitorSaving, devil emitters
+		// TODO UpdateEvents, UpdateScreens, TimeCheckpointMonitors, Update294, UpdateRoomLights
+		UpdateDecals();
+		// TODO UpdateMTF
+		UpdateNPCs();
+		// TODO UpdateItems, Use427, UpdateMonitorSaving, devil emitters
 		UpdateParticles();
 		UpdateRooms();
 	}
@@ -151,7 +154,8 @@ void UpdateGame(void) {
 	DrawMessages();
 	bbColor(255, 255, 255);
 	if (ShowFPS) { AASetFont(ConsoleFont); AAText(20, 20, cat("FPS: ", bbStr(FPS)), 0, 0); AASetFont(Font1); }
-	// TODO DrawQuickLoading, UpdateAchievementMsg
+	// TODO DrawQuickLoading
+	UpdateAchievementMsg();
 }
 
 void MainLoop(void) {

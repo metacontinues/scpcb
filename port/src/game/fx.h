@@ -29,3 +29,4 @@ Decals *CreateDecal(int id, float x, float y, float z, float pitch, float yaw, f
 SecurityCams *CreateSecurityCam(float x, float y, float z, Rooms *r, int screen);
 ElevatorObj *AssignElevatorObj(int obj, Doors *door, int in_facility);
 void LoadParticleTextures(void);
+void UpdateDecals(void);

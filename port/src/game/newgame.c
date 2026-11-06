@@ -9,9 +9,11 @@ void InitNewGame(void) {
 	for (int i = 0; i <= 3; i++) AccessCode = bbInt(AccessCode + bbRand(1, 9) * powf(10, i));
 	if (!bbLen(SelectedMap)) CreateMap();
 	else RuntimeError("custom maps (LoadMap) aren't ported yet");
-	// TODO InitWayPoints, then Curr173/Curr106 = CreateNPC(...) w/ Curr106\State = 70*60*Rand(12,17).
-	// they roll rng, so until NPCs are in, everything after the map rolls differently than blitz
+	InitWayPoints(45);
 	DrawLoading(79, 0);
+	Curr173 = CreateNPC(NPCtype173, 0, -30, 0);
+	Curr106 = CreateNPC(NPCtypeOldMan, 0, -30, 0);
+	Curr106->State = 70 * 60 * bbRand(12, 17);
 	each(Doors, d) {
 		bbEntityParent(d->obj, 0, 1);
 		if (d->obj2) bbEntityParent(d->obj2, 0, 1);
@@ -61,7 +63,12 @@ void InitNewGame(void) {
 	bbDeleteEach(TempWayPoints);
 	bbTurnEntity(Collider, 0, bbRand(160, 200), 0, 0);
 	bbResetEntity(Collider);
-	// TODO InitEvents (+ the room2nuke/room106/room2sl event states set here)
+	if (!bbLen(SelectedMap)) InitEvents();
+	each(Events, e) {
+		if (bbSeq(e->EventName, "room2nuke")) e->EventState = 1;
+		if (bbSeq(e->EventName, "room106")) e->EventState2 = 1;
+		if (bbSeq(e->EventName, "room2sl")) e->EventState3 = 1;
+	}
 	bbMoveMouse(viewport_center_x, viewport_center_y);
 	AASetFont(Font1);
 	bbHidePointer();
@@ -71,9 +78,23 @@ void InitNewGame(void) {
 		bbFlushKeys();
 		MovePlayer();
 		UpdateDoors();
-		// TODO UpdateNPCs
+		UpdateNPCs();
 		bbUpdateWorld(1);
 		if (bbInt(i * .27f) != bbInt((i - 1) * .27f)) DrawLoading(80 + bbInt(i * .27f), 0);
+	}
+	// dev: SCPCB_173=d / SCPCB_106=d put 173 / an already risen 106 d units in front of you
+	for (int k = 0; k < 2; k++) {
+		const char *v = getenv(k ? "SCPCB_106" : "SCPCB_173");
+		if (!v) continue;
+		NPCs *n = k ? Curr106 : Curr173;
+		int p = bbCreatePivot(0);
+		bbPositionEntity(p, bbEntityX(Collider, 0), bbEntityY(Collider, 0), bbEntityZ(Collider, 0), 0);
+		bbRotateEntity(p, 0, bbEntityYaw(Collider, 0), 0, 0);
+		bbMoveEntity(p, 0, 0, atof(v));
+		bbPositionEntity(n->Collider, bbEntityX(p, 0), bbEntityY(p, 0), bbEntityZ(p, 0), 0);
+		bbResetEntity(n->Collider);
+		bbFreeEntity(p);
+		if (k) { n->State = -10; SetNPCFrame(n, 259); }
 	}
 	FreeTextureCache();
 	DrawLoading(100, 0);
