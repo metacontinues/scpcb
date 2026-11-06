@@ -3,7 +3,6 @@
 #include "in.h"
 
 static int inframe;
-static Color clsc = {0, 0, 0, 255};
 
 void bb_frame(void) { if (!inframe) { BeginDrawing(); inframe = 1; } }
 
@@ -20,9 +19,8 @@ int bbGraphics3D(int w, int h, int depth, int mode) {
 void bbEndGraphics(void) { snd_quit(); rend_quit(); CloseWindow(); }
 int bbGraphicsWidth(void) { return GetScreenWidth(); }
 int bbGraphicsHeight(void) { return GetScreenHeight(); }
-void bbFlip(int vsync) { (void)vsync; bb_frame(); EndDrawing(); inframe = 0; snd_update(); }
-void bbClsColor(int r, int g, int b) { clsc = (Color){r, g, b, 255}; }
-void bbCls(void) { bb_frame(); ClearBackground(clsc); }
+void bbFlip(int vsync) { (void)vsync; bb_frame(); g2d_end(); EndDrawing(); inframe = 0; snd_update(); }
+
 int bbMilliSecs(void) { return (int)(GetTime() * 1000); }
 int bbAppClosing(void) { return WindowShouldClose(); }
 

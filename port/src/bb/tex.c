@@ -70,7 +70,7 @@ void tex_unref(htex h) {
 	if (!h) return;
 	tex *t = bb_t(h);
 	if (--t->rc > 0) return;
-	UnloadTexture(t->t);
+	if (t->hasrt) UnloadRenderTexture(t->rt); else UnloadTexture(t->t);
 	t->used = 0;
 }
 // handle drop; brushes may still hold it.
