@@ -78,7 +78,7 @@ executable('scpcb', files(
 	'src/game/fillroom1.c', 'src/game/fillroom2.c', 'src/game/fillroom3.c', 'src/game/forest.c',
 	'src/game/fx.c', 'src/game/hud.c', 'src/game/ini.c', 'src/game/items.c', 'src/game/keyname.c',
 	'src/game/loading.c', 'src/game/loop.c', 'src/game/main.c', 'src/game/mainmenu.c', 'src/game/mapgen.c',
-	'src/game/menu.c', 'src/game/music.c', 'src/game/newgame.c', 'src/game/options.c', 'src/game/player.c',
+	'src/game/menu.c', 'src/game/music.c', 'src/game/newgame.c', 'src/game/options.c', 'src/game/player.c', 'src/game/npcs.c', 'src/game/npc173.c', 'src/game/waypoints.c', 'src/game/events.c',
 	'src/game/rooms.c', 'src/game/save.c', 'src/game/sliders.c', 'src/game/sounds.c', 'src/game/strict.c',
 	'src/game/tooltip.c', 'src/game/widgets.c'),
 	dependencies: bb)

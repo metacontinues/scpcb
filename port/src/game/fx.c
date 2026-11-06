@@ -124,3 +124,29 @@ ElevatorObj *AssignElevatorObj(int obj, Doors *door, int in_facility) {
 	eo->obj = obj; eo->door = door; eo->InFacility = in_facility;
 	return eo;
 }
+
+// Main.bb's UpdateDecals: growing decals (106's corrosion spawns more around itself), fades, lifetimes
+void UpdateDecals(void) {
+	each(Decals, d) {
+		if (d->SizeChange != 0) {
+			d->Size += d->SizeChange * FPSfactor;
+			bbScaleSprite(d->obj, d->Size, d->Size);
+			if (d->ID == 0) {
+				if (d->Timer <= 0) {
+					float a = bbRand(360, 1), t = bbRnd(d->Size, 0);
+					float yaw = bbRnd(360, 0); // the decal's only rng arg
+					Decals *d2 = CreateDecal(1, bbEntityX(d->obj, 0) + cosf(a * DTOR) * t, bbEntityY(d->obj, 0) - .0005f, bbEntityZ(d->obj, 0) + sinf(a * DTOR) * t, bbEntityPitch(d->obj, 0), yaw, bbEntityRoll(d->obj, 0));
+					d2 = d2 ? d2 : bbLast(Decals); // blitz gets the decal back even when its texture is missing
+					d2->Size = bbRnd(.1f, .5f); bbScaleSprite(d2->obj, d2->Size, d2->Size);
+					int s = DecaySFX[bbRand(1, 3)]; // Rand then Rnd: codegen order, the args tie
+					PlaySound2(s, Camera, d2->obj, 10, bbRnd(.1f, .5f));
+					d->Timer = bbRand(50, 100);
+				} else d->Timer -= FPSfactor;
+			}
+			if (d->Size >= d->MaxSize) { d->SizeChange = 0; d->Size = d->MaxSize; }
+		}
+		if (d->AlphaChange != 0) { d->Alpha = Min(d->Alpha + FPSfactor * d->AlphaChange, 1); bbEntityAlpha(d->obj, d->Alpha); }
+		if (d->lifetime > 0) d->lifetime = Max(d->lifetime - FPSfactor, 5);
+		if (d->Size <= 0 || d->Alpha <= 0 || d->lifetime == 5) { bbFreeEntity(d->obj); bbDelete(d); }
+	}
+}

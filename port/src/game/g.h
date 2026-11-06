@@ -163,6 +163,18 @@ enum { MAXACHIEVEMENTS = 37 };
 G(int, Achievements[MAXACHIEVEMENTS + 1], AchvIMG[MAXACHIEVEMENTS + 1], AchvLocked, UsedConsole, AchievementsMenu, CurrAchvMSGID);
 G(str, AchievementStrings[MAXACHIEVEMENTS + 1], AchievementDescs[MAXACHIEVEMENTS + 1]);
 void InitAchievements(void);
+enum {
+	Achv008, Achv012, Achv035, Achv049, Achv055, Achv079, Achv096, Achv106, Achv148, Achv205,
+	Achv294, Achv372, Achv420, Achv427, Achv500, Achv513, Achv714, Achv789, Achv860, Achv895,
+	Achv914, Achv939, Achv966, Achv970, Achv1025, Achv1048, Achv1123,
+	AchvMaynard, AchvHarp, AchvSNAV, AchvOmni, AchvConsole, AchvTesla, AchvPD, Achv1162, Achv1499,
+	AchvKeter, // = Achievements.bb consts (0..36)
+};
+typedef struct AchievementMsg { lnode n; int achvID; str txt; float msgx, msgtime; int msgID; } AchievementMsg;
+TLIST_DECL(AchievementMsg);
+void GiveAchievement(int id, int showMessage);
+AchievementMsg *CreateAchievementMsg(int id, const char *txt);
+void UpdateAchievementMsg(void);
 
 // ---- Menu.bb
 typedef struct LoadingScreens { lnode n; str imgpath; int img, ID; str title; int alignx, aligny, disablebackground; str txt[5]; int txtamount; } LoadingScreens;
@@ -236,3 +248,4 @@ int StartGame(const char *how);
 #include "fx.h"
 #include "sounds.h"
 #include "player.h"
+#include "npcs.h"

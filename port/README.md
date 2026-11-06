@@ -53,7 +53,10 @@ port/
     fillroom1-3.c  FillRoom's 75 per-room cases (drafted by a throwaway script, reviewed by hand)
     forest.c       SCP-860-1's forest: grid gen, PlaceForest, load_terrain
     fx.c           particles, emitters, decals, security cams, elevator objs
-    keyname.c difficulty.c achv.c             the small .bb files
+    npcs.h/.c      NPCs.bb: the NPCs type, CreateNPC (all 22 types), RemoveNPC, the UpdateNPCs frame + gravity, helpers
+    npc173.c       UpdateNPCs' 173 + 106 cases          waypoints.c InitWayPoints + FindPath (a*)
+    events.c       Events type, CreateEvent/InitEvents (UpdateEvents.bb itself isn't ported yet)
+    keyname.c difficulty.c achv.c             the small .bb files (achv.c also has the unlock popups)
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
   tools/colltest.c collision + pick checks, `meson test -C port/build`
@@ -169,16 +172,19 @@ points at a folder on the modder's desktop), and blitz chokes on those too.
 game: hand-ported (no transpiler) into `src/game/`. done so far: Main.bb's top level up to the main loop, the main
 loop's menu side, INI, StrictLoads, launcher, loading screens, the whole main menu, save/map lists, UpdateMusic,
 KeyName, Difficulty, Achievements init, LoadEntities (most), room templates + rmesh rooms, CreateMap (the full map
-generator), CreateRoom, CreateDoor. START builds the facility from the seed and drops you in a stand-in fly cam
-(wasd + mouse, esc back to the menu). dev env for it: `SCPCB_SEED=x` fixed seed, `SCPCB_TOPDOWN=1` whole map from
-above (ceilings are culled), `SCPCB_DUMP=1` room list on stderr.
+generator), CreateRoom, CreateDoor, FillRoom, the player (MovePlayer/MouseLook/hud), UpdateRooms/UpdateDoors, waypoints +
+FindPath, CreateNPC (every type) + UpdateNPCs w/ SCP-173 and SCP-106, InitEvents, decals, achievement popups.
+START builds the facility from the seed and you walk it; 173 and 106 hunt you (106 drags you to the pocket dimension,
+whose event isn't in yet). esc = a stub pause screen (q quits). dev env for it: `SCPCB_SEED=x` fixed seed, `SCPCB_TOPDOWN=1` whole map from
+above (ceilings are culled), `SCPCB_DUMP=1` room list on stderr, `SCPCB_173=d` / `SCPCB_106=d` drop 173 / an already risen
+106 d units in front of you after loading (note u start mid-blink, so 173 at 2 snaps ur neck on the first frames, like blitz would).
 statements w/ several rng calls follow blitz's evaluation order, see "rng order" below.
 stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), Dreamfilter,
 borderless windowed + ScreenGamma (blitz did these w/ the fresize_* camera, not ported), ResizeImage2 is a plain ResizeImage,
 TextureLodBias is a no-op (es2), "antialiased text" only flips the ini value, bump maps, LoadWorld (.b3d rooms, unused),
-light cones, the blur cam overlays, NPC/event setup, the 1499 chunks, loading saves.
-next up: UpdateRooms/UpdateDoors/UpdateItems, then the player (MovePlayer/MouseLook) so the fly cam can go,
-then NPCs.bb and UpdateEvents.bb (hand-ported).
+light cones, the 1499 chunks, loading saves, EntityAutoFade (1499-1 only), MeshCullBox (no per-entity culling here).
+next up: the other UpdateNPCs cases (096, 049, guards/MTF, ...), UpdateEvents.bb (the intro, 173's chamber, pocket
+dimension...), then DrawMenu, inventory/UpdateItems and the console (all hand-ported).
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested
