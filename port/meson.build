@@ -35,8 +35,9 @@ endif
 add_project_arguments(cc.get_supported_arguments(opt), language: 'c')
 add_project_link_arguments(optl, language: 'c')
 
+# raylib's config.h is swapped for src/rlconfig.h (only the formats the game loads)
 rldefs = ['-DPLATFORM_DESKTOP_GLFW', '-DGRAPHICS_API_OPENGL_ES2', '-D_GLFW_X11',
-	'-DSUPPORT_FILEFORMAT_JPG', '-DSUPPORT_FILEFORMAT_BMP']
+	'-DEXTERNAL_CONFIG_FLAGS', '-include', meson.current_source_dir() / 'src/rlconfig.h']
 sys = [cc.find_library('m'), cc.find_library('dl'), cc.find_library('rt'), cc.find_library('X11'), dependency('threads')]
 
 # vendored libs, built quiet
