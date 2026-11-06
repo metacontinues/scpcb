@@ -22,7 +22,7 @@ RLOBJ := $(RLSRC:%=$(B)/raylib/%.o)
 BBSRC := $(wildcard src/bb/*.c) $(wildcard src/fmt/*.c)
 BBOBJ := $(BBSRC:%.c=$(B)/%.o)
 
-all: $(B)/rmview $(B)/colltest $(B)/sndtest $(B)/g2dtest
+all: $(B)/rmview $(B)/colltest $(B)/sndtest $(B)/g2dtest $(B)/misctest
 
 $(B)/libraylib.a: $(RLOBJ)
 	ar rcs $@ $^
@@ -46,9 +46,13 @@ $(B)/sndtest: $(B)/tools/sndtest.o $(BBOBJ) $(B)/libraylib.a
 $(B)/g2dtest: $(B)/tools/g2dtest.o $(BBOBJ) $(B)/libraylib.a
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
+$(B)/misctest: $(B)/tools/misctest.o $(BBOBJ) $(B)/libraylib.a
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
+
 # run from anywhere; sndtest needs the repo's SFX + an audio device
-test: $(B)/colltest $(B)/sndtest
+test: $(B)/colltest $(B)/sndtest $(B)/misctest
 	$(B)/colltest
+	$(B)/misctest
 	cd .. && port/$(B)/sndtest
 
 clean:

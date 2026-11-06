@@ -27,12 +27,17 @@ port/
     coll.c         Collisions/UpdateWorld (swept ellipsoid), picks, EntityVisible
     anim.c         keyframes (lerp + slerp per channel), cpu skinning, SetAnimTime/Animate/seqs
     snd.c          sounds/channels (raylib aliases) + music streams for the FSOUND_Stream_* calls
+    g2d.c          buffers, images, Text/Rect/Line/Oval, fonts, CopyRect, Read/WritePixel
+    input.c        keyboard (directinput scancodes) + mouse, hit/speed counters like blitz
+    misc.c         blitz's exact rng, file writing, dirs, dates
   src/fmt/         file formats: b3d.c (+ LoadMesh dispatch), x.c, rmesh.c
   src/game/        game code goes here (empty rn)
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
   tools/colltest.c collision + pick checks, `make -C port test`
   tools/sndtest.c  sound/channel/stream checks (muted). w/o an audio device it only checks silent mode
+  tools/g2dtest.c  every 2d path once + pixel io; `port/build/g2dtest out.png` to eyeball it
+  tools/misctest.c rng + file io
 ```
 
 ## build + run
@@ -60,6 +65,14 @@ x11 only for now (works under xwayland). native wayland needs glfw's generated p
 
 ## how the blitz stuff maps
 
+- **2d**: SetBuffer on an image/texture lazily turns it into a render texture drawn w/ a y-flipped ortho,
+  so row 0 stays the top row and blitz uvs keep working. images are masked like blitz (black = clear,
+  alpha ignored) and get re-keyed after being drawn into. AAText.bb's sprite-camera font hack isn't
+  needed: raylib text is antialiased already, so AAText -> bbTextA (text w/ alpha). CopyRect and pixel
+  ops go through cpu readback (TODO: glCopyTexSubImage2D for the per-frame Dreamfilter grab).
+- **rng**: Rand/Rnd/SeedRnd use blitz3d's park-miller generator. the step is checked against c++'s
+  minstd_rand (10000th value). the float mapping + default seed 0x1234 are from blitz3d's source as i
+  remember it, not checked against a real blitz build yet. worth verifying w/ a known map seed.
 - **audio**: the game does its own 3d (PlaySound2/UpdateSoundOrigin compute vol + pan from DeltaYaw), so
   only the plain blitz api is needed. each PlaySound gets its own voice (a raylib sound alias); channel
   handles carry a generation so stale ones go dead instead of steering a recycled voice. fmod streams
@@ -80,15 +93,14 @@ x11 only for now (works under xwayland). native wayland needs glfw's generated p
 
 ## status
 
-works: entities/hierarchy/transforms, b3d animation + skinning, sound + music streams, meshes, brushes, textures, cameras, lights, sprites, fog,
+works: entities/hierarchy/transforms, b3d animation + skinning, sound + music streams, 2d, input, files, rng, meshes, brushes, textures, cameras, lights, sprites, fog,
 collisions + picking, b3d + .x meshes and node trees (.x: text, binary, and single-block mszip "bzip"), rmesh rooms w/ props.
 every .x in the repo loads. the only warnings are 2 broken asset paths (294.x wants a missing png, mug.x
 points at a folder on the modder's desktop), and blitz chokes on those too.
 
-next up, roughly in order:
-1. **2d**: images, fonts (`AAText.bb`), `Text`/`Rect`/`Line`, `SetBuffer`/render-to-texture
-2. **input + ini** helpers
-3. then the actual game port: Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
+next up: the game itself. Main.bb (12k), UpdateEvents (10k), MapSystem (8.7k), NPCs (7.5k), ...
+the runtime covers the blitz commands those files use (see the usage counts in git history); the open
+design questions are strings (blitz `$` is a gc'd value type) and blitz `Type` lists (New/Each/Delete/Before/After).
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested
