@@ -11,7 +11,7 @@ handles are ints and 0 is null, same as blitz, so game code that stores entities
 
 ```
 port/
-  Makefile         plain make, builds raylib from vendor/ too
+  meson.build      muon/meson build, builds raylib + bdwgc from vendor/ too
   vendor/raylib    submodule, pinned to 5.5
   vendor/bdwgc     submodule, boehm gc v8.2.12 (for blitz strings + Type objects)
   src/bb/          blitz runtime
@@ -42,7 +42,7 @@ port/
     keyname.c difficulty.c achv.c             the small .bb files
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
-  tools/colltest.c collision + pick checks, `make -C port test`
+  tools/colltest.c collision + pick checks, `muon -C port/build test`
   tools/sndtest.c  sound/channel/stream checks (muted). w/o an audio device it only checks silent mode
   tools/g2dtest.c  every 2d path once + pixel io; `port/build/g2dtest out.png` to eyeball it
   tools/misctest.c rng + file io
@@ -50,11 +50,12 @@ port/
 
 ## build + run
 
-needs a c compiler, make, x11 dev headers. run stuff from the repo root so asset paths resolve.
+needs a c compiler, [muon](https://muon.build) (or meson + ninja, same file), x11 dev headers. run stuff from the repo root so asset paths resolve.
 
 ```sh
 git submodule update --init
-make -C port
+cd port && muon setup build && muon -C build samu && cd ..   # samu = muon's built-in ninja
+muon -C port/build test
 port/build/scpcb                             # the game (launcher -> loading screen so far)
 port/build/rmview GFX/map/173_opt.rmesh     # wasd/qe + mouse, shift fast, f12 screenshot
 port/build/rmview GFX/apache.b3d
@@ -64,7 +65,7 @@ by default it uses the system `libEGL`/`libGLESv2` (mesa). to run on ANGLE, poin
 ANGLE's `libEGL.so` + `libGLESv2.so` (chromium/electron ship them, or build angle w/ gn):
 
 ```sh
-make -C port ANGLE=/path/to/angle/out   # adds an rpath
+cd port && muon setup -Dangle=/path/to/angle/out build   # adds an rpath (on an existing dir: muon -C build configure -Dangle=...)
 # or without rebuilding:
 LD_LIBRARY_PATH=/path/to/angle/out port/build/rmview ...
 ```
