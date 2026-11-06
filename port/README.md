@@ -43,7 +43,11 @@ port/
     widgets.c      buttons/ticks/frames/RowText/InputBox   sliders.c SlideBar/Slider3-7/Button/scrollbar
     mainmenu.c     UpdateMainMenu + Menu.bb top level      options.c the options tabs
     tooltip.c      option/map tooltips, GetLineAmount      save.c    Save.bb (save + map lists so far)
-    loop.c         Main.bb's main loop                     music.c   UpdateMusic + the Music list
+    loop.c         Main.bb's main loop (+ a temp fly cam)  music.c   UpdateMusic + the Music list
+    map.h          MapSystem types (rooms, templates, doors, waypoints, screens) + their globals
+    rooms.c        materials, rmesh glue, room templates, CreateRoom, FillRoom's generic part, lights, overlap
+    mapgen.c       CreateMap / SetRoom / GetZone           doors.c   CreateDoor, CreateButton
+    entities.c     LoadEntities (most of it)
     keyname.c difficulty.c achv.c             the small .bb files
   tools/rmview.c   room/model viewer, the current test bed (tab = walk w/ the game's collider,
                    `rmview GFX/npcs/classd.b3d out.png 0 anim 200` poses an npc)
@@ -135,15 +139,20 @@ collisions + picking, b3d + .x meshes and node trees (.x: text, binary, and sing
 every .x in the repo loads. the only warnings are 2 broken asset paths (294.x wants a missing png, mug.x
 points at a folder on the modder's desktop), and blitz chokes on those too.
 
-game: hand-ported (no transpiler) into `src/game/`. done so far: Main.bb's top level up to the main loop (minus the
-includes below), the main loop's menu side, INI, StrictLoads, launcher, loading screens, the whole main menu (new game,
-load game, load map, all 4 options tabs, tooltips, sliders), save/map lists, UpdateMusic, KeyName, Difficulty, Achievements init.
-`build/scpcb` goes launcher -> loading screens -> main menu. START/Load print "can't start a game yet" and stay in the menu.
+game: hand-ported (no transpiler) into `src/game/`. done so far: Main.bb's top level up to the main loop, the main
+loop's menu side, INI, StrictLoads, launcher, loading screens, the whole main menu, save/map lists, UpdateMusic,
+KeyName, Difficulty, Achievements init, LoadEntities (most), room templates + rmesh rooms, CreateMap (the full map
+generator), CreateRoom, CreateDoor. START builds the facility from the seed and drops you in a stand-in fly cam
+(wasd + mouse, esc back to the menu). dev env for it: `SCPCB_SEED=x` fixed seed, `SCPCB_TOPDOWN=1` whole map from
+above (ceilings are culled), `SCPCB_DUMP=1` room list on stderr.
+heads up: FillRoom's per-room part (the ~3400 line Select) isn't ported. it calls Rand too, so until it is, a seed
+gives the same corridor layout as blitz but different room picks after the first special room.
 stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), Dreamfilter,
 borderless windowed + ScreenGamma (blitz did these w/ the fresize_* camera, not ported), ResizeImage2 is a plain ResizeImage,
-TextureLodBias is a no-op (es2), "antialiased text" only flips the ini value.
-next up: the game itself. Items.bb, Particles.bb, MapSystem.bb (LoadRoomTemplates + map gen), NPCs.bb, then
-LoadEntities/LoadAllSounds/InitNewGame and the in-game half of the main loop.
+TextureLodBias is a no-op (es2), "antialiased text" only flips the ini value, bump maps, LoadWorld (.b3d rooms, unused),
+light cones, the blur cam overlays, items/particles/NPC/event setup, loading saves.
+next up: FillRoom's per-room cases (needs Items.bb's CreateItem, NPCs, emitters, levers, security cams), UpdateRooms/
+UpdateDoors, then the player (MovePlayer/MouseLook) so the fly cam can go.
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested

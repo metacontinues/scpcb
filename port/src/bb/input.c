@@ -31,12 +31,12 @@ static void push(int c) { if (nkq < 64) keyq[nkq++] = c; }
 
 // dev hook: BB_INPUT="frame:ev ev,frame:ev" plays input at flip n (counted like BB_SHOT_FRAME).
 // ev: m<x>x<y> move the mouse (virtual, the real pointer isn't touched), l left click,
-//     k<scancode> key hit, c<ascii> typed char. eg BB_INPUT="12:c13,20:m300x400 l"
-static int sx = -1, sy, sdown, sframe;
+//     k<scancode> key hit, h<scancode> key held this flip, c<ascii> typed char. eg BB_INPUT="12:c13,20:m300x400 l"
+static int sx = -1, sy, sdown, sframe, shold[256];
 static void script(void) {
 	static const char *p; static int init;
 	if (!init) { init = 1; p = getenv("BB_INPUT"); }
-	sframe++; sdown = 0;
+	sframe++; sdown = 0; memset(shold, 0, sizeof shold);
 	for (const char *c = p; c && *c;) {
 		int f = atoi(c);
 		const char *e = strchr(c, ':'), *nx = strchr(c, ',');
@@ -47,6 +47,7 @@ static void script(void) {
 				case 'l': mhit[1]++; sdown = 1; break;
 				case 'k': { int k = atoi(e + 1); if (k > 0 && k < 256) khit[k]++; } break;
 				case 'c': push(atoi(e + 1)); break;
+				case 'h': { int k = atoi(e + 1); if (k > 0 && k < 256) shold[k] = 1; } break;
 			}
 			while (*e && *e != ' ' && *e != ',') e++;
 			while (*e == ' ') e++;
@@ -56,7 +57,7 @@ static void script(void) {
 }
 
 static int rl(int sc) { return sc > 0 && sc < 256 ? sc2rl[sc] : 0; }
-int bbKeyDown(int sc) { return rl(sc) && IsKeyDown(rl(sc)); }
+int bbKeyDown(int sc) { return (sc > 0 && sc < 256 && shold[sc]) || (rl(sc) && IsKeyDown(rl(sc))); }
 int bbKeyHit(int sc) { if (sc <= 0 || sc >= 256) return 0; int n = khit[sc]; khit[sc] = 0; return n; }
 void bbFlushKeys(void) { memset(khit, 0, sizeof khit); nkq = 0; }
 int bbGetKey(void) { // ascii of next typed key, 0 if none
