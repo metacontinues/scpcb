@@ -7,7 +7,8 @@
 #define grow(p, n, cap) do { if ((n) >= (cap)) { (cap) = (cap) ? (cap)*2 : 16; \
 	(p) = realloc((p), sizeof *(p) * (cap)); } } while (0)
 
-Image bb_loadimg(const char *path); // tex.c: LoadImage that sniffs the format
+Image bb_loadimg(const char *path); // tex.c: loads the converted .qoi of a real asset path
+const char *bb_media(const char *real, const char *ext); // fs.c: real asset path -> its converted copy, NULL if missing
 
 typedef struct {
 	float r, g, b, a, shine;

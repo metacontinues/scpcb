@@ -12,7 +12,8 @@ handles are ints and 0 is null, same as blitz, so game code that stores entities
 ```
 port/
   meson.build      meson build (plain syntax, muon works too), builds raylib + bdwgc + mimalloc from vendor/ too
-  src/rlconfig.h   raylib's config.h trimmed to what the game loads (png/jpg/bmp, ogg, ttf)
+  src/rlconfig.h   raylib's config.h trimmed to what the game loads (qoi, qoa, ttf)
+  data/            converted assets (gitignored), written by tools/assetconv.c
   vendor/raylib    submodule, pinned to 5.5
   vendor/bdwgc     submodule, boehm gc v8.2.12 (for blitz strings + Type objects)
   vendor/mimalloc  submodule, v3.5.4, overrides malloc for the whole process (-Dmimalloc=false to skip)
@@ -59,6 +60,7 @@ port/
   tools/sndtest.c  sound/channel/stream checks (muted). w/o an audio device it only checks silent mode
   tools/g2dtest.c  every 2d path once + pixel io; `port/build/g2dtest out.png` to eyeball it
   tools/misctest.c rng + file io
+  tools/assetconv.c images -> qoi, oggs -> qoa into port/data (the only place w/ png/jpg/bmp/dds/ogg decoders)
 ```
 
 ## build + run
@@ -75,6 +77,7 @@ handles the lto bitcode fine through LLVMgold.so.
 ```sh
 git submodule update --init
 port/setup.sh && ninja -C port/build
+port/build/assetconv                         # once (and after asset changes): GFX/SFX/... -> port/data, ~5s
 meson test -C port/build
 port/build/scpcb                             # the game (launcher -> loading screen so far)
 port/build/rmview GFX/map/173_opt.rmesh     # wasd/qe + mouse, shift fast, f12 screenshot
@@ -112,8 +115,14 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
   exist in a c string, so the INI code that used it as a separator is rewritten w/ a line array.
 - **Types**: `typedef struct T { lnode n; ...fields } T;` + `TLIST(T)` in one .c. objects are gc'd, Delete just
   unlinks, so dangling refs stay readable (blitz would error). `bbObject(T, h)` is Null after Delete, like blitz.
-- **textures**: png/jpg/bmp/dds via raylib (sniffed by magic, the game hides jpgs as .dc/.pt), dxt1/3/5 dds
-  get decoded on the cpu. LoadAnimTexture keeps one gl texture per frame, EntityTexture/BrushTexture pick it.
+- **assets**: the game only reads qoi (images) and qoa (sound), so raylib is built w/o its png/jpg/bmp/ogg decoders.
+  tools/assetconv.c converts every asset once into `port/data/<path>.qoi|qoa` (full name kept, so foo.png and
+  foo.jpg can't collide; files are recognised by content, the game hides jpgs as .dc/.pt/.it/.s and an ogg as
+  .cwm). the runtime maps every image/sound load there (`bb_media`, BB_DATA overrides the dir). originals stay as
+  they are. qoi is lossless; the rgb/rgba channel count is kept since texture alpha depends on it. qoa is lossy
+  (~3.2 bits/sample, transcoded from vorbis). dxt dds are decoded in the converter. sizes: ~207MB of originals
+  -> ~508MB in port/data (qoa ~2x the oggs, qoi of jpgs is most of the rest).
+- **textures**: LoadAnimTexture keeps one gl texture per frame, EntityTexture/BrushTexture pick it.
   ReadPixel outside a Lock reads a cached download (invalidated by any draw), so per-pixel loops stay fast.
 - **game porting rules**: float -> int goes through `bbInt` (blitz rounds to nearest, c truncates), Min/Max are
   float like blitz, `Dim a(n)` is `a[n+1]`, globals are declared once w/ `G(type, names)` in g.h, function
@@ -133,7 +142,7 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
   one-shot is stolen, like fmod); channel
   handles carry a generation so stale ones go dead instead of steering a recycled voice. fmod streams
   map to raylib Music, fed in bbFlip. no audio device -> LoadSound still returns handles, everything's silent.
-  all 894 referenced oggs decode (the 895th, SFX/SCP/970/fcveny.ogg, is a text-prefixed easter egg nobody loads).
+  all 894 referenced oggs convert (the 895th, SFX/SCP/970/fcveny.ogg, is a text-prefixed easter egg nobody loads).
 
 - **coords**: everything stays in blitz's left-handed space. the projection matrix maps lh view space
   straight to gl clip space, and since blitz front faces are cw we cull gl "front" faces. no mirroring anywhere.

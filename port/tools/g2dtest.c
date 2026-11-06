@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
 	int w = GetRenderWidth(), h = GetRenderHeight();
 	g2d_end(); rlDrawRenderBatchActive();
 	Image s = {rlReadScreenPixels(w, h), w, h, 1, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
-	if (argc > 1) ExportImage(s, argv[1]);
+	if (argc > 1) bbSavePNG(argv[1], w, h, s.data);
 	UnloadImage(s);
 	bbFlip(1);
 	bbEndGraphics();

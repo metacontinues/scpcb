@@ -29,6 +29,10 @@ void bbEndGraphics(void) { snd_quit(); rend_quit(); CloseWindow(); }
 int bbGraphicsWidth(void) { return GetScreenWidth(); }
 int bbGraphicsHeight(void) { return GetScreenHeight(); }
 // EndDrawing polls events. closing the window ends the program, like blitz w/o a close prompt
+// png writer for screenshots. no png decoder is built, but raylib always compiles stb_image_write
+int stbi_write_png(const char *filename, int w, int h, int comp, const void *data, int stride);
+int bbSavePNG(const char *p, int w, int h, const void *rgba) { return stbi_write_png(p, w, h, 4, rgba, w * 4); }
+
 // dev hook: BB_SHOT=out.png BB_SHOT_FRAME=n grabs flip n to a png and exits
 static void autoshot(void) {
 	static int n; static const char *p; static int at = -1;
@@ -36,8 +40,8 @@ static void autoshot(void) {
 	if (!p || ++n != at) return;
 	rlDrawRenderBatchActive();
 	int w = GetRenderWidth(), h = GetRenderHeight();
-	Image im = {rlReadScreenPixels(w, h), w, h, 1, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
-	ExportImage(im, p);
+	unsigned char *px = rlReadScreenPixels(w, h);
+	bbSavePNG(p, w, h, px);
 	exit(0);
 }
 void bbFlip(int vsync) {

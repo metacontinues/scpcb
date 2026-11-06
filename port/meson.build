@@ -82,6 +82,9 @@ executable('scpcb', files(
 	'src/game/strict.c', 'src/game/tooltip.c', 'src/game/widgets.c'),
 	dependencies: bb)
 
+# assets -> qoi/qoa (port/data). has its own decoders (stb_image, stb_vorbis), the game doesn't
+executable('assetconv', 'tools/assetconv.c', c_args: ['-w'], include_directories: rl, dependencies: cc.find_library('m'))
+
 foreach t : ['rmview', 'colltest', 'sndtest', 'g2dtest', 'misctest', 'strtest']
 	exe = executable(t, 'tools' / t + '.c', dependencies: bb)
 	if t in ['colltest', 'misctest', 'strtest']

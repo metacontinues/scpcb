@@ -4,6 +4,7 @@
 #include <string.h>
 #include <strings.h>
 #include <sys/stat.h>
+#include <unistd.h>
 #include "in.h"
 
 // resolve "GFX\map\door01.x" -> "GFX/map/Door01.x". walks components, case-insensitive
@@ -27,6 +28,28 @@ const char *bbPath(const char *p) {
 		if (ok) snprintf(out + n, sizeof out - n, "%s%s", n && out[n-1] != '/' ? "/" : "", de->d_name);
 		closedir(d);
 		if (!ok) return NULL;
+	}
+	return out;
+}
+
+// media (images, sounds) is read from the qoi/qoa copies tools/assetconv.c writes: <data>/<real path>.qoi|qoa.
+// <data> is BB_DATA or port/data, both relative to the game dir like the assets themselves
+const char *bb_media(const char *real, const char *ext) {
+	static char out[2048], cwd[1024];
+	if (!real) return NULL;
+	const char *d = getenv("BB_DATA");
+	if (real[0] == '/') { // absolute (CurrentDir() + ...): make it relative again
+		if (!cwd[0] && !getcwd(cwd, sizeof cwd)) return NULL;
+		size_t n = strlen(cwd);
+		if (strncmp(real, cwd, n) || real[n] != '/') return NULL;
+		real += n + 1;
+	}
+	snprintf(out, sizeof out, "%s/%s.%s", d ? d : "port/data", real, ext);
+	struct stat st;
+	if (stat(out, &st)) {
+		static int warned;
+		if (!warned++) fprintf(stderr, "bb: no converted asset %s (run port/build/assetconv from the game dir)\n", out);
+		return NULL;
 	}
 	return out;
 }
