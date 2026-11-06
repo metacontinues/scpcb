@@ -74,11 +74,11 @@ bb = declare_dependency(link_with: [bblib, raylib, gc], link_whole: mi, dependen
 	include_directories: include_directories(rl, 'vendor/bdwgc/include'), link_args: link)
 
 executable('scpcb', files(
-	'src/game/achv.c', 'src/game/difficulty.c', 'src/game/doors.c', 'src/game/entities.c', 'src/game/ini.c',
-	'src/game/items.c', 'src/game/keyname.c', 'src/game/loading.c', 'src/game/loop.c', 'src/game/main.c',
-	'src/game/mainmenu.c', 'src/game/mapgen.c', 'src/game/menu.c', 'src/game/music.c', 'src/game/options.c',
-	'src/game/rooms.c', 'src/game/save.c', 'src/game/sliders.c', 'src/game/strict.c', 'src/game/tooltip.c',
-	'src/game/widgets.c'),
+	'src/game/achv.c', 'src/game/difficulty.c', 'src/game/doors.c', 'src/game/entities.c', 'src/game/fx.c',
+	'src/game/ini.c', 'src/game/items.c', 'src/game/keyname.c', 'src/game/loading.c', 'src/game/loop.c',
+	'src/game/main.c', 'src/game/mainmenu.c', 'src/game/mapgen.c', 'src/game/menu.c', 'src/game/music.c',
+	'src/game/options.c', 'src/game/rooms.c', 'src/game/save.c', 'src/game/sliders.c', 'src/game/strict.c',
+	'src/game/tooltip.c', 'src/game/widgets.c'),
 	dependencies: bb)
 
 foreach t : ['rmview', 'colltest', 'sndtest', 'g2dtest', 'misctest', 'strtest']

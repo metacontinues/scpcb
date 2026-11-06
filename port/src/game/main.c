@@ -216,7 +216,8 @@ void InitLateGlobals(void) {
 	NavImages[4] = LoadImage_Strict("GFX\\navigator\\batterymeter.png");
 	NavBG = bbCreateImage(GraphicWidth, GraphicHeight, 1);
 	DrawLoading(35, 1);
-	// TODO Items.bb, Particles.bb (HissSFX), doors, MapSystem.bb (LoadRoomTemplates), NPCs.bb, UpdateEvents.bb
+	HissSFX = LoadSound_Strict("SFX\\General\\Hiss.ogg"); // Particles.bb
+	// TODO MapSystem.bb (LoadRoomTemplates), NPCs.bb, UpdateEvents.bb
 	DrawLoading(40, 1);
 	InitMapGlobals(); // MapSystem.bb's top level
 	DrawLoading(80, 1);
