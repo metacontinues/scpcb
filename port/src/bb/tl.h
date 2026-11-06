@@ -3,11 +3,12 @@
 //   Doors *d = bbNew(Doors);   each(Doors, d) { ... }   bbDelete(d);
 // deleting the current object inside each() is fine (next is grabbed up front).
 // a deleted object stays valid memory until unreferenced, its n.ls goes NULL.
+// Handle(p)/Object.T(h): bbHandle(p) / bbObject(T, h). the handle table pins objects, like blitz.
 #pragma once
 #include <gc.h>
 
 typedef struct tlist tlist;
-typedef struct lnode { struct lnode *prev, *next; tlist *ls; } lnode;
+typedef struct lnode { struct lnode *prev, *next; tlist *ls; int h; } lnode;
 struct tlist { lnode *first, *last; };
 
 #define TLIST(T) tlist T##_l
@@ -38,3 +39,9 @@ static inline void *tl_new(tlist *l, size_t sz) { lnode *x = GC_MALLOC(sz); tl_i
 #define bbInsertBefore(p, q) do { lnode *x_ = &(p)->n, *y_ = &(q)->n; tlist *l_ = x_->ls; tl_unlink(x_); tl_ins(l_, x_, y_->prev); } while (0)
 #define bbInsertAfter(p, q) do { lnode *x_ = &(p)->n, *y_ = &(q)->n; tlist *l_ = x_->ls; tl_unlink(x_); tl_ins(l_, x_, y_); } while (0)
 #define each(T, v) for (T *v = bbFirst(T), *v##_nx = v ? bbAfter(v) : NULL; v; v = v##_nx, v##_nx = v ? bbAfter(v) : NULL)
+
+int tl_handle(lnode *x);
+lnode *tl_object(int h); // NULL for 0, unknown or deleted
+#define bbHandle(p) ((p) ? tl_handle(&(p)->n) : 0)
+#define bbObject(T, h) ((T *)tl_obj_of(&T##_l, h))
+static inline lnode *tl_obj_of(tlist *l, int h) { lnode *x = tl_object(h); return x && x->ls == l ? x : NULL; }

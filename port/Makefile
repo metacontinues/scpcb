@@ -23,7 +23,7 @@ RLOBJ := $(RLSRC:%=$(B)/raylib/%.o)
 BBSRC := $(wildcard src/bb/*.c) $(wildcard src/fmt/*.c)
 BBOBJ := $(BBSRC:%.c=$(B)/%.o) $(B)/gc.o
 
-all: $(B)/rmview $(B)/colltest $(B)/sndtest $(B)/g2dtest $(B)/misctest $(B)/strtest
+all: $(B)/scpcb $(B)/rmview $(B)/colltest $(B)/sndtest $(B)/g2dtest $(B)/misctest $(B)/strtest
 
 $(B)/libraylib.a: $(RLOBJ)
 	ar rcs $@ $^
@@ -39,6 +39,10 @@ $(B)/gc.o: $(GC)/extra/gc.c
 $(B)/%.o: %.c $(wildcard src/*/*.h)
 	@mkdir -p $(@D)
 	$(CC) -c $(CFLAGS) $< -o $@
+
+GAMEOBJ := $(patsubst %.c,$(B)/%.o,$(wildcard src/game/*.c))
+$(B)/scpcb: $(GAMEOBJ) $(BBOBJ) $(B)/libraylib.a
+	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@
 
 $(B)/rmview: $(B)/tools/rmview.o $(BBOBJ) $(B)/libraylib.a
 	$(CC) $(LDFLAGS) $^ $(LDLIBS) -o $@

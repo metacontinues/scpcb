@@ -1,13 +1,22 @@
 // sys.c: window, frame, timing, primitives
 #include <stdlib.h>
 #include "in.h"
+#include "rlgl.h"
 
 static int inframe;
 
 void bb_frame(void) { if (!inframe) { BeginDrawing(); inframe = 1; } }
 
+// blitz lets you call this again (launcher -> game). we keep the window + gl context and
+// just resize it, so loaded stuff survives (blitz would free it, the game reloads anyway)
 int bbGraphics3D(int w, int h, int depth, int mode) {
 	(void)depth;
+	if (IsWindowReady()) {
+		if (inframe) { EndDrawing(); inframe = 0; }
+		if (IsWindowFullscreen() != (mode == 1)) ToggleFullscreen();
+		SetWindowSize(w, h);
+		return 1;
+	}
 	SetTraceLogLevel(LOG_WARNING);
 	SetConfigFlags(mode == 1 ? FLAG_FULLSCREEN_MODE : 0);
 	InitWindow(w, h, "scpcb");
@@ -19,10 +28,30 @@ int bbGraphics3D(int w, int h, int depth, int mode) {
 void bbEndGraphics(void) { snd_quit(); rend_quit(); CloseWindow(); }
 int bbGraphicsWidth(void) { return GetScreenWidth(); }
 int bbGraphicsHeight(void) { return GetScreenHeight(); }
-void bbFlip(int vsync) { (void)vsync; bb_frame(); g2d_end(); EndDrawing(); inframe = 0; input_update(); snd_update(); } // EndDrawing polled events
+// EndDrawing polls events. closing the window ends the program, like blitz w/o a close prompt
+// dev hook: BB_SHOT=out.png BB_SHOT_FRAME=n grabs flip n to a png and exits
+static void autoshot(void) {
+	static int n; static const char *p; static int at = -1;
+	if (at < 0) { p = getenv("BB_SHOT"); const char *f = getenv("BB_SHOT_FRAME"); at = f ? atoi(f) : 10; }
+	if (!p || ++n != at) return;
+	rlDrawRenderBatchActive();
+	int w = GetRenderWidth(), h = GetRenderHeight();
+	Image im = {rlReadScreenPixels(w, h), w, h, 1, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8};
+	ExportImage(im, p);
+	exit(0);
+}
+void bbFlip(int vsync) {
+	(void)vsync; bb_frame(); g2d_end(); autoshot(); EndDrawing(); inframe = 0; input_update(); snd_update();
+	if (WindowShouldClose()) exit(0);
+}
 
 int bbMilliSecs(void) { return (int)(GetTime() * 1000); }
 int bbAppClosing(void) { return WindowShouldClose(); }
+int bbCountGfxDrivers(void) { return 1; }
+const char *bbGfxDriverName(int i) { return i == 1 ? "OpenGL ES 2 (raylib)" : ""; }
+void bbAntiAlias(int on) { (void)on; } // msaa has to be picked before the window exists
+int bbDesktopWidth(void) { return IsWindowReady() ? GetMonitorWidth(GetCurrentMonitor()) : 0; }
+int bbDesktopHeight(void) { return IsWindowReady() ? GetMonitorHeight(GetCurrentMonitor()) : 0; }
 
 // ---- primitives (blitz layouts, cw front faces)
 ent bbCreateCube(ent par) {
