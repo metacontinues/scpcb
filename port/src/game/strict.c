@@ -44,7 +44,7 @@ int PlaySound_Strict(int h) {
 
 int LoadSound_Strict(const char *file) {
 	Sound *snd = lnew(Sound);
-	snd->name = s_dup(file);
+	sset(&snd->name, s_dup(file));
 	if (!EnableSFXRelease) snd->internalHandle = load_sound(snd->name);
 	return lhandle(snd);
 }

@@ -114,8 +114,8 @@ static int room2cafeteria(Events *e) { // 294 takes two quarters
 					inserted = 1;
 				}
 				if (e->EventState2 == 2) { Using294 = temp; if (Using294) MouseHit1 = 0; }
-				else if (e->EventState2 == 1 && !inserted) { Using294 = 0; Msg = "You need to insert another Quarter in order to use this machine."; MsgTimer = 70 * 5; }
-				else if (!inserted) { Using294 = 0; Msg = "You need to insert two Quarters in order to use this machine."; MsgTimer = 70 * 5; }
+				else if (e->EventState2 == 1 && !inserted) { Using294 = 0; sset(&Msg, "You need to insert another Quarter in order to use this machine."); MsgTimer = 70 * 5; }
+				else if (!inserted) { Using294 = 0; sset(&Msg, "You need to insert two Quarters in order to use this machine."); MsgTimer = 70 * 5; }
 			}
 		}
 	}
@@ -216,7 +216,7 @@ static int room1lifts(Events *e) {
 	for (int i = 0; i <= 1; i++) {
 		UpdateButton(R->Objects[i]);
 		if (ClosestButton == R->Objects[i] && MouseHit1) {
-			Msg = "The elevator appears to be broken.";
+			sset(&Msg, "The elevator appears to be broken.");
 			PlaySound2(ButtonSFX2, Camera, R->Objects[i], 10, 1);
 			MsgTimer = 5 * 70;
 			MouseHit1 = 0;
@@ -330,7 +330,7 @@ static int pipes106(Events *e) { // 106 walks across the pipes
 
 static int closets(Events *e) { // 2 class ds hiding in the closet. their setup is QuickLoad's (room2closets below)
 	if (e->EventState == 0) {
-		if (IN && Curr173->Idle < 2 && !s_len(e->EventStr) && QuickLoadPercent == -1) { QuickLoadPercent = 0; QuickLoad_CurrEvent = e; e->EventStr = "load0"; }
+		if (IN && Curr173->Idle < 2 && !s_len(e->EventStr) && QuickLoadPercent == -1) { QuickLoadPercent = 0; QuickLoad_CurrEvent = e; sset(&e->EventStr, "load0"); }
 		return 0;
 	}
 	NPCs *n0 = R->NPC[0], *n1 = R->NPC[1];
@@ -454,15 +454,15 @@ static void ql_closets(Events *e) {
 		QuickLoadPercent = 10;
 		if (!llive(R->NPC[0])) R->NPC[0] = CreateNPC(NPCtypeD, XG(R->Objects[0]), YG(R->Objects[0]), ZG(R->Objects[0]));
 		ChangeNPCTextureID(R->NPC[0], 4);
-		e->EventStr = "load1";
-	} else if (s_eq(s, "load1")) { QuickLoadPercent = 20; R->NPC[0]->Sound = LoadSound_Strict("SFX\\Room\\Storeroom\\Escape1.ogg"); e->EventStr = "load2"; }
-	else if (s_eq(s, "load2")) { QuickLoadPercent = 35; R->NPC[0]->SoundChn = PlaySound2(R->NPC[0]->Sound, Camera, R->NPC[0]->Collider, 12, 1); e->EventStr = "load3"; }
+		sset(&e->EventStr, "load1");
+	} else if (s_eq(s, "load1")) { QuickLoadPercent = 20; R->NPC[0]->Sound = LoadSound_Strict("SFX\\Room\\Storeroom\\Escape1.ogg"); sset(&e->EventStr, "load2"); }
+	else if (s_eq(s, "load2")) { QuickLoadPercent = 35; R->NPC[0]->SoundChn = PlaySound2(R->NPC[0]->Sound, Camera, R->NPC[0]->Collider, 12, 1); sset(&e->EventStr, "load3"); }
 	else if (s_eq(s, "load3")) {
 		QuickLoadPercent = 55;
 		if (!llive(R->NPC[1])) R->NPC[1] = CreateNPC(NPCtypeD, XG(R->Objects[1]), YG(R->Objects[1]), ZG(R->Objects[1]));
 		ChangeNPCTextureID(R->NPC[1], 2);
-		e->EventStr = "load4";
-	} else if (s_eq(s, "load4")) { QuickLoadPercent = 80; R->NPC[1]->Sound = LoadSound_Strict("SFX\\Room\\Storeroom\\Escape2.ogg"); e->EventStr = "load5"; }
+		sset(&e->EventStr, "load4");
+	} else if (s_eq(s, "load4")) { QuickLoadPercent = 80; R->NPC[1]->Sound = LoadSound_Strict("SFX\\Room\\Storeroom\\Escape2.ogg"); sset(&e->EventStr, "load5"); }
 	else if (s_eq(s, "load5")) {
 		QuickLoadPercent = 100;
 		point_entity(R->NPC[0]->Collider, R->NPC[1]->Collider, 0);

@@ -74,7 +74,7 @@ void RowText(const char *a, int x, int y, int w, int h, int align, float leading
 	str A = s_dup(a), b = "";
 #define LINE() AAText(align ? x + w / 2 - AAStringWidth(b) / 2 : x, shown * lh + y, b, 0, 0)
 	while (s_len(A) > 0) {
-		int sp = s_instr(A, " ", 1);
+		int sp = s_find(A, " ", 0) + 1; // up to + incl. the next space
 		if (!sp) sp = s_len(A);
 		str t = s_left(A, sp), tr = s_trim(t);
 		int extra = 0;

@@ -108,12 +108,12 @@ static int cell(Events *e) {
 			reset_entity(Collider); show_entity(Collider);
 			DropSpeed = 0;
 			e->EventState3 = 15;
-			Msg = "Pick up the paper on the desk."; MsgTimer = 70 * 7;
+			sset(&Msg, "Pick up the paper on the desk."); MsgTimer = 70 * 7;
 		}
 		user_camera_pitch = 0;
 		rotate_entity(Collider, 0, entity_yaw(Camera, 0), 0, 0);
 	} else if (s3 < 40 && Inventory[0]) {
-		Msg = cat("Press ", KeyName[KEY_INV], " to open the inventory."); MsgTimer = 70 * 7;
+		sset(&Msg, cat("Press ", KeyName[KEY_INV], " to open the inventory.")); MsgTimer = 70 * 7;
 		e->EventState3 = 40;
 		return 1;
 	}
@@ -241,7 +241,7 @@ static void arrive(Events *e, NPCs *n3, NPCs *n4) { // at the chamber's door: se
 static void escort(Events *e) { // 710..900: the walk
 	NPCs *n3 = N(3), *n4 = N(4);
 	n4->Angle = 0;
-	if (X(Collider) < XG(R->obj) - 5376 * RS && !s_len(e->EventStr)) e->EventStr = pamsg();
+	if (X(Collider) < XG(R->obj) - 5376 * RS && !s_len(e->EventStr)) sset(&e->EventStr, pamsg());
 	NPCs *n6 = N(6);
 	if (n6) { // the scientist at the door
 		if (n6->State == 0) {
@@ -266,9 +266,9 @@ static void escort(Events *e) { // 710..900: the walk
 	if (s_len(e->EventStr) && !s_eq(e->EventStr, "done")) { // the PA, one clip at a time
 		if (!e->SoundCHN) e->SoundCHN = PlaySound_Strict(LoadTempSound("SFX\\Room\\Intro\\PA\\on.ogg"));
 		if (!channel_playing(e->SoundCHN)) {
-			str clip = s_left(e->EventStr, s_instr(e->EventStr, "|", 1) - 1);
+			str clip = s_left(e->EventStr, s_find(e->EventStr, "|", 0));
 			e->SoundCHN = PlaySound_Strict(LoadTempSound(cat("SFX\\Room\\Intro\\PA\\", clip)));
-			e->EventStr = s_right(e->EventStr, s_len(e->EventStr) - s_len(clip) - 1);
+			sset(&e->EventStr, s_right(e->EventStr, s_len(e->EventStr) - s_len(clip) - 1));
 			if (!s_len(e->EventStr)) {
 				FreeSound_Strict(n3->Sound);
 				int t = irand(1, 5);
@@ -276,7 +276,7 @@ static void escort(Events *e) { // 710..900: the walk
 				n3->SoundChn = PlaySound2(n3->Sound, Camera, n3->Collider, 10, 1);
 				n4->Sound = LoadSound_Strict(sf("SFX\\Room\\Intro\\Guard\\Conversation%db.ogg", t));
 				n4->SoundChn = PlaySound2(n4->Sound, Camera, n4->Collider, 10, 1);
-				e->EventStr = "done";
+				sset(&e->EventStr, "done");
 			}
 		}
 	}
@@ -420,7 +420,7 @@ static int briefing(Events *e) { // < 10000: the class ds walk in, you're told t
 		else Animate2(n6->obj, anim_time(n6->obj), 328, 320, -.02f, 0);
 	}
 	if (IntroSFX[17] && entity_visible(Curr173->Collider, Collider) && entity_in_view(Curr173->obj, Camera)) {
-		Msg = cat("Press ", KeyName[KEY_BLINK], " to blink."); MsgTimer = 70 * 4;
+		sset(&Msg, cat("Press ", KeyName[KEY_BLINK], " to blink.")); MsgTimer = 70 * 4;
 		PlaySound_Strict(IntroSFX[17]);
 		IntroSFX[17] = 0;
 	}
@@ -701,8 +701,8 @@ static void alarmsetup(Events *e) {
 	ambient_light(Brightness, Brightness, Brightness);
 	camera_fog_range(Camera, CameraFogNear, CameraFogFar);
 	camera_fog_mode(Camera, 1);
-	if (SelectedDifficulty->saveType == SAVEANYWHERE) { Msg = cat("Press ", KeyName[KEY_SAVE], " to save."); MsgTimer = 70 * 4; }
-	else if (SelectedDifficulty->saveType == SAVEONSCREENS) { Msg = "Saving is only permitted on clickable monitors scattered throughout the facility."; MsgTimer = 70 * 8; }
+	if (SelectedDifficulty->saveType == SAVEANYWHERE) { sset(&Msg, cat("Press ", KeyName[KEY_SAVE], " to save.")); MsgTimer = 70 * 4; }
+	else if (SelectedDifficulty->saveType == SAVEONSCREENS) { sset(&Msg, "Saving is only permitted on clickable monitors scattered throughout the facility."); MsgTimer = 70 * 8; }
 	Curr173->Idle = 0;
 	Doors *d1 = R->RoomDoors[1];
 	while (d1->openstate < 180) { // snap the door open
@@ -714,7 +714,7 @@ static void alarmsetup(Events *e) {
 	if (!N(1)) {
 		R->NPC[1] = CreateNPC(NPCtypeD, 0, 0, 0);
 		ChangeNPCTextureID(R->NPC[1], 3);
-		R->NPC[1]->texture = "GFX\\npcs\\scientist2.jpg";
+		sset(&R->NPC[1]->texture, "GFX\\npcs\\scientist2.jpg");
 		ChangeNPCTextureID(R->NPC[1], 3);
 	}
 	position_entity(N(1)->Collider, R->x, .5f, R->z - 1, 1);
@@ -799,7 +799,7 @@ static void lockdown(Events *e, str trig) { // 900+: the scientist + ulgrin at t
 					position_entity(Curr173->Collider, X(Collider), Y(Collider), Z(Collider), 0);
 				else position_entity(Curr173->Collider, 0, 0, 0, 0);
 				reset_entity(Curr173->Collider);
-				Msg = cat("Hold ", KeyName[KEY_SPRINT], " to run."); MsgTimer = 70 * 8;
+				sset(&Msg, cat("Hold ", KeyName[KEY_SPRINT], " to run.")); MsgTimer = 70 * 8;
 			}
 		}
 		if (s_eq(trig, "173scene_end") && entity_visible(n2->Collider, Collider) && !NoTarget) { n2->State = 1; n2->State3 = 1; } // ulgrin shoots

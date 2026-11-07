@@ -25,14 +25,14 @@ static void opendoors(NPCs *n) {
 
 static void snapneck(NPCs *n) {
 	if (is(RN, "lockroom") || is(RN, "room2closets") || is(RN, "coffin"))
-		DeathMSG = "Subject D-9341. Cause of death: Fatal cervical fracture. The surveillance tapes confirm that the subject was killed by SCP-173.";
+		sset(&DeathMSG, "Subject D-9341. Cause of death: Fatal cervical fracture. The surveillance tapes confirm that the subject was killed by SCP-173.");
 	else if (is(RN, "173"))
-		DeathMSG = "Subject D-9341. Cause of death: Fatal cervical fracture. According to Security Chief Franklin who was present at SCP-173's containment "
-			"chamber during the breach, the subject was killed by SCP-173 as soon as the disruptions in the electrical network started.";
+		sset(&DeathMSG, "Subject D-9341. Cause of death: Fatal cervical fracture. According to Security Chief Franklin who was present at SCP-173's containment "
+			"chamber during the breach, the subject was killed by SCP-173 as soon as the disruptions in the electrical network started.");
 	else if (is(RN, "room2doors"))
-		DeathMSG = "\"If I'm not mistaken, one of the main purposes of these rooms was to stop SCP-173 from moving further in the event of a containment breach. "
-			"So, who's brilliant idea was it to put A GODDAMN MAN-SIZED VENTILATION DUCT in there?\"";
-	else DeathMSG = "Subject D-9341. Cause of death: Fatal cervical fracture. Assumed to be attacked by SCP-173.";
+		sset(&DeathMSG, "\"If I'm not mistaken, one of the main purposes of these rooms was to stop SCP-173 from moving further in the event of a containment breach. "
+			"So, who's brilliant idea was it to put A GODDAMN MAN-SIZED VENTILATION DUCT in there?\"");
+	else sset(&DeathMSG, "Subject D-9341. Cause of death: Fatal cervical fracture. Assumed to be attacked by SCP-173.");
 	if (!GodMode) n->Idle = 1;
 	PlaySound_Strict(NeckSnapSFX[irand(0, 2)]);
 	if (irand(1, 2) == 1) turn_entity(Camera, 0, irand(80, 100), 0, 0);
@@ -207,7 +207,7 @@ static void walk106(NPCs *n, float dist, int visible) {
 				PlaySound_Strict(DamageSFX[1]);
 				PlaySound_Strict(HorrorSFX[5]);
 				if (is(RN, "pocketdimension")) {
-					DeathMSG = "Subject D-9341. Body partially decomposed by what is assumed to be SCP-106's \"corrosion\" effect. Body disposed of via incineration.";
+					sset(&DeathMSG, "Subject D-9341. Body partially decomposed by what is assumed to be SCP-106's \"corrosion\" effect. Body disposed of via incineration.");
 					Kill();
 				} else {
 					PlaySound_Strict(OldManSFX[3]);

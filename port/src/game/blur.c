@@ -54,7 +54,7 @@ void RenderWorld2(void) {
 			power = iround(it->state);
 			if (it->state <= 0) {
 				hasBattery = 0;
-				Msg = "The batteries in these night vision goggles died.";
+				sset(&Msg, "The batteries in these night vision goggles died.");
 				BlinkTimer = -1; MsgTimer = 350;
 				break;
 			} else if (it->state <= 100) hasBattery = 1;

@@ -40,7 +40,7 @@ static void darkness(void) {
 		EyeStuck = Max(EyeStuck - FPSfactor, 0);
 		if (EyeStuck < 9000) BlurTimer = Max(BlurTimer, (9000 - EyeStuck) * .5f);
 		if (EyeStuck < 6000) darkA = Min(Max(darkA, (6000 - EyeStuck) / 5000), 1);
-		if (EyeStuck < 9000 && EyeStuck + FPSfactor >= 9000) { Msg = "The eyedrops are causing your eyes to tear up."; MsgTimer = 70 * 6; }
+		if (EyeStuck < 9000 && EyeStuck + FPSfactor >= 9000) { sset(&Msg, "The eyedrops are causing your eyes to tear up."); MsgTimer = 70 * 6; }
 	}
 	if (BlinkTimer < 0) {
 		if (BlinkTimer > -5) darkA = Max(darkA, sinf(fabsf(BlinkTimer * 18) * DTOR));
@@ -158,6 +158,7 @@ void UpdateGame(void) {
 void MainLoop(void) {
 	int CheckFPS = 0, ElapsedLoops = 0;
 	for (;;) {
+		tmp_reset(); // last frame's temp strings go
 		clear_screen();
 		CurTime = MilliSecs2();
 		float ElapsedTime = (CurTime - PrevTime) / 1000.0f;

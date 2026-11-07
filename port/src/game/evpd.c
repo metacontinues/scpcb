@@ -111,8 +111,8 @@ static void throne(Events *e) { // the throne room w/ the moving pillars, 106's 
 			position_entity(Collider, X(pvt), Y(Collider), Z(pvt), 0);
 			free_entity(pvt);
 			if (KillTimer == 0) {
-				DeathMSG = "In addition to the decomposed appearance typical of SCP-106's victims, the body exhibits injuries that have not been observed before: "
-					"massive skull fracture, three broken ribs, fractured shoulder and multiple heavy lacerations.";
+				sset(&DeathMSG, "In addition to the decomposed appearance typical of SCP-106's victims, the body exhibits injuries that have not been observed before: "
+					"massive skull fracture, three broken ribs, fractured shoulder and multiple heavy lacerations.");
 				PlaySound_Strict(LoadTempSound("SFX\\Room\\PocketDimension\\Impact.ogg"));
 				KillTimer = -1;
 			}
@@ -213,7 +213,7 @@ static void secondroom(Events *e) { // EventState2 = 1
 		} else { // fell
 			if (KillTimer >= 0) {
 				PlaySound_Strict(HorrorSFX[8]);
-				DeathMSG = "In addition to the decomposed appearance typical of the victims of SCP-106, the subject seems to have suffered multiple heavy fractures to both of his legs.";
+				sset(&DeathMSG, "In addition to the decomposed appearance typical of the victims of SCP-106, the subject seems to have suffered multiple heavy fractures to both of his legs.");
 			}
 			KillTimer = Min(-1, KillTimer);
 			BlurTimer = 3000;

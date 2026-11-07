@@ -5,7 +5,7 @@ void InitMusic(void) {
 	static const char *m[] = {"The Dread", "HeavyContainment", "EntranceZone", "PD", "079", "GateB1", "GateB2", "Room3Storage",
 		"Room049", "8601", "106", "Menu", "8601Cancer", "Intro", "178", "PDTrench", "205", "GateA", "1499", "1499Danger",
 		"049Chase", "..\\Ending\\MenuBreath", "914", "Ending", "Credits", "SaveMeFrom"};
-	for (int i = 0; i < 26; i++) Music[i] = (str)m[i];
+	for (int i = 0; i < 26; i++) sset(&Music[i], (str)m[i]);
 	MusicVolume = GetINIFloat(OptionFile, "audio", "music volume", 0);
 	MusicCHN = StreamSound_Strict(cat("SFX\\Music\\", Music[2], ".ogg"), MusicVolume, FMOD_MODE);
 	CurrMusicVolume = 1; NowPlaying = 2; ShouldPlay = 11; CurrMusic = 1;

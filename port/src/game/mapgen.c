@@ -165,7 +165,7 @@ static void assignrooms(void) {
 	mr = Max(mr, R2C[0] + R2C[1] + R2C[2] + 1); mr = Max(mr, R3[0] + R3[1] + R3[2] + 1);
 	mr = Max(mr, R4[0] + R4[1] + R4[2] + 1);
 	MaxRooms_ = mr;
-	MapRoom = GC_MALLOC(sizeof(str) * (ROOM4 + 2) * (mr + 1));
+	free(MapRoom); MapRoom = calloc((ROOM4 + 2) * (mr + 1), sizeof(str)); // points at literals / template names, owns nothing
 
 	// zone 1
 	int lo = 1, hi = R1[0] - 1;
@@ -343,7 +343,7 @@ void CreateMap(void) {
 	I_Zone->Transition[0] = 13; I_Zone->Transition[1] = 7;
 	I_Zone->HasCustomForest = I_Zone->HasCustomMT = 0;
 	seed_rnd(GenerateSeedNumber(RandomSeed));
-	MapName = GC_MALLOC(sizeof(str) * (MapWidth + 1) * (MapHeight + 1));
+	free(MapName); MapName = calloc((MapWidth + 1) * (MapHeight + 1), sizeof(str)); // same
 	memset(MapRoomID, 0, sizeof MapRoomID);
 	hallways();
 	countrooms();

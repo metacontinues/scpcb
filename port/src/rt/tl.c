@@ -1,6 +1,8 @@
 // tl.c: blitz object handles. table is gc memory so it keeps its objects alive
 #include "tl.h"
 
+__attribute__((constructor)) static void gcinit(void) { GC_INIT(); }
+
 static lnode **ht;
 static int nh, ch;
 

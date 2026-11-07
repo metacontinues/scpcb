@@ -16,13 +16,6 @@ str StripFilename(const char *f) {
 	for (int i = 1; i <= s_len(f); i++) if (f[i - 1] == '\\' || f[i - 1] == '/') last = i;
 	return s_left(f, last);
 }
-str Piece(const char *s0, int entry, const char *ch) {
-	str s = s_dup(s0), cc = cat(ch, ch);
-	while (s_instr(s, cc, 1)) s = s_replace(s, cc, ch);
-	for (int n = 1; n <= entry - 1; n++) s = s_right(s, s_len(s) - s_instr(s, ch, 1));
-	int p = s_instr(s, ch, 1);
-	return p < 1 ? s : s_left(s, p - 1);
-}
 
 float WrapAngle(float a) {
 	if (isinf(a)) return 0;
@@ -51,9 +44,9 @@ void LoadMaterials_(const char *file) {
 	while (f && !file_eof(f)) {
 		str t = s_trim(read_line(f));
 		if (!s_eq(s_left(t, 1), "[")) continue;
-		t = s_mid(t, 2, s_len(t) - 2);
+		t = s_mid(t, 1, s_len(t) - 2);
 		Materials *m = lnew(Materials);
-		m->name = s_lower(t);
+		sset(&m->name, s_lower(t));
 		// TODO BumpEnabled: "bump" textures w/ TextureBlend 6 + TextureBumpEnv*
 		m->StepSound = GetINIInt(file, t, "stepsound", 0) + 1;
 	}
@@ -65,7 +58,7 @@ int GetBumpFromCache(const char *name) { Materials *m = GetCache(name); return m
 void AddTextureToCache(int tex) {
 	str n = StripPath(texture_name(tex));
 	Materials *tc = GetCache(n);
-	if (!tc) { tc = lnew(Materials); tc->name = n; }
+	if (!tc) { tc = lnew(Materials); sset(&tc->name, n); }
 	if (!tc->Diff) tc->Diff = tex;
 }
 void ClearTextureCache(void) {
@@ -92,7 +85,7 @@ int LoadRMesh(const char *file, RoomTemplates *rt) {
 		switch (p->kind) {
 		case RP_SCREEN:
 			if (!nz || !rt) break;
-			{ TempScreens *ts = lnew(TempScreens); ts->x = p->x; ts->y = p->y; ts->z = p->z; ts->imgpath = s_dup(p->str); ts->roomtemplate = rt; }
+			{ TempScreens *ts = lnew(TempScreens); ts->x = p->x; ts->y = p->y; ts->z = p->z; sset(&ts->imgpath, s_dup(p->str)); ts->roomtemplate = rt; }
 			break;
 		case RP_WAYPOINT:
 			{ TempWayPoints *w = lnew(TempWayPoints); w->roomtemplate = rt; w->x = p->x; w->y = p->y; w->z = p->z; }
@@ -123,7 +116,7 @@ int LoadRMesh(const char *file, RoomTemplates *rt) {
 			entity_parent(rm.trig[t], 0, 1);
 			entity_alpha(rm.trig[t], 0);
 			rt->TempTriggerbox[t] = rm.trig[t];
-			rt->TempTriggerboxName[t] = s_dup(rm.trigname[t]);
+			sset(&rt->TempTriggerboxName[t], s_dup(rm.trigname[t]));
 		}
 	}
 	int obj = rm.obj;
@@ -134,7 +127,7 @@ int LoadRMesh(const char *file, RoomTemplates *rt) {
 // ---- room templates
 RoomTemplates *CreateRoomTemplate(const char *meshpath) {
 	RoomTemplates *rt = lnew(RoomTemplates);
-	rt->objPath = s_dup(meshpath);
+	sset(&rt->objPath, s_dup(meshpath));
 	rt->id = RoomTempID++;
 	rt->DisableOverlapCheck = 1;
 	return rt;
@@ -145,9 +138,9 @@ void LoadRoomTemplates(const char *file) {
 	while (f && !file_eof(f)) {
 		str t = s_trim(read_line(f));
 		if (!s_eq(s_left(t, 1), "[")) continue;
-		t = s_mid(t, 2, s_len(t) - 2);
+		t = s_mid(t, 1, s_len(t) - 2);
 		RoomTemplates *rt = CreateRoomTemplate(GetINIString(file, t, "mesh path", ""));
-		rt->Name = s_lower(t);
+		sset(&rt->Name, s_lower(t));
 		str s = s_lower(GetINIString(file, t, "shape", ""));
 		static const char *sh[][2] = {{"room1", "1"}, {"room2", "2"}, {"room2c", "2c"}, {"room3", "3"}, {"room4", "4"}};
 		for (int i = 0; i < 5; i++) if (s_eq(s, sh[i][0]) || s_eq(s, sh[i][1])) rt->Shape = ROOM1 + i;
@@ -168,7 +161,7 @@ void LoadRoomTemplates(const char *file) {
 
 // .b3d rooms (LoadWorld) don't show up in rooms.ini, so only rmesh + empty paths are handled
 void LoadRoomMesh(RoomTemplates *rt) {
-	if (s_instr(rt->objPath, ".rmesh", 1)) rt->obj = LoadRMesh(rt->objPath, rt);
+	if (s_has(rt->objPath, ".rmesh")) rt->obj = LoadRMesh(rt->objPath, rt);
 	else if (s_len(rt->objPath)) RuntimeError(cat("LoadWorld isn't ported: ", rt->objPath));
 	else rt->obj = create_pivot(0);
 	if (!rt->obj) RuntimeError(cat("Failed to load map file \"", rt->objPath, "\"."));
@@ -224,7 +217,7 @@ void FillRoom(Rooms *r) {
 		r->TriggerboxAmount = rt->TempTriggerboxAmount;
 		for (int i = 0; i < r->TriggerboxAmount; i++) {
 			r->Triggerbox[i] = copy_entity(rt->TempTriggerbox[i], r->obj);
-			r->TriggerboxName[i] = rt->TempTriggerboxName[i];
+			sset(&r->TriggerboxName[i], rt->TempTriggerboxName[i]);
 		}
 	}
 	for (int i = 0; i < MaxRoomEmitters; i++) if (rt->TempSoundEmitter[i]) {
@@ -307,7 +300,7 @@ Screens *CreateScreen(float x, float y, float z, const char *imgpath, Rooms *r) 
 	entity_pick_mode(s->obj, 1, 1);
 	entity_radius(s->obj, .1f, .1f);
 	position_entity(s->obj, x, y, z, 0);
-	s->imgpath = s_dup(imgpath);
+	sset(&s->imgpath, s_dup(imgpath));
 	s->room = r;
 	entity_parent(s->obj, r->obj, 1);
 	return s;
@@ -425,7 +418,7 @@ static int near4(Rooms *r) { return fabsf(r->x - entity_x(Collider, 1)) < 4 && f
 
 void UpdateRooms(void) {
 	float cz = entity_z(Collider, 0) / 8.0f;
-	int sm = !s_len(SelectedMap); // blitz subtracts the boolean (SelectedMap = "")
+	int sm = !s_len(SelectedMap); // blitz subtracts the boolean (sset(&SelectedMap, ""))
 	PlayerZone = cz < I_Zone->Transition[1] - sm ? 2 : cz < I_Zone->Transition[0] - sm ? 1 : 0;
 	TempLightVolume = 0;
 	int found = 0;

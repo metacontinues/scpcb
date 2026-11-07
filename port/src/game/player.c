@@ -58,8 +58,8 @@ void MovePlayer(void) {
 		SuperManTimer += FPSfactor;
 		CameraShake = sinf(SuperManTimer / 5 * DTOR) * (SuperManTimer / 1500);
 		if (SuperManTimer > 70 * 50) {
-			DeathMSG = "A Class D jumpsuit found in [DATA REDACTED]. Upon further examination, the jumpsuit was found to be filled with 12.5 kilograms of blue ash-like substance. "
-				"Chemical analysis of the substance remains non-conclusive. Most likely related to SCP-914.";
+			sset(&DeathMSG, "A Class D jumpsuit found in [DATA REDACTED]. Upon further examination, the jumpsuit was found to be filled with 12.5 kilograms of blue ash-like substance. "
+				"Chemical analysis of the substance remains non-conclusive. Most likely related to SCP-914.");
 			Kill();
 			show_entity(Fog);
 		} else { BlurTimer = 500; hide_entity(Fog); }
@@ -172,7 +172,7 @@ void MovePlayer(void) {
 		temp2 = Bloodloss;
 		BlurTimer = Max(Max(sinf(MilliSecs2() / 100.0f * DTOR) * Bloodloss * 30, Bloodloss * 2 * (2 - CrouchState)), BlurTimer);
 		if (!(I_427->Using && I_427->Timer < 70 * 360)) Bloodloss = Min(Bloodloss + Min(Injuries, 3.5f) / 300 * FPSfactor, 100);
-		if (temp2 <= 60 && Bloodloss > 60) { Msg = "You are feeling faint from the amount of blood you have lost."; MsgTimer = 70 * 4; }
+		if (temp2 <= 60 && Bloodloss > 60) { sset(&Msg, "You are feeling faint from the amount of blood you have lost."); MsgTimer = 70 * 4; }
 	}
 	UpdateInfect();
 	if (Bloodloss > 0) {
@@ -226,7 +226,7 @@ void MouseLook(void) {
 		HeadDropSpeed = 0;
 		if (badf(entity_x(Collider, 0))) {
 			position_entity(Collider, entity_x(Camera, 1), entity_y(Camera, 1) - .5f, entity_z(Camera, 1), 1);
-			Msg = cat("EntityX(Collider) = NaN, RESETTING COORDINATES    -    New coordinates: ", s_str(entity_x(Collider, 0)));
+			sset(&Msg, cat("EntityX(Collider) = NaN, RESETTING COORDINATES    -    New coordinates: ", s_str(entity_x(Collider, 0))));
 			MsgTimer = 300;
 		}
 		float up = sinf(Shake * DTOR) / (20 + CrouchState * 20) * .6f;
@@ -301,12 +301,12 @@ void MouseLook(void) {
 		if (SCP1025state[i] <= 0) continue;
 		switch (i) {
 		case 0: if (FPSfactor > 0 && irand(1, 1000) == 1) cough(); Stamina -= FPSfactor * .3f; break; // common cold
-		case 1: if (irand(1, 9000) == 1 && !s_len(Msg)) { Msg = "Your skin is feeling itchy."; MsgTimer = 70 * 4; } break;
+		case 1: if (irand(1, 9000) == 1 && !s_len(Msg)) { sset(&Msg, "Your skin is feeling itchy."); MsgTimer = 70 * 4; } break;
 		case 2: if (FPSfactor > 0 && irand(1, 800) == 1) cough(); Stamina -= FPSfactor * .1f; break; // lung cancer
 		case 3: // appendicitis
 			if (!(I_427->Using && I_427->Timer < 70 * 360)) SCP1025state[i] += FPSfactor * .0005f;
-			if (SCP1025state[i] > 20) { if (SCP1025state[i] - FPSfactor <= 20) Msg = "The pain in your stomach is becoming unbearable."; Stamina -= FPSfactor * .3f; }
-			else if (SCP1025state[i] > 10 && SCP1025state[i] - FPSfactor <= 10) Msg = "Your stomach is aching.";
+			if (SCP1025state[i] > 20) { if (SCP1025state[i] - FPSfactor <= 20) sset(&Msg, "The pain in your stomach is becoming unbearable."); Stamina -= FPSfactor * .3f; }
+			else if (SCP1025state[i] > 10 && SCP1025state[i] - FPSfactor <= 10) sset(&Msg, "Your stomach is aching.");
 			break;
 		case 4: // asthma
 			if (Stamina < 35) {
@@ -320,8 +320,8 @@ void MouseLook(void) {
 				HeartBeatRate = 0;
 				BlurTimer = Max(BlurTimer, 500);
 				if (SCP1025state[i] > 140) {
-					DeathMSG = "\"He died of a cardiac arrest after reading SCP-1025, that's for sure. Is there such a thing as psychosomatic cardiac arrest, or does SCP-1025 have some "
-						"anomalous properties we are not yet aware of?\"";
+					sset(&DeathMSG, "\"He died of a cardiac arrest after reading SCP-1025, that's for sure. Is there such a thing as psychosomatic cardiac arrest, or does SCP-1025 have some "
+						"anomalous properties we are not yet aware of?\"");
 					Kill();
 				}
 			} else { HeartBeatRate = Max(HeartBeatRate, 70 + SCP1025state[i]); HeartBeatVolume = 1; }

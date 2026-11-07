@@ -11,7 +11,7 @@ int MilliSecs2(void) { int r = milli_secs(); return r < 0 ? r + 2147483647 + 1 :
 void CreateConsoleMsg(const char *txt, int r, int g, int b, int isCommand) {
 	ConsoleMsg *c = lnew(ConsoleMsg);
 	linsert_before(c, lfirst(ConsoleMsg));
-	c->txt = s_dup(txt); c->isCommand = isCommand;
+	sset(&c->txt, s_dup(txt)); c->isCommand = isCommand;
 	c->r = r < 0 ? ConsoleR : r; c->g = g < 0 ? ConsoleG : g; c->b = b < 0 ? ConsoleB : b;
 }
 
@@ -55,7 +55,7 @@ static void OpenGame(void) {
 }
 
 static void InitOptions(void) {
-	VersionNumber = "1.3.11"; CompatibleNumber = "1.3.11";
+	sset(&VersionNumber, "1.3.11"); sset(&CompatibleNumber, "1.3.11");
 	EnableSFXRelease = GetINIInt(OptionFile, "audio", "sfx release", 0);
 	EnableSFXRelease_Prev = EnableSFXRelease;
 	CanOpenConsole = GetINIInt(OptionFile, "console", "enabled", 0);
@@ -106,12 +106,12 @@ static void InitPlayerGlobals(void) {
 int main(void) {
 	// dll checks + FSOUND_Init: nothing to do, raylib audio comes up w/ the window
 	InitKeyName();
-	OptionFile = "options.ini";
+	sset(&OptionFile, "options.ini");
 	UpdateCheckEnabled = GetINIInt(OptionFile, "options", "check for updates", 0); // Update.bb
-	ErrorFile = "error_log_";
+	sset(&ErrorFile, "error_log_");
 	int ei = 0;
 	while (file_type(cat(ErrorFile, s_str(ei), ".txt"))) ei++;
-	ErrorFile = cat(ErrorFile, s_str(ei), ".txt");
+	sset(&ErrorFile, cat(ErrorFile, s_str(ei), ".txt"));
 	InitOptions();
 
 	if (LauncherEnabled) UpdateLauncher();
@@ -159,7 +159,7 @@ int main(void) {
 
 int GenerateSeedNumber(const char *seed) {
 	int t = 0, sh = 0;
-	for (int i = 1; i <= s_len(seed); i++) { t ^= (unsigned)s_asc(s_mid(seed, i, 1)) << sh; sh = (sh + 1) % 24; }
+	for (int i = 0; i < s_len(seed); i++) { t ^= (unsigned char)seed[i] << sh; sh = (sh + 1) % 24; }
 	return t;
 }
 
@@ -208,7 +208,7 @@ void InitLateGlobals(void) {
 	InFacility = 1;
 	PrevMusicVolume = MusicVolume; PrevSFXVolume = SFXVolume;
 	menuroomscale = 8.0f / 2048.0f;
-	CurrMenu_TestIMG = "";
+	sset(&CurrMenu_TestIMG, "");
 	ParticleAmount = GetINIInt(OptionFile, "options", "particle amount", 0);
 	for (int i = 0; i < 4; i++) {
 		NavImages[i] = LoadImage_Strict(cat("GFX\\navigator\\roomborder", s_str(i), ".png"));
@@ -231,7 +231,7 @@ void InitLateGlobals(void) {
 	coll_rule(HIT_DEAD, HIT_MAP, 2, 2);
 	DrawLoading(90, 1);
 	ShouldEntitiesFall = 1; PlayerFallingPickDistance = 10;
-	Save_MSG = "";
+	sset(&Save_MSG, "");
 	InitMenu();
 	MainMenuOpen = 1;
 	flush_keys(); flush_mouse();
@@ -242,7 +242,7 @@ void InitLateGlobals(void) {
 // Menu.bb's START button: LoadEntities, LoadAllSounds, InitNewGame. TODO LoadGame/InitLoadGame
 int StartGame(const char *how) {
 	if (!s_eq(how, "new")) { fprintf(stderr, "scpcb: loading saves isn't ported yet\n"); return 0; }
-	if (getenv("SCPCB_SEED")) RandomSeed = getenv("SCPCB_SEED"); // dev: fixed map
+	if (getenv("SCPCB_SEED")) sset(&RandomSeed, getenv("SCPCB_SEED")); // dev: fixed map
 	LoadEntities();
 	LoadAllSounds();
 	InitNewGame();

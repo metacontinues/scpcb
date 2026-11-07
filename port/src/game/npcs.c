@@ -20,7 +20,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 	n->GravityMult = 1; n->MaxGravity = .2f; n->CollRadius = .2f; n->FallingPickDistance = 10;
 	switch (type) {
 	case NPCtype173:
-		n->NVName = "SCP-173";
+		sset(&n->NVName, "SCP-173");
 		entity_radius(npivot(n, 0), .23f, .32f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->Gravity = 1;
@@ -40,7 +40,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		n->CollRadius = .32f;
 		break;
 	case NPCtypeOldMan: {
-		n->NVName = "SCP-106";
+		sset(&n->NVName, "SCP-106");
 		npivot(n, .2f);
 		n->GravityMult = 0; n->MaxGravity = 0;
 		entity_type(n->Collider, HIT_PLAYER, 0);
@@ -59,7 +59,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		break;
 	}
 	case NPCtypeGuard:
-		n->NVName = "Human";
+		sset(&n->NVName, "Human");
 		npivot(n, .2f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = copy_entity(GuardObj, 0);
@@ -68,7 +68,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		scale_entity(n->obj, t, t, t, 0);
 		break;
 	case NPCtypeMTF:
-		n->NVName = "Human";
+		sset(&n->NVName, "Human");
 		npivot(n, .2f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = copy_entity(MTFObj, 0);
@@ -86,7 +86,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		}
 		break;
 	case NPCtypeD:
-		n->NVName = "Human";
+		sset(&n->NVName, "Human");
 		npivot(n, .32f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = copy_entity(ClassDObj, 0);
@@ -102,7 +102,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		scale_entity(n->obj, t, t, t, 0);
 		break;
 	case NPCtype5131:
-		n->NVName = "SCP-513-1";
+		sset(&n->NVName, "SCP-513-1");
 		npivot(n, .2f);
 		n->obj = LoadAnimMesh_Strict("GFX\\npcs\\bll.b3d", 0);
 		n->obj2 = copy_entity(n->obj, 0);
@@ -112,7 +112,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		scale_entity(n->obj2, t, t, t, 0);
 		break;
 	case NPCtype096:
-		n->NVName = "SCP-096";
+		sset(&n->NVName, "SCP-096");
 		npivot(n, .26f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = LoadAnimMesh_Strict("GFX\\npcs\\scp096.b3d", 0);
@@ -122,7 +122,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		n->CollRadius = .26f;
 		break;
 	case NPCtype049:
-		n->NVName = "SCP-049";
+		sset(&n->NVName, "SCP-049");
 		npivot(n, .2f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = copy_entity(NPC049OBJ, 0);
@@ -134,7 +134,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		n->CanUseElevator = 1;
 		break;
 	case NPCtypeZombie:
-		n->NVName = "Human";
+		sset(&n->NVName, "Human");
 		npivot(n, .2f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = copy_entity(NPC0492OBJ, 0);
@@ -146,7 +146,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		n->HP = 100;
 		break;
 	case NPCtypeApache:
-		n->NVName = "Human";
+		sset(&n->NVName, "Human");
 		n->GravityMult = 0; n->MaxGravity = 0;
 		npivot(n, .2f);
 		n->obj = copy_entity(ApacheObj, 0);
@@ -175,7 +175,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		scale_entity(n->obj, .6f, .6f, .6f, 0);
 		break;
 	case NPCtypeTentacle: {
-		n->NVName = "Unidentified";
+		sset(&n->NVName, "Unidentified");
 		n->Collider = create_pivot(0);
 		NPCs *o = sametype(n);
 		if (o) n->obj = copy_entity(o->obj, 0);
@@ -184,7 +184,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		break;
 	}
 	case NPCtype860: {
-		n->NVName = "Unidentified";
+		sset(&n->NVName, "Unidentified");
 		npivot(n, .25f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = LoadAnimMesh_Strict("GFX\\npcs\\forestmonster.b3d", 0);
@@ -208,7 +208,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		if (c == 0) i = 53;
 		if (c == 1) i = 89;
 		if (c == 2) i = 96;
-		n->NVName = cat("SCP-939-", s_str(i));
+		sset(&n->NVName, cat("SCP-939-", s_str(i)));
 		npivot(n, .3f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		NPCs *o = sametype(n);
@@ -223,7 +223,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		break;
 	}
 	case NPCtype066:
-		n->NVName = "SCP-066";
+		sset(&n->NVName, "SCP-066");
 		npivot(n, .2f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = LoadAnimMesh_Strict("GFX\\NPCs\\scp-066.b3d", 0);
@@ -232,7 +232,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		n->Speed = inif("SCP-066", "speed") / 100;
 		break;
 	case NPCtype966: {
-		n->NVName = cat("SCP-966-", s_str(count(n) + 1));
+		sset(&n->NVName, cat("SCP-966-", s_str(count(n) + 1)));
 		npivot(n, .2f);
 		NPCs *o = sametype(n);
 		if (o) n->obj = copy_entity(o->obj, 0);
@@ -246,7 +246,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		break;
 	}
 	case NPCtype1048a: // no collider, like blitz
-		n->NVName = "SCP-1048-A";
+		sset(&n->NVName, "SCP-1048-A");
 		n->obj = LoadAnimMesh_Strict("GFX\\npcs\\scp-1048a.b3d", 0);
 		scale_entity(n->obj, .05f, .05f, .05f, 0);
 		set_anim_time(n->obj, 2, 0);
@@ -254,7 +254,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		n->Sound2 = LoadSound_Strict("SFX\\SCP\\1048A\\Growth.ogg");
 		break;
 	case NPCtype1499: {
-		n->NVName = "Unidentified";
+		sset(&n->NVName, "Unidentified");
 		npivot(n, .2f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		NPCs *o = sametype(n);
@@ -268,7 +268,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		break;
 	}
 	case NPCtype008:
-		n->NVName = "Human";
+		sset(&n->NVName, "Human");
 		npivot(n, .2f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = LoadAnimMesh_Strict("GFX\\npcs\\zombiesurgeon.b3d", 0);
@@ -280,7 +280,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 		n->HP = 120;
 		break;
 	case NPCtypeClerk:
-		n->NVName = "Human";
+		sset(&n->NVName, "Human");
 		npivot(n, .32f);
 		entity_type(n->Collider, HIT_PLAYER, 0);
 		n->obj = copy_entity(ClerkOBJ, 0);

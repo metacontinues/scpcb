@@ -733,10 +733,10 @@ static void f_room2cafeteria(Rooms *r) {
 	position_entity(r->Objects[1], r->x + 1780.0f * RoomScale, -248.0f * RoomScale, r->z - 276 * RoomScale, 1);
 	it = CreateItem("cup", "cup", r->x - 508.0f * RoomScale, -187 * RoomScale, r->z + 284.0f * RoomScale, 240, 175, 70, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
-	it->name = (str)"Cup of Orange Juice";
+	sset(&it->name, (str)"Cup of Orange Juice");
 	it = CreateItem("cup", "cup", r->x + 1412 * RoomScale, -187 * RoomScale, r->z - 716.0f * RoomScale, 87, 62, 45, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
-	it->name = (str)"Cup of Coffee";
+	sset(&it->name, (str)"Cup of Coffee");
 	it = CreateItem("Empty Cup", "emptycup", r->x - 540 * RoomScale, -187 * RoomScale, r->z + 124.0f * RoomScale, 0, 0, 0, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
 	it = CreateItem("Quarter", "25ct", r->x - 447.0f * RoomScale, r->y - 334.0f * RoomScale, r->z + 36.0f * RoomScale, 0, 0, 0, 1, 0);

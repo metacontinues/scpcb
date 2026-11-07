@@ -50,7 +50,7 @@ Doors *CreateDoor(int lvl, float x, float y, float z, float angle, Rooms *room, 
 	entity_type(d->obj2, HIT_MAP, 0);
 	d->ID = DoorTempID++;
 	d->KeyCard = keycard;
-	d->Code = s_dup(code);
+	sset(&d->Code, s_dup(code));
 	d->Level = lvl; d->LevelDest = 66;
 	for (int i = 0; i <= 1; i++) {
 		if (s_len(code)) { d->buttons[i] = copy_entity(ButtonCodeOBJ, 0); entity_fx(d->buttons[i], 1); }
@@ -253,7 +253,7 @@ static int keycardlevel(const char *t) {
 	return -1;
 }
 static void lockmsg(void) {
-	if ((!s_instr(Msg, "The keycard", 1) && !s_instr(Msg, "A keycard with", 1)) || MsgTimer < 70 * 3) { Msg = "A keycard is required to operate this door."; MsgTimer = 70 * 7; }
+	if ((!s_has(Msg, "The keycard") && !s_has(Msg, "A keycard with")) || MsgTimer < 70 * 3) { sset(&Msg, "A keycard is required to operate this door."); MsgTimer = 70 * 7; }
 }
 
 void UseDoor(Doors *d, int showmsg, int playsfx) {
@@ -264,14 +264,14 @@ void UseDoor(Doors *d, int showmsg, int playsfx) {
 		SelectedItem = NULL;
 		if (temp >= d->KeyCard) {
 			if (showmsg) {
-				if (d->locked) { PlaySound_Strict(KeyCardSFX2); Msg = "The keycard was inserted into the slot but nothing happened."; MsgTimer = 70 * 7; return; }
-				PlaySound_Strict(KeyCardSFX1); Msg = "The keycard was inserted into the slot."; MsgTimer = 70 * 7;
+				if (d->locked) { PlaySound_Strict(KeyCardSFX2); sset(&Msg, "The keycard was inserted into the slot but nothing happened."); MsgTimer = 70 * 7; return; }
+				PlaySound_Strict(KeyCardSFX1); sset(&Msg, "The keycard was inserted into the slot."); MsgTimer = 70 * 7;
 			}
 		} else {
 			if (showmsg) {
 				PlaySound_Strict(KeyCardSFX2);
-				Msg = d->locked ? "The keycard was inserted into the slot but nothing happened."
-					: cat("A keycard with security clearance ", s_str(d->KeyCard), " or higher is required to operate this door.");
+				sset(&Msg, d->locked ? "The keycard was inserted into the slot but nothing happened."
+					: cat("A keycard with security clearance ", s_str(d->KeyCard), " or higher is required to operate this door."));
 				MsgTimer = 70 * 7;
 			}
 			return;
@@ -286,34 +286,34 @@ void UseDoor(Doors *d, int showmsg, int playsfx) {
 		if (!temp) {
 			if (showmsg) {
 				PlaySound_Strict(ScannerSFX2);
-				Msg = "You placed your palm onto the scanner. The scanner reads: \"DNA does not match known sample. Access denied.\"";
+				sset(&Msg, "You placed your palm onto the scanner. The scanner reads: \"DNA does not match known sample. Access denied.\"");
 				MsgTimer = 70 * 10;
 			}
 			return;
 		}
 		PlaySound_Strict(ScannerSFX1);
-		if (!s_instr(Msg, "You placed your", 1) || MsgTimer < 70 * 3) Msg = "You place the palm of the hand onto the scanner. The scanner reads: \"DNA verified. Access granted.\"";
+		if (!s_has(Msg, "You placed your") || MsgTimer < 70 * 3) sset(&Msg, "You place the palm of the hand onto the scanner. The scanner reads: \"DNA verified. Access granted.\"");
 		MsgTimer = 70 * 10;
 	} else if (d->locked) {
 		if (!showmsg) return;
 		if (!(d->IsElevatorDoor > 0)) {
 			PlaySound_Strict(ButtonSFX2);
-			if (!s_eq(PlayerRoom->RoomTemplate->Name, "room2elevator")) Msg = d->open ? "You pushed the button but nothing happened." : "The door appears to be locked.";
-			else Msg = "The elevator appears to be broken.";
+			if (!s_eq(PlayerRoom->RoomTemplate->Name, "room2elevator")) sset(&Msg, d->open ? "You pushed the button but nothing happened." : "The door appears to be locked.");
+			else sset(&Msg, "The elevator appears to be broken.");
 			MsgTimer = 70 * 5;
-		} else if (d->IsElevatorDoor == 1) { Msg = "You called the elevator."; MsgTimer = 70 * 5; }
-		else if (d->IsElevatorDoor == 3) { Msg = "The elevator is already on this floor."; MsgTimer = 70 * 5; }
+		} else if (d->IsElevatorDoor == 1) { sset(&Msg, "You called the elevator."); MsgTimer = 70 * 5; }
+		else if (d->IsElevatorDoor == 3) { sset(&Msg, "The elevator is already on this floor."); MsgTimer = 70 * 5; }
 		else if (!s_eq(Msg, "You called the elevator.")) {
 			if (s_eq(Msg, "You already called the elevator.") || MsgTimer < 70 * 3) {
 				switch (irand(1, 10)) {
-				case 1: Msg = "Stop spamming the button."; break;
-				case 2: Msg = "Pressing it harder does not make the elevator come faster."; break;
-				case 3: Msg = "If you continue pressing this button I will generate a Memory Access Violation."; break;
-				default: Msg = "You already called the elevator.";
+				case 1: sset(&Msg, "Stop spamming the button."); break;
+				case 2: sset(&Msg, "Pressing it harder does not make the elevator come faster."); break;
+				case 3: sset(&Msg, "If you continue pressing this button I will generate a Memory Access Violation."); break;
+				default: sset(&Msg, "You already called the elevator.");
 				}
 				MsgTimer = 70 * 7;
 			}
-		} else { Msg = "You already called the elevator."; MsgTimer = 70 * 7; }
+		} else { sset(&Msg, "You already called the elevator."); MsgTimer = 70 * 7; }
 		return;
 	}
 	d->open = !d->open;

@@ -10,7 +10,7 @@ int GetLineAmount(const char *a, int w, int h, float leading) {
 	int shown = 0, lh = iround(AAStringHeight(a) + leading);
 	str A = s_dup(a), b = "";
 	while (s_len(A) > 0) {
-		int sp = s_instr(A, " ", 1);
+		int sp = s_find(A, " ", 0) + 1; // up to + incl. the next space
 		if (!sp) sp = s_len(A);
 		str t = s_left(A, sp), tr = s_trim(t);
 		int extra = 0;

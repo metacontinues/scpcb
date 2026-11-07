@@ -21,7 +21,7 @@ void InitMenu(void) {
 	}
 	MenuBlinkTimer[0] = MenuBlinkTimer[1] = 1;
 	IntroEnabled = GetINIInt(OptionFile, "options", "intro enabled", 0);
-	SavePath = "Saves\\";
+	sset(&SavePath, "Saves\\");
 	QuickLoadPercent = -1;
 	LoadSaveGames();
 }
@@ -56,7 +56,7 @@ static void background(void) {
 			MenuStrX = R(irand(700, 1000) * M);
 			MenuStrY = R(irand(100, 600) * M);
 			const char *s = menustrs[irand(0, 22)];
-			if (s) MenuStr = (str)s;
+			if (s) sset(&MenuStr, (str)s);
 		}
 	}
 	AASetFont(Font2);
@@ -73,13 +73,13 @@ static void maintab(void) {
 		switch (i) {
 		case 0:
 			txt = "NEW GAME";
-			RandomSeed = "";
+			sset(&RandomSeed, "");
 			if (!t) break;
-			if (irand(1, 15) == 1) RandomSeed = (str)seeds[irand(1, 13) - 1];
+			if (irand(1, 15) == 1) sset(&RandomSeed, (str)seeds[irand(1, 13) - 1]);
 			else {
 				// blitz reuses the outer loop's i here, so the menu loop ends early after a click. kept
 				int n = irand(4, 8);
-				for (i = 1; i <= n; i++) RandomSeed = cat(RandomSeed, irand(1, 3) == 1 ? s_str(irand(0, 9)) : s_chr(irand(97, 122)));
+				for (i = 1; i <= n; i++) sset(&RandomSeed, cat(RandomSeed, irand(1, 3) == 1 ? s_str(irand(0, 9)) : s_chr(irand(97, 122))));
 			}
 			MainMenuTab = 1;
 			break;
@@ -111,18 +111,18 @@ static void newgame(int x, int y) {
 	DrawFrame(x, y, w, h, 0, 0);
 	AASetFont(Font1);
 	AAText(R(x + 20 * M), R(y + 20 * M), "Name:", 0, 0);
-	CurrSave = clean(InputBox(R(x + 150 * M), R(y + 15 * M), R(200 * M), R(30 * M), CurrSave, 1));
+	sset(&CurrSave, clean(InputBox(R(x + 150 * M), R(y + 15 * M), R(200 * M), R(30 * M), CurrSave, 1)));
 	set_color(255, 255, 255);
 	if (!s_len(SelectedMap)) {
 		AAText(R(x + 20 * M), R(y + 60 * M), "Map seed:", 0, 0);
-		RandomSeed = s_left(InputBox(R(x + 150 * M), R(y + 55 * M), R(200 * M), R(30 * M), RandomSeed, 3), 15);
+		sset(&RandomSeed, s_left(InputBox(R(x + 150 * M), R(y + 55 * M), R(200 * M), R(30 * M), RandomSeed, 3), 15));
 	} else {
 		AAText(R(x + 20 * M), R(y + 60 * M), "Selected map:", 0, 0);
 		set_color(255, 255, 255); draw_rect(R(x + 150 * M), R(y + 55 * M), R(200 * M), R(30 * M), 1);
 		set_color(0, 0, 0); draw_rect(R(x + 150 * M + 2), R(y + 55 * M + 2), R(200 * M - 4), R(30 * M - 4), 1);
 		set_color(255, 0, 0);
 		AAText(R(x + 150 * M + 100 * M), R(y + 55 * M + 15 * M), s_len(SelectedMap) > 15 ? cat(s_left(SelectedMap, 14), "...") : SelectedMap, 1, 1);
-		if (DrawButton(R(x + 370 * M), R(y + 55 * M), R(120 * M), R(30 * M), "Deselect", 0, 0, 1)) SelectedMap = "";
+		if (DrawButton(R(x + 370 * M), R(y + 55 * M), R(120 * M), R(30 * M), "Deselect", 0, 0, 1)) sset(&SelectedMap, "");
 	}
 	AAText(R(x + 20 * M), R(y + 110 * M), "Enable intro sequence:", 0, 0);
 	IntroEnabled = DrawTick(R(x + 280 * M), R(y + 110 * M), IntroEnabled, 0);
@@ -156,12 +156,12 @@ static void newgame(int x, int y) {
 	if (DrawButton(x, R(y + h + 20 * M), R(160 * M), R(70 * M), "Load map", 0, 0, 1)) { MainMenuTab = 4; LoadSavedMaps(); }
 	AASetFont(Font2);
 	if (DrawButton(R(x + 420 * M), R(y + h + 20 * M), R(160 * M), R(70 * M), "START", 0, 0, 1)) {
-		if (!s_len(CurrSave)) CurrSave = "untitled";
-		if (!s_len(RandomSeed)) RandomSeed = s_str(abs(milli_secs()));
+		if (!s_len(CurrSave)) sset(&CurrSave, "untitled");
+		if (!s_len(RandomSeed)) sset(&RandomSeed, s_str(abs(milli_secs())));
 		seed_rnd(GenerateSeedNumber(RandomSeed));
 		int same = 0;
 		for (int i = 1; i <= SaveGameAmount; i++) if (s_eq(SaveGames[i - 1], CurrSave)) same++;
-		if (same > 0) CurrSave = cat(CurrSave, " (", s_str(same + 1), ")");
+		if (same > 0) sset(&CurrSave, cat(CurrSave, " (", s_str(same + 1), ")"));
 		if (StartGame("new")) {
 			MainMenuOpen = 0;
 			flush_keys(); flush_mouse();
@@ -215,10 +215,10 @@ static void loadgame(int x, int y, int h) {
 				DrawFrame(R(x + 280 * M), R(y + 20 * M), R(100 * M), R(30 * M), 0, 0);
 				set_color(255, 0, 0); AAText(R(x + 330 * M), R(y + 34 * M), "Load", 1, 1);
 			} else if (DrawButton(R(x + 280 * M), R(y + 20 * M), R(100 * M), R(30 * M), "Load", 0, 0, 1)) {
-				CurrSave = SaveGames[k];
+				sset(&CurrSave, SaveGames[k]);
 				if (StartGame("load")) MainMenuOpen = 0;
 			}
-			if (DrawButton(R(x + 400 * M), R(y + 20 * M), R(100 * M), R(30 * M), "Delete", 0, 0, 1)) { SaveMSG = SaveGames[k]; break; }
+			if (DrawButton(R(x + 400 * M), R(y + 20 * M), R(100 * M), R(30 * M), "Delete", 0, 0, 1)) { sset(&SaveMSG, SaveGames[k]); break; }
 		} else {
 			DrawFrame(R(x + 280 * M), R(y + 20 * M), R(100 * M), R(30 * M), 0, 0);
 			if (oldsave(k)) set_color(255, 0, 0); else set_color(100, 100, 100);
@@ -235,10 +235,10 @@ static void loadgame(int x, int y, int h) {
 	if (DrawButton(R(x + 50 * M), R(y + 150 * M), R(100 * M), R(30 * M), "Yes", 0, 0, 1)) {
 		delete_file(cat(current_dir(), SavePath, SaveMSG, "\\save.txt"));
 		delete_dir(cat(current_dir(), SavePath, SaveMSG));
-		SaveMSG = "";
+		sset(&SaveMSG, "");
 		LoadSaveGames();
 	}
-	if (DrawButton(R(x + 250 * M), R(y + 150 * M), R(100 * M), R(30 * M), "No", 0, 0, 1)) SaveMSG = "";
+	if (DrawButton(R(x + 250 * M), R(y + 150 * M), R(100 * M), R(30 * M), "No", 0, 0, 1)) sset(&SaveMSG, "");
 }
 
 static void loadmap(int x, int y, int h) {
@@ -254,7 +254,7 @@ static void loadmap(int x, int y, int h) {
 		DrawFrame(x, y, R(540 * M), R(70 * M), 0, 0);
 		AAText(R(x + 20 * M), R(y + 10 * M), SavedMaps[i - 1], 0, 0);
 		AAText(R(x + 20 * M), R(y + 37 * M), SavedMapsAuthor[i - 1], 0, 0);
-		if (DrawButton(R(x + 400 * M), R(y + 20 * M), R(100 * M), R(30 * M), "Load", 0, 0, 1)) { SelectedMap = SavedMaps[i - 1]; MainMenuTab = 1; }
+		if (DrawButton(R(x + 400 * M), R(y + 20 * M), R(100 * M), R(30 * M), "Load", 0, 0, 1)) { sset(&SelectedMap, SavedMaps[i - 1]); MainMenuTab = 1; }
 		if (MouseOn(R(x + 400 * M), R(y + 20 * M), R(100 * M), R(30 * M))) DrawMapCreatorTooltip(R(tx), R(ty), R(tw), R(th), SavedMaps[i - 1]);
 		y = R(y + 80 * M);
 	}
