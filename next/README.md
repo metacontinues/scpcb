@@ -89,7 +89,10 @@ from the repo root:
    not yet: FillRoom (rooms' own doors, items, props placed by code), sounds, the hud, room culling beyond distance.
 4. hud, menus, text, audio, options. hud done (blink + stamina meters, hand icon, messages, blinking itself),
    pixel-matched against port/'s. ui images bake 1:1 (tools/bake/ui.c, `.mu` = masked ui), fonts are copied as ttf.
-   left: menus, audio, options screens, the lamps' glow sprites.
+   the meters only show when they matter: options.ini `hud mode = auto|always|off` (missing -> the original's
+   `HUD enabled`, 1 = auto). auto: stamina once it's below full (+2 s), blink in the last third before a blink or
+   while something's watching (173, once npcs exist).
+   left: menus, audio, options screens, the lamps' glow sprites, eye strain + breathing as diegetic cues.
 5. 173/106/guard/class-d, items + inventory, the events port/ already has.
 6. the rest of port/README's "left to port" list, written straight against this.
 

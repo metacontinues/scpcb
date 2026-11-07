@@ -12,6 +12,9 @@
 //                          the door, 3: same, opened); SCPCB_CLICK=frame clicks
 //   SCPCB_MSG=text         a hud message
 //   SCPCB_DEBUG=1          the debug line (f2 toggles it)
+//   SCPCB_SPRINT=1         sprint while SCPCB_WALK walks
+//   SCPCB_HUD=mode         auto|always|off, over options.ini's "hud mode"
+#define _POSIX_C_SOURCE 200809L // strcasecmp
 #include "coll.h"
 #include "door.h"
 #include "hud.h"
@@ -27,6 +30,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <strings.h>
 #include <time.h>
 
 #define HIDE                                                                   \
@@ -41,6 +45,27 @@ static float handyaw(const Player *p, Vector3 at) {
 static float handpitch(const Player *p, Vector3 at) {
   Vector3 d = Vector3Subtract(at, player_eye(p));
   return p->pitch - atan2f(-d.y, sqrtf(d.x * d.x + d.z * d.z)) * RAD2DEG;
+}
+
+static HudIn hudin(const Player *p, int btn, Vector3 at) {
+  return (HudIn){.dark = player_dark(p),
+                 .blink = p->blink,
+                 .blinkfreq = p->blinkfreq,
+                 .stamina = p->stamina,
+                 .crouch = p->crouch,
+                 .hand = btn >= 0,
+                 .handyaw = handyaw(p, at),
+                 .handpitch = handpitch(p, at)};
+}
+
+// "hud mode = auto|always|off", else the original's "HUD enabled" (1 -> auto)
+static int hudmode(const Ini *o) {
+  const char *m = ini_str(o, "options", "hud mode", NULL);
+  if (!m)
+    return ini_int(o, "options", "hud enabled", 1) ? HUD_AUTO : HUD_OFF;
+  return !strcasecmp(m, "off")      ? HUD_OFF
+         : !strcasecmp(m, "always") ? HUD_ALWAYS
+                                    : HUD_AUTO;
 }
 
 static float envf(const char *k, float def) {
@@ -178,6 +203,14 @@ int main(void) {
       ksprint = key_dik(ini_int(&opt, "options", "sprint key", 42)),
       kblink = key_dik(ini_int(&opt, "options", "blink key", 57)),
       kcrouch = key_dik(ini_int(&opt, "options", "crouch key", 29));
+  int hud = hudmode(&opt), sprintdev = getenv("SCPCB_SPRINT") != NULL;
+  if (getenv("SCPCB_HUD")) { // dev: auto|always|off
+    Ini o = {0};
+    IniKV kv = {"options", "hud mode", getenv("SCPCB_HUD")};
+    o.kv = &kv;
+    o.n = 1;
+    hud = hudmode(&o);
+  }
   ini_free(&opt);
   float fovy = 2 * atanf(tanf(45 * DEG2RAD) * sh / (float)sw) *
                RAD2DEG; // the original's 90 degrees across
@@ -186,7 +219,7 @@ int main(void) {
   int ticks = 0, crouch = 0, blink = 0, btn = -1,
       debug = getenv("SCPCB_DEBUG") != NULL;
   Vector3 btnat = {0};
-  hud_init(sw, sh);
+  hud_init(sw, sh, hud);
   if (getenv("SCPCB_MSG")) // dev: show a message
     hud_msg(getenv("SCPCB_MSG"), 70 * 6);
   Vector2 mouse = {0};
@@ -201,7 +234,7 @@ int main(void) {
                      .down = IsKeyDown(kdown),
                      .left = IsKeyDown(kleft),
                      .right = IsKeyDown(kright),
-                     .sprint = IsKeyDown(ksprint),
+                     .sprint = IsKeyDown(ksprint) || (fw && sprintdev),
                      .crouch = crouch,
                      .blink = blink,
                      .blinkheld = IsKeyDown(kblink),
@@ -211,11 +244,13 @@ int main(void) {
       door_coll(&w, p.pos, 4);
       player_tick(&p, in);
       door_tick(&w, player_eye(&p));
-      hud_tick();
+      hud_tick(&(HudIn){
+          .stamina = p.stamina, .blink = p.blink, .blinkfreq = p.blinkfreq});
       acc -= 1 / TICK;
       ticks++;
     }
     btn = door_button(&w, player_eye(&p), p.pos, &btnat);
+    HudIn hi = hudin(&p, btn, btnat);
     if (btn >= 0 && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || f == click))
       door_use(&w, btn);
 
@@ -224,14 +259,7 @@ int main(void) {
     BeginMode3D(player_camera(&p, fovy));
     draw(&w, player_eye(&p));
     EndMode3D();
-    hud_draw(&(HudIn){.dark = player_dark(&p),
-                      .blink = p.blink,
-                      .blinkfreq = p.blinkfreq,
-                      .stamina = p.stamina,
-                      .crouch = p.crouch,
-                      .hand = btn >= 0,
-                      .handyaw = handyaw(&p, btnat),
-                      .handpitch = handpitch(&p, btnat)});
+    hud_draw(&hi);
     if (IsKeyPressed(KEY_F2))
       debug = !debug;
     if (debug)
@@ -241,7 +269,8 @@ int main(void) {
     EndDrawing();
     if (shot && f == shotf) {
       TakeScreenshot(shot);
-      printf("pos %.2f %.2f %.2f, button %d\n", p.pos.x, p.pos.y, p.pos.z, btn);
+      printf("pos %.2f %.2f %.2f, button %d, stamina %.0f, blink %.0f/%.0f\n",
+             p.pos.x, p.pos.y, p.pos.z, btn, p.stamina, p.blink, p.blinkfreq);
       for (int i = 0; i < w.ndoors; i++)
         if (Vector3Distance(w.doors[i].pos, p.pos) < 3)
           printf("door %d: open %d state %.0f\n", i, w.doors[i].open,
