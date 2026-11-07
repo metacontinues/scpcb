@@ -1,6 +1,6 @@
 # scpcb on raylib. plain meson syntax only (no native files, no b_* opts), so muon builds it too.
 #   ./setup.sh && ninja -C build       (or: muon -C build samu)   configure w/ the llvm toolchain, build
-#   ./setup.sh -Dangle=/path/to/angle/out    rpath angle's libEGL.so/libGLESv2.so so they win at runtime
+#   ./setup.sh -Dangle=/path/to/angle/out    use angle's libEGL.so/libGLESv2.so (eg /opt/angle/usr/lib)
 #   build/bake                         (from the repo root) source assets -> next/data
 project('scpcb-next', 'c', default_options: ['c_std=c99', 'buildtype=release', 'warning_level=2'])
 
@@ -37,16 +37,44 @@ add_project_link_arguments(optl, language: 'c')
 # raylib twice: the game's (gles2 so it runs on angle, only the formats the game loads: glb, qoi, qoa, ttf)
 # and the tools' (+ the source formats the baker reads). src/rlconfig*.h get force-included ahead of config.h
 rl = 'vendor/raylib/src'
-plat = ['-DPLATFORM_DESKTOP_GLFW', '-DGRAPHICS_API_OPENGL_ES2', '-D_GLFW_X11']
+plat = ['-DPLATFORM_DESKTOP_GLFW', '-DGRAPHICS_API_OPENGL_ES2']
+sys = [cc.find_library('m'), dependency('threads')]
+wl = []
+if host_machine.system() == 'linux'
+	# glfw w/ x11 + wayland, picked at runtime (wayland if WAYLAND_DISPLAY is set). it dlopens both, so only
+	# headers here: system ones for wayland/xkbcommon + the protocol glue wayland-scanner generates
+	plat += ['-D_GLFW_X11', '-D_GLFW_WAYLAND']
+	sys += [cc.find_library('dl'), cc.find_library('rt'),
+		dependency('wayland-client').partial_dependency(compile_args: true, includes: true),
+		dependency('xkbcommon').partial_dependency(compile_args: true, includes: true)]
+	scanner = find_program('wayland-scanner')
+	foreach p : ['wayland', 'xdg-shell', 'xdg-decoration-unstable-v1', 'viewporter', 'relative-pointer-unstable-v1',
+			'pointer-constraints-unstable-v1', 'fractional-scale-v1', 'xdg-activation-v1', 'idle-inhibit-unstable-v1']
+		xml = rl / 'external/glfw/deps/wayland' / p + '.xml'
+		wl += custom_target(p + '-h', input: xml, output: p + '-client-protocol.h',
+			command: [scanner, 'client-header', '@INPUT@', '@OUTPUT@'])
+		wl += custom_target(p + '-code', input: xml, output: p + '-client-protocol-code.h',
+			command: [scanner, 'private-code', '@INPUT@', '@OUTPUT@'])
+	endforeach
+else
+	error('only linux is wired up so far (windows/mac: glfw win32/cocoa + their system libs go here)')
+endif
+# angle ships unversioned sonames, glfw would dlopen libEGL.so.1/libGLESv2.so.2 (= the system's) otherwise.
+# the rpath makes that dlopen look in angle's dir first
+link = []
+angle = get_option('angle')
+if angle != ''
+	plat += ['-D_GLFW_EGL_LIBRARY="libEGL.so"', '-D_GLFW_GLESV2_LIBRARY="libGLESv2.so"', '-DSCPCB_ANGLE']
+	link = ['-L' + angle, '-Wl,-rpath,' + angle]
+endif
 rldefs = plat + ['-include', meson.current_source_dir() / 'src/rlconfig.h']
 tooldefs = plat + ['-include', meson.current_source_dir() / 'src/rlconfig_tool.h']
-sys = [cc.find_library('m'), cc.find_library('dl'), cc.find_library('rt'), cc.find_library('X11'), dependency('threads')]
 rlsrc = files(rl / 'rcore.c', rl / 'rshapes.c', rl / 'rtextures.c', rl / 'rtext.c', rl / 'rmodels.c',
-	rl / 'raudio.c', rl / 'rglfw.c')
-rlinc = include_directories(rl / 'external/glfw/include')
+	rl / 'raudio.c', 'src/glfw.c') # src/glfw.c = raylib's rglfw.c + angle on wayland
+rlinc = include_directories(rl, rl / 'external/glfw/include')
 # our code is strict c99; the vendored libs need gnu extensions (glfw, mimalloc), so only they get gnu11
-raylib = static_library('raylib', rlsrc, c_args: rldefs + ['-w'], include_directories: rlinc, override_options: ['c_std=gnu11'])
-rltool = static_library('raylib_tool', rlsrc, c_args: tooldefs + ['-w'], include_directories: rlinc,
+raylib = static_library('raylib', rlsrc + wl, dependencies: sys, c_args: rldefs + ['-w'], include_directories: rlinc, override_options: ['c_std=gnu11'])
+rltool = static_library('raylib_tool', rlsrc + wl, dependencies: sys, c_args: tooldefs + ['-w'], include_directories: rlinc,
 	override_options: ['c_std=gnu11'])
 
 mi = []
@@ -55,11 +83,6 @@ if get_option('mimalloc')
 		c_args: ['-w', '-DNDEBUG', '-DMI_MALLOC_OVERRIDE=1'], include_directories: 'vendor/mimalloc/include', override_options: ['c_std=gnu11'])
 endif
 
-link = []
-angle = get_option('angle')
-if angle != ''
-	link = ['-L' + angle, '-Wl,-rpath,' + angle]
-endif
 
 rlg = declare_dependency(link_with: raylib, link_whole: mi, dependencies: sys, compile_args: rldefs,
 	include_directories: include_directories(rl, 'src'), link_args: link)
