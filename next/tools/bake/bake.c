@@ -11,6 +11,10 @@
 #include <sys/stat.h>
 #include "raylib.h"
 #include "bake.h"
+#ifdef _WIN32
+	#include <direct.h>
+	#define mkdir(p, m) _mkdir(p)
+#endif
 
 int nwarn;
 void warn(const char *fmt, ...) {

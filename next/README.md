@@ -15,6 +15,10 @@ runtime), the wayland protocol glue comes from `wayland-scanner`. `./setup.sh -D
 - angle dlopens libvulkan.so.1 from its own dir only, so that dir needs one (`ln -s /usr/lib/libvulkan.so.1` there)
 - check w/ `VIEW_LOG=1 next/build/view`: the renderer line should say ANGLE
 
+other platforms: `TARGET=windows ./setup.sh && ninja -C build-windows` cross builds w/ clang + the mingw-w64 sysroot
+(`cross/windows.ini`), es2 via angle's dlls next to the exe. mac has its meson branch (cocoa as objective-c +
+frameworks, angle's dylibs) but needs an apple sdk, so it's untested; from linux that'd be osxcross + your own sdk.
+
 from the repo root:
 - `next/build/bake [x.rmesh|.b3d|.x ...]` bakes into `next/data` (only stale outputs; all of GFX/map takes ~2s)
 - `next/build/view [id]` flies around a baked room (eg `gfx/map/room2cafeteria_opt`) or orbits a model (eg

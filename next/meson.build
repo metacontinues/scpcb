@@ -2,6 +2,7 @@
 #   ./setup.sh && ninja -C build       (or: muon -C build samu)   configure w/ the llvm toolchain, build
 #   ./setup.sh -Dangle=/path/to/angle/out    use angle's libEGL.so/libGLESv2.so (eg /opt/angle/usr/lib)
 #   build/bake                         (from the repo root) source assets -> next/data
+#   TARGET=windows ./setup.sh          cross build for windows (mingw-w64 via clang, see cross/), runs on angle's dlls
 project('scpcb-next', 'c', default_options: ['c_std=c99', 'buildtype=release', 'warning_level=2'])
 
 cc = meson.get_compiler('c')
@@ -32,19 +33,22 @@ if ld == 'lld'
 	optl += '-Wl,--icf=all'
 endif
 add_project_arguments(cc.get_supported_arguments(opt), language: 'c')
-add_project_link_arguments(optl, language: 'c')
+add_project_link_arguments(cc.get_supported_link_arguments(optl), language: 'c') # ld64/lld-link don't take all
 
 # raylib twice: the game's (gles2 so it runs on angle, only the formats the game loads: glb, qoi, qoa, ttf)
 # and the tools' (+ the source formats the baker reads). src/rlconfig*.h get force-included ahead of config.h
 rl = 'vendor/raylib/src'
 plat = ['-DPLATFORM_DESKTOP_GLFW', '-DGRAPHICS_API_OPENGL_ES2']
-sys = [cc.find_library('m'), dependency('threads')]
+sys = [dependency('threads')]
 wl = []
-if host_machine.system() == 'linux'
+glfwargs = []
+link = []
+system = host_machine.system()
+if system == 'linux'
 	# glfw w/ x11 + wayland, picked at runtime (wayland if WAYLAND_DISPLAY is set). it dlopens both, so only
 	# headers here: system ones for wayland/xkbcommon + the protocol glue wayland-scanner generates
 	plat += ['-D_GLFW_X11', '-D_GLFW_WAYLAND']
-	sys += [cc.find_library('dl'), cc.find_library('rt'),
+	sys += [cc.find_library('m'), cc.find_library('dl'), cc.find_library('rt'),
 		dependency('wayland-client').partial_dependency(compile_args: true, includes: true),
 		dependency('xkbcommon').partial_dependency(compile_args: true, includes: true)]
 	scanner = find_program('wayland-scanner')
@@ -56,33 +60,48 @@ if host_machine.system() == 'linux'
 		wl += custom_target(p + '-code', input: xml, output: p + '-client-protocol-code.h',
 			command: [scanner, 'private-code', '@INPUT@', '@OUTPUT@'])
 	endforeach
+	# angle ships unversioned sonames, glfw would dlopen libEGL.so.1/libGLESv2.so.2 (= the system's) otherwise.
+	# the rpath makes that dlopen look in angle's dir first
+	angle = get_option('angle')
+	if angle != ''
+		plat += ['-D_GLFW_EGL_LIBRARY="libEGL.so"', '-D_GLFW_GLESV2_LIBRARY="libGLESv2.so"', '-DSCPCB_ANGLE']
+		link = ['-L' + angle, '-Wl,-rpath,' + angle]
+	endif
+elif system == 'windows'
+	# glfw's win32 backend. es2 comes from angle: glfw loads libEGL.dll/libGLESv2.dll, ship them next to the exe
+	foreach l : ['gdi32', 'winmm', 'opengl32', 'shell32']
+		sys += cc.find_library(l)
+	endforeach
+elif system == 'darwin'
+	# glfw's cocoa backend is objective-c (src/glfw.c includes the .m files). es2 comes from angle (metal):
+	# glfw loads libEGL.dylib/libGLESv2.dylib, ship them in the app's dir. untested: needs an apple sdk
+	add_languages('objc', native: false)
+	glfwargs = ['-x', 'objective-c']
+	link = ['-framework', 'Cocoa', '-framework', 'IOKit', '-framework', 'CoreVideo', '-framework', 'CoreFoundation',
+		'-framework', 'CoreAudio', '-framework', 'AudioToolbox']
+	sys += cc.find_library('m')
 else
-	error('only linux is wired up so far (windows/mac: glfw win32/cocoa + their system libs go here)')
-endif
-# angle ships unversioned sonames, glfw would dlopen libEGL.so.1/libGLESv2.so.2 (= the system's) otherwise.
-# the rpath makes that dlopen look in angle's dir first
-link = []
-angle = get_option('angle')
-if angle != ''
-	plat += ['-D_GLFW_EGL_LIBRARY="libEGL.so"', '-D_GLFW_GLESV2_LIBRARY="libGLESv2.so"', '-DSCPCB_ANGLE']
-	link = ['-L' + angle, '-Wl,-rpath,' + angle]
+	error('no build for ' + system + ' yet (glfw backend + system libs go here)')
 endif
 rldefs = plat + ['-include', meson.current_source_dir() / 'src/rlconfig.h']
 tooldefs = plat + ['-include', meson.current_source_dir() / 'src/rlconfig_tool.h']
-rlsrc = files(rl / 'rcore.c', rl / 'rshapes.c', rl / 'rtextures.c', rl / 'rtext.c', rl / 'rmodels.c',
-	rl / 'raudio.c', 'src/glfw.c') # src/glfw.c = raylib's rglfw.c + angle on wayland
+rlsrc = files(rl / 'rcore.c', rl / 'rshapes.c', rl / 'rtextures.c', rl / 'rtext.c', rl / 'rmodels.c', rl / 'raudio.c')
 rlinc = include_directories(rl, rl / 'external/glfw/include')
-# our code is strict c99; the vendored libs need gnu extensions (glfw, mimalloc), so only they get gnu11
-raylib = static_library('raylib', rlsrc + wl, dependencies: sys, c_args: rldefs + ['-w'], include_directories: rlinc, override_options: ['c_std=gnu11'])
-rltool = static_library('raylib_tool', rlsrc + wl, dependencies: sys, c_args: tooldefs + ['-w'], include_directories: rlinc,
-	override_options: ['c_std=gnu11'])
+# our code is strict c99; the vendored libs need gnu extensions (glfw, mimalloc), so only they get gnu11.
+# src/glfw.c = raylib's rglfw.c + angle on wayland, its own lib since mac compiles it as objective-c
+glfw = static_library('glfw', files('src/glfw.c') + wl, dependencies: sys, c_args: plat + glfwargs + ['-w'],
+	include_directories: rlinc, override_options: ['c_std=gnu11'])
+raylib = static_library('raylib', rlsrc, link_with: glfw, dependencies: sys, c_args: rldefs + ['-w'],
+	include_directories: rlinc, override_options: ['c_std=gnu11'])
+rltool = static_library('raylib_tool', rlsrc, link_with: glfw, dependencies: sys, c_args: tooldefs + ['-w'],
+	include_directories: rlinc, override_options: ['c_std=gnu11'])
 
 mi = []
-if get_option('mimalloc')
+# overriding malloc on windows needs mimalloc's redirect dll, so it's off there
+if get_option('mimalloc') and system != 'windows'
 	mi = static_library('mimalloc', 'vendor/mimalloc/src/static.c',
 		c_args: ['-w', '-DNDEBUG', '-DMI_MALLOC_OVERRIDE=1'], include_directories: 'vendor/mimalloc/include', override_options: ['c_std=gnu11'])
 endif
-
 
 rlg = declare_dependency(link_with: raylib, link_whole: mi, dependencies: sys, compile_args: rldefs,
 	include_directories: include_directories(rl, 'src'), link_args: link)
