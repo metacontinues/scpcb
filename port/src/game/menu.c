@@ -1,7 +1,8 @@
 // menu.c: Menu.bb. launcher, loading screens, widgets (main menu itself not yet)
 #include "g.h"
 
-TLIST(LoadingScreens);
+static void lsfree(LoadingScreens *l) { free(l->imgpath); free(l->title); for (int i = 0; i < 5; i++) free(l->txt[i]); }
+TLIST_DTOR(LoadingScreens, lsfree);
 
 void UpdateLauncher(void) {
 	MenuScale = 1;

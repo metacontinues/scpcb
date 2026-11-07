@@ -159,6 +159,7 @@ void MainLoop(void) {
 	int CheckFPS = 0, ElapsedLoops = 0;
 	for (;;) {
 		tmp_reset(); // last frame's temp strings go
+		tl_flush(); // and the objects deleted during it
 		clear_screen();
 		CurTime = MilliSecs2();
 		float ElapsedTime = (CurTime - PrevTime) / 1000.0f;

@@ -161,6 +161,7 @@ extern const FillEntry Fills1[], Fills2[], Fills3[]; // fillroom1-3.c
 int AddLight(Rooms *room, float x, float y, float z, int ltype, float range, int r, int g, int b);
 LightTemplates *AddTempLight(RoomTemplates *rt, float x, float y, float z, int ltype, float range, int r, int g, int b);
 WayPoints *CreateWaypoint(float x, float y, float z, Doors *door, Rooms *room);
+void RemoveRoom(Rooms *r);
 Screens *CreateScreen(float x, float y, float z, const char *imgpath, Rooms *r);
 void CalculateRoomTemplateExtents(RoomTemplates *r);
 void CalculateRoomExtents(Rooms *r);

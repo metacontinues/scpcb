@@ -2,7 +2,8 @@
 // + Main.bb's AnimateNPC/SetNPCFrame/Animate2/TeleportEntity
 #include "g.h"
 
-TLIST(NPCs);
+static void npcfree(NPCs *n) { free(n->texture); free(n->NVName); free(n->BoneToManipulate); free(n->NPCNameInSection); free(n->Model); }
+TLIST_DTOR(NPCs, npcfree);
 
 #define INI "DATA\\NPCs.ini"
 #define RN (PlayerRoom->RoomTemplate->Name)
@@ -304,8 +305,17 @@ static void stopchn(int chn, int stream) {
 	else if (chn) StopStream_Strict(chn);
 }
 
+// nothing may point at a removed npc after this frame
+static void unref_npc(NPCs *n) {
+	NPCs **cur[] = {&Curr173, &Curr106, &Curr096, &Curr5131};
+	for (int i = 0; i < 4; i++) if (*cur[i] == n) *cur[i] = NULL;
+	each(Rooms, r) for (int i = 0; i < 13; i++) if (r->NPC[i] == n) r->NPC[i] = NULL;
+	each(NPCs, o) { if (o->Target == n) o->Target = NULL; if (o->MTFLeader == n) o->MTFLeader = NULL; }
+}
+
 void RemoveNPC(NPCs *n) {
-	if (!n) return;
+	if (!n || !n->n.ls) return;
+	unref_npc(n);
 	if (n->obj2) { free_entity(n->obj2); n->obj2 = 0; }
 	if (n->obj3) { free_entity(n->obj3); n->obj3 = 0; }
 	if (n->obj4) { free_entity(n->obj4); n->obj4 = 0; }

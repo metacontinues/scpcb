@@ -1,7 +1,9 @@
 // items.c: Items.bb. templates, CreateItem, RemoveItem (UpdateItems/PickItem/DropItem come w/ the player)
 #include "g.h"
 
-TLIST(ItemTemplates); TLIST(Items);
+static void itfree(ItemTemplates *t) { free(t->name); free(t->tempname); free(t->objpath); free(t->parentobjpath); free(t->invimgpath); free(t->imgpath); free(t->texpath); }
+static void itemfree(Items *i) { free(i->name); }
+TLIST_DTOR(ItemTemplates, itfree); TLIST_DTOR(Items, itemfree);
 
 ItemTemplates *CreateItemTemplate(const char *name, const char *tempname, const char *objpath, const char *invimgpath,
 	const char *imgpath, float scale, const char *texturepath, const char *invimgpath2, int anim, int texflags) {
@@ -225,6 +227,10 @@ Items *CreateItem(const char *name, const char *tempname, float x, float y, floa
 }
 
 void RemoveItem(Items *i) {
+	if (!i || !i->n.ls) return;
+	if (ClosestItem == i) ClosestItem = NULL;
+	if (OtherOpen == i) OtherOpen = NULL;
+	each(Items, o) for (int k = 0; k < 21; k++) if (o->SecondInv[k] == i) o->SecondInv[k] = NULL;
 	free_entity(i->model); free_entity(i->collider); i->collider = 0;
 	for (int n = 0; n < MaxItemAmount; n++) if (Inventory[n] == i) { Inventory[n] = NULL; ItemAmount--; break; }
 	if (SelectedItem == i) {

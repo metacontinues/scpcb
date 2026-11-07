@@ -606,14 +606,12 @@ static void tostart(Events *e) {
 		r->NPC[0] = R->NPC[0];
 		r->NPC[0]->State = 8;
 		each(Doors, d) if (d->room == R) RemoveDoor(d);
-		each(WayPoints, w) if (w->room == R) { free_entity(w->obj); ldel(w); }
+		each(WayPoints, w) if (w->room == R) RemoveWaypoint(w);
 		for (int i = 3; i <= 4; i++) RemoveNPC(N(i));
 		r->NPC[1] = R->NPC[6];
 		Rooms *dead = R;
-		free_entity(dead->obj);
-		ldel(dead);
-		e->room = NULL;
-		each(SecurityCams, sc) if (sc->room == dead) ldel(sc); // the intro room's cams
+		each(SecurityCams, sc) if (sc->room == dead) RemoveSecurityCam(sc); // the intro room's cams
+		RemoveRoom(dead); // also clears e->room
 		show_entity(Fog);
 		ambient_light(Brightness, Brightness, Brightness);
 		camera_fog_range(Camera, CameraFogNear, CameraFogFar);

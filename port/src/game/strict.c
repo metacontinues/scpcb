@@ -1,7 +1,8 @@
 // strict.c: StrictLoads.bb. loaders that RuntimeError on missing files, Sound/Stream wrappers
 #include "g.h"
 
-TLIST(Sound);
+static void sndfree(Sound *s) { free(s->name); }
+TLIST_DTOR(Sound, sndfree);
 typedef struct Stream { lnode n; int sfx, chn; } Stream;
 static TLIST(Stream);
 

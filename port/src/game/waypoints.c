@@ -46,7 +46,16 @@ void InitWayPoints(int loadingstart) {
 	each(WayPoints, w) { entity_pick_mode(w->obj, 0, 0); entity_radius(w->obj, 0, 0); }
 }
 
-void RemoveWaypoint(WayPoints *w) { free_entity(w->obj); ldel(w); }
+void RemoveWaypoint(WayPoints *w) {
+	if (!w->n.ls) return;
+	each(WayPoints, o) {
+		for (int i = 0; i < 6; i++) if (o->connected[i] == w) o->connected[i] = NULL;
+		if (o->parent == w) o->parent = NULL;
+	}
+	each(NPCs, n) for (int i = 0; i < 21; i++) if (n->Path[i] == w) n->Path[i] = NULL;
+	free_entity(w->obj);
+	ldel(w);
+}
 
 // 0: not searched / already there, 1: found (n->Path), 2: unreachable
 int FindPath(NPCs *n, float x, float y, float z) {
