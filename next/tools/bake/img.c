@@ -34,12 +34,10 @@ const char *bake_tex(const char *path, int mode) {
     return NULL;
   char s[4096], out[4096];
   snprintf(s, sizeof s, "%s", src);
-  mkid(s, id, sizeof id - 4);
+  mkid(s, id, sizeof id - 5);
   if (mode)
-    snprintf(id + strlen(id), 4, "%s",
-             mode == IM_ALPHA  ? ".a"
-             : mode == IM_MASK ? ".m"
-                               : ".am");
+    snprintf(id + strlen(id), 5, ".%s%s%s", mode & IM_ALPHA ? "a" : "",
+             mode & IM_MASK ? "m" : "", mode & IM_UI ? "u" : "");
   snprintf(out, sizeof out, OUT "%s.qoi", id);
   if (!stale(s, out))
     return id;
@@ -77,7 +75,7 @@ const char *bake_tex(const char *path, int mode) {
   }
   // es2: npot can't mip or repeat
   int pw = pot(im.width), ph = pot(im.height);
-  if (pw != im.width || ph != im.height)
+  if (!(mode & IM_UI) && (pw != im.width || ph != im.height))
     ImageResize(&im, pw, ph);
   mkdirs(out);
   int ok = ExportImage(im, out);

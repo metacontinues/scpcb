@@ -109,9 +109,10 @@ rlt = declare_dependency(link_with: rltool, link_whole: mi, dependencies: sys, c
 	include_directories: include_directories(rl, 'src'), link_args: link)
 
 executable('bake', files('tools/bake/bake.c', 'tools/bake/glb.c', 'tools/bake/img.c', 'tools/bake/room.c',
-	'tools/bake/model.c', 'tools/bake/b3d.c', 'tools/bake/x.c'),
+	'tools/bake/model.c', 'tools/bake/b3d.c', 'tools/bake/x.c', 'tools/bake/ui.c'),
 	dependencies: rlt)
 # the viewer runs the game's room code but links the tools' raylib so screenshots can be png
 executable('view', files('tools/view.c', 'src/asset.c', 'src/model.c', 'src/room.c', 'src/shd.c'), dependencies: rlt)
 executable('scpcb', files('src/game.c', 'src/asset.c', 'src/coll.c', 'src/door.c', 'src/ini.c', 'src/mapgen.c',
-	'src/model.c', 'src/player.c', 'src/props.c', 'src/room.c', 'src/shd.c', 'src/world.c'), dependencies: rlg)
+	'src/hud.c', 'src/model.c', 'src/player.c', 'src/props.c', 'src/room.c', 'src/shd.c', 'src/world.c'),
+	dependencies: rlg)

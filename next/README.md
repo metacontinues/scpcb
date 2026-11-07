@@ -87,7 +87,9 @@ from the repo root:
    map (the original's algorithm, raylib's rng), drops you in the start room, wasd/mouse w/ the original's speeds,
    sprint/crouch/gravity, swept-ellipsoid collision (src/coll.c), doors between rooms open from their buttons.
    not yet: FillRoom (rooms' own doors, items, props placed by code), sounds, the hud, room culling beyond distance.
-4. hud, menus, text, audio, options.
+4. hud, menus, text, audio, options. hud done (blink + stamina meters, hand icon, messages, blinking itself),
+   pixel-matched against port/'s. ui images bake 1:1 (tools/bake/ui.c, `.mu` = masked ui), fonts are copied as ttf.
+   left: menus, audio, options screens, the lamps' glow sprites.
 5. 173/106/guard/class-d, items + inventory, the events port/ already has.
 6. the rest of port/README's "left to port" list, written straight against this.
 

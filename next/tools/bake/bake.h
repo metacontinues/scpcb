@@ -56,12 +56,14 @@ int gb_idx16(glb *g, const uint16_t *v, int n);
 int gb_mat4(glb *g, const float *v, int n);  // column-major
 int gb_times(glb *g, const float *v, int n); // anim input, w/ min/max
 
-// ---- images (img.c). returns the id (+ ".a" / ".m" / ".am" by mode), NULL if
-// missing/unreadable alpha: keeps the alpha channel, or derives it from
-// brightness if there's none. mask: pure black -> clear
-enum { IM_OPAQUE = 0, IM_ALPHA = 1, IM_MASK = 2 };
+// ---- images (img.c). returns the id (+ a ".a" / ".m" / ".u" suffix per mode
+// bit, combined), NULL if missing or unreadable.
+// alpha: keeps the alpha channel, or derives it from brightness if there's
+// none. mask: pure black -> clear. ui: drawn 1:1 in 2d, so no pow2 resize
+enum { IM_OPAQUE = 0, IM_ALPHA = 1, IM_MASK = 2, IM_UI = 4 };
 const char *bake_tex(const char *path, int mode);
 
 // ---- rooms (room.c), models (model.c)
 int bake_room(const char *path);
 int bake_model(const char *path);
+int bake_ui(void); // ui.c: the 2d images + fonts, returns how many failed
