@@ -3,6 +3,7 @@
 #include "ini.h"
 #include "raylib.h"
 #include <ctype.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -85,4 +86,76 @@ int ini_sections(const Ini *o, const char **out, int max) {
     n++;
   }
   return n;
+}
+
+// is line (up to its end) the key `key` (case-insensitive, spaces around ok)?
+static int iskey(const char *l, const char *end, const char *key) {
+  while (l < end && isspace((unsigned char)*l))
+    l++;
+  size_t n = strlen(key);
+  if ((size_t)(end - l) < n || strncasecmp(l, key, n))
+    return 0;
+  l += n;
+  while (l < end && (*l == ' ' || *l == '\t'))
+    l++;
+  return l < end && *l == '=';
+}
+
+static int issec(const char *l, const char *end, const char *sec) {
+  while (l < end && isspace((unsigned char)*l))
+    l++;
+  size_t n = strlen(sec);
+  return l < end && *l == '[' && (size_t)(end - l) > n + 1 &&
+         !strncasecmp(l + 1, sec, n) && l[n + 1] == ']';
+}
+
+int ini_set(const char *path, const char *sec, const char *key,
+            const char *val) {
+  char *t = LoadFileText(path);
+  const char *src = t ? t : "";
+  const char *nl = strstr(src, "\r\n") ? "\r\n" : "\n";
+  size_t n = strlen(src),
+         cap = n + strlen(sec) + strlen(key) + strlen(val) + 32;
+  char *o = malloc(cap), *w = o;
+  int insec = 0, done = 0;
+  const char *at = NULL; // where to add the key: after the section's last line
+  for (const char *l = src; *l;) {
+    const char *e = strchr(l, '\n');
+    e = e ? e + 1 : src + n;
+    const char *le = e; // line w/o its newline
+    while (le > l && (le[-1] == '\n' || le[-1] == '\r'))
+      le--;
+    const char *p = l;
+    while (p < le && isspace((unsigned char)*p))
+      p++;
+    if (p < le && *p == '[')
+      insec = issec(l, le, sec);
+    if (insec && !done && iskey(l, le, key)) {
+      w += snprintf(w, cap - (size_t)(w - o), "%s = %s%s", key, val, nl);
+      done = 1;
+    } else {
+      memcpy(w, l, e - l);
+      w += e - l;
+    }
+    if (insec && p < le)
+      at = w;
+    l = e;
+  }
+  *w = 0;
+  if (!done) { // insert after the section's last non-empty line, or append it
+    char add[512];
+    if (at)
+      snprintf(add, sizeof add, "%s = %s%s", key, val, nl);
+    else
+      snprintf(add, sizeof add, "%s[%s]%s%s = %s%s", nl, sec, nl, key, val, nl);
+    size_t k = strlen(add), off = at ? (size_t)(at - o) : (size_t)(w - o);
+    o = realloc(o, cap + k);
+    memmove(o + off + k, o + off, strlen(o + off) + 1);
+    memcpy(o + off, add, k);
+  }
+  int ok = SaveFileText(path, o);
+  free(o);
+  if (t)
+    UnloadFileText(t);
+  return ok;
 }

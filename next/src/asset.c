@@ -47,9 +47,10 @@ static Texture2D load(const char *id, int ui) {
   Texture2D t = LoadTexture(asset_path(id, ".qoi"));
   if (!t.id)
     return t;
-  if (ui) { // npot on es2: no mips, no repeat
+  if (ui) { // 2d 1:1: no mips. es2 can only repeat pow2 sizes (the menu frames)
+    int pot = !(t.width & (t.width - 1)) && !(t.height & (t.height - 1));
     SetTextureFilter(t, TEXTURE_FILTER_BILINEAR);
-    SetTextureWrap(t, TEXTURE_WRAP_CLAMP);
+    SetTextureWrap(t, pot ? TEXTURE_WRAP_REPEAT : TEXTURE_WRAP_CLAMP);
   } else {
     GenTextureMipmaps(&t);
     SetTextureFilter(t, TEXTURE_FILTER_TRILINEAR);

@@ -7,6 +7,7 @@
 
 void snd_init(float sfx, float music); // volumes 0..1
 void snd_close(void);
+void snd_volumes(float sfx, float music);  // live, from the options screen
 void snd_listener(Vector3 eye, float yaw); // yaw: the player's
 
 // voice handles: 0 = none. a handle goes dead once its voice is reused

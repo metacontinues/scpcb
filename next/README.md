@@ -25,8 +25,8 @@ glfw.c's include order is load-bearing). lint: `next/tools/lint.sh [build dir]` 
 
 from the repo root:
 - `next/build/bake [x.rmesh|.b3d|.x ...]` bakes into `next/data` (only stale outputs; all of GFX/map takes ~2s)
-- `next/build/scpcb` the game so far (reads options.ini: size, keys, mouse, fog, map size). dev env: `SCPCB_SEED=n`,
-  `SCPCB_SHOT=a.png SCPCB_SHOT_FRAME=n`, `SCPCB_WALK=ticks`, `SCPCB_YAW=deg`, `SCPCB_NOFOG=1`, `SCPCB_DOOR=1|2|3` +
+- `next/build/scpcb` the game so far (reads options.ini: size, keys, mouse, fog, map size). dev env: `SCPCB_SEED=n` (skips the menu),
+  `SCPCB_SHOT=a.png SCPCB_SHOT_FRAME=n` (w/o a seed: the menu, `SCPCB_TAB`/`SCPCB_OPT` pick the page), `SCPCB_PAUSE=1`, `SCPCB_WALK=ticks`, `SCPCB_YAW=deg`, `SCPCB_NOFOG=1`, `SCPCB_DOOR=1|2|3` +
   `SCPCB_CLICK=frame` (door tests), see the top of src/game.c
 - `next/build/view [id]` flies around a baked room (eg `gfx/map/room2cafeteria_opt`) or orbits a model (eg
   `gfx/npcs/scp096`: space play, , . step, b bones, `VIEW_POSE=f` / `VIEW_YAW=deg` for shots). f fog, g ambient,
@@ -97,7 +97,11 @@ from the repo root:
    angle) + music crossfades (out over 250 ticks, in 10%/tick). src/sfx.c: footsteps by floor material
    (Data/materials.ini stepsound, ray vs the room's meshes), landing, breathing when tired, the zone's ambience +
    music. doors + buttons play theirs. options.ini [audio] volumes, keys from [binds] (or [options]).
-   left: menus, options screens, the lamps' glow sprites, eye strain before a blink.
+   menus done: main menu (173 flicker, whispers, new game w/ name/seed/intro/difficulties incl. custom), loading
+   screens (Loadingscreens/loadingscreens.ini pages), pause menu, the options tabs in both layouts (only options
+   next/ has: vsync, volumes, mouse, key rebinding, hud mode, show fps, framelimit; saved to options.ini on BACK).
+   src/ui.c = the original's widgets, immediate mode. load game / achievements are greyed out until saves exist.
+   left: the lamps' glow sprites, eye strain before a blink, the intro.
 5. 173/106/guard/class-d, items + inventory, the events port/ already has.
 6. the rest of port/README's "left to port" list, written straight against this.
 

@@ -19,6 +19,7 @@ typedef struct {
   int step, landed;   // set by the tick: a footstep (1 walk, 2 run) / hit the
                       // floor hard
   float sens, smooth; // options: mouse sensitivity, smoothing
+  float blinklo, blinkhi; // ticks between blinks (the difficulty's)
   int invert;
 } Player;
 

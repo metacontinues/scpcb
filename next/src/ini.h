@@ -20,3 +20,7 @@ float ini_float(const Ini *o, const char *sec, const char *key, float def);
 // sections in file order, for walking every [room] in rooms.ini. returns the
 // count, fills up to max
 int ini_sections(const Ini *o, const char **out, int max);
+// rewrite one key in a file, everything else untouched (adds the key / the
+// section if missing). 0 on failure. an Ini loaded earlier doesn't see it
+int ini_set(const char *path, const char *sec, const char *key,
+            const char *val);

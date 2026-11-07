@@ -21,6 +21,8 @@ void hud_init(int sw, int sh, int m) {
   msgfont = font_get("gfx/font/cour/courier_new", (int)(19 * (sh / 1024.0f)));
 }
 
+void hud_mode(int m) { mode = m; }
+
 void hud_msg(const char *text, float ticks) {
   snprintf(msg, sizeof msg, "%s", text);
   msgt = ticks;

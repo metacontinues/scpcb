@@ -52,6 +52,11 @@ void snd_close(void) {
   CloseAudioDevice();
 }
 
+void snd_volumes(float sfx, float music) {
+  sfxvol = sfx;
+  musvol = music;
+}
+
 void snd_listener(Vector3 e, float yaw) {
   eye = e;
   eyeyaw = yaw;

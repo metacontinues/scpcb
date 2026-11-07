@@ -2,9 +2,18 @@
 // walk it, open doors, blink. run from the repo root (it reads options.ini,
 // Data/rooms.ini and next/data).
 //
+// states: main menu -> loading screen -> play (esc pauses) -> back to the menu.
+//
 // dev env:
-//   SCPCB_SEED=n           fixed map
-//   SCPCB_SHOT=a.png       screenshot at frame SCPCB_SHOT_FRAME (60), then quit
+//   SCPCB_SEED=n           fixed map, skips the menu + loading screen
+//   SCPCB_LOADING=1        w/ SCPCB_SEED: the loading screen anyway (+
+//   SCPCB_SHOT:
+//                          shoot it once loaded)
+//   SCPCB_TAB=n            open the menu on tab n (1 new game, 2 load, 3
+//   options) SCPCB_OPT=n            + the options on tab n (0 graphics .. 3
+//   advanced) SCPCB_SHOT=a.png       screenshot at frame SCPCB_SHOT_FRAME (60),
+//   then quit
+//                          (in the menu too, w/o SCPCB_SEED)
 //   SCPCB_WALK=ticks       hold "forward" that long
 //   SCPCB_YAW=deg          start facing
 //   SCPCB_NOFOG=1          see past the fog
@@ -15,11 +24,15 @@
 //   SCPCB_SPRINT=1         sprint while SCPCB_WALK walks
 //   SCPCB_HUD=mode         auto|always|off, over options.ini's "hud mode"
 //   SCPCB_NOMUSIC=1        no music; SCPCB_SNDLOG=1 prints every sound played
+//   SCPCB_PAUSE=1          start paused (for shots of the pause menu)
 #define _POSIX_C_SOURCE 200809L // strcasecmp
 #include "coll.h"
+#include "difficulty.h"
 #include "door.h"
 #include "hud.h"
 #include "ini.h"
+#include "loading.h"
+#include "menu.h"
 #include "player.h"
 #include "props.h"
 #include "raylib.h"
@@ -28,6 +41,7 @@
 #include "sfx.h"
 #include "shd.h"
 #include "snd.h"
+#include "ui.h"
 #include "util.h"
 #include "world.h"
 #include <math.h>
@@ -59,21 +73,6 @@ static HudIn hudin(const Player *p, int btn, Vector3 at) {
                  .hand = btn >= 0,
                  .handyaw = handyaw(p, at),
                  .handpitch = handpitch(p, at)};
-}
-
-// "hud mode = auto|always|off", else the original's "HUD enabled" (1 -> auto)
-static int hudmode(const Ini *o) {
-  const char *m = ini_str(o, "options", "hud mode", NULL);
-  if (!m)
-    return ini_int(o, "options", "hud enabled", 1) ? HUD_AUTO : HUD_OFF;
-  return !strcasecmp(m, "off")      ? HUD_OFF
-         : !strcasecmp(m, "always") ? HUD_ALWAYS
-                                    : HUD_AUTO;
-}
-
-// keys live in [binds] in newer options.ini files, [options] in older ones
-static int bind(const Ini *o, const char *k, int def) {
-  return ini_int(o, "binds", k, ini_int(o, "options", k, def));
 }
 
 static float envf(const char *k, float def) {
@@ -133,54 +132,54 @@ static void draw(World *w, Vector3 eye) {
   }
 }
 
-int main(void) {
-  Ini opt;
-  ini_load(&opt, "options.ini");
-  int sw = ini_int(&opt, "options", "width", 1280),
-      sh = ini_int(&opt, "options", "height", 720);
-  const char *shot = getenv("SCPCB_SHOT");
-  int shotf = (int)envf("SCPCB_SHOT_FRAME", 60),
-      walk = (int)envf("SCPCB_WALK", 0);
-  SetTraceLogLevel(getenv("SCPCB_LOG") ? LOG_INFO : LOG_WARNING);
-  SetConfigFlags(FLAG_VSYNC_HINT);
-#ifdef SCPCB_ANGLE
-  SetConfigFlags(FLAG_WINDOW_TRANSPARENT); // see tools/view.c
-#endif
-  InitWindow(sw, sh, "SCP - Containment Breach");
-  if (!shot)
-    DisableCursor();
-  shd_init();
-  snd_init(ini_float(&opt, "audio", "sound volume", 1),
-           getenv("SCPCB_NOMUSIC")
-               ? 0
-               : ini_float(&opt, "audio", "music volume", .5f));
-  sfx_init();
-  float fogn = ini_float(&opt, "options", "camera fog near", .5f),
-        fogf = ini_float(&opt, "options", "camera fog far", 6);
-  if (getenv("SCPCB_NOFOG")) // dev: see past the fog
-    fogf = 60, fogn = 59;
-  shd_fog(fogn, fogf, BLACK);
-  shd_lights((Vector3){.5f, .5f, .5f}, 0, NULL,
-             NULL); // placeholder until rooms light their props/npcs
-  rlSetClipPlanes(.05f, fogf);
+// the original's GenerateSeedNumber: each char xor'd in, shifted 0..23
+static unsigned seednum(const char *s) {
+  unsigned t = 0;
+  for (int sh = 0; *s; s++, sh = (sh + 1) % 24)
+    t ^= (unsigned)(unsigned char)*s << sh;
+  return t;
+}
 
+static const char *shot;
+static int shotf;
+
+// a frame of the loading screen
+static void loadframe(const Loading *l, int pct) {
+  BeginDrawing();
+  loading_draw(l, pct);
+  EndDrawing();
+}
+
+// settings that apply live (pause menu's options)
+static void apply(const Settings *s, Player *p) {
+  snd_volumes(s->sound, getenv("SCPCB_NOMUSIC") ? 0 : s->music);
+  hud_mode(s->hud);
+  settings_apply(s);
+  p->sens = s->sens;
+  p->smooth = s->smooth > 0 ? s->smooth : 1;
+  p->invert = s->invert;
+}
+
+// one game, from the loading screen until it's quit. MENU_TOMENU or MENU_QUIT
+static MenuAct play(Settings *s, const NewGame *ng, unsigned seed, int dev) {
+  int sw = GetScreenWidth(), sh = GetScreenHeight();
+  Loading ld;
+  loading_pick(&ld);
+  if (!dev)
+    loadframe(&ld, 0);
   World w = {0};
-  w.w = w.h = ini_int(&opt, "options", "map size", 18);
-  if (!world_templates(&w, "Data/rooms.ini")) {
-    TraceLog(LOG_ERROR, "game: no Data/rooms.ini, run me from the repo root");
-    CloseWindow();
-    return 1;
-  }
-  const char *seeds = getenv("SCPCB_SEED");
-  unsigned seed = seeds ? (unsigned)atol(seeds) : (unsigned)time(NULL);
+  w.w = w.h = s->mapsize;
+  world_templates(&w, "Data/rooms.ini");
   world_gen(&w, seed);
+  if (!dev)
+    loadframe(&ld, 80);
   solids(&w);
   door_init();
   printf("seed %u: %d rooms, %d doors\n", seed, w.nrooms, w.ndoors);
 
-  Player p = {.sens = ini_float(&opt, "options", "mouse sensitivity", 0),
-              .smooth = ini_float(&opt, "options", "mouse smoothing", 1),
-              .invert = ini_int(&opt, "options", "invert mouse y", 0)};
+  Player p = {0};
+  blink_range(ng->d.otherfactors, &p.blinklo, &p.blinkhi);
+  apply(s, &p);
   player_spawn(&p, w.spawn, envf("SCPCB_YAW", w.spawnyaw));
   if (getenv("SCPCB_DOOR")) { // dev: stand in front of the nearest door's
                               // button, facing it
@@ -208,49 +207,66 @@ int main(void) {
              d->open);
     }
   }
-  int click = (int)envf("SCPCB_CLICK", -1);
-  int kup = key_dik(bind(&opt, "up key", 17)),
-      kdown = key_dik(bind(&opt, "down key", 31)),
-      kleft = key_dik(bind(&opt, "left key", 30)),
-      kright = key_dik(bind(&opt, "right key", 32)),
-      ksprint = key_dik(bind(&opt, "sprint key", 42)),
-      kblink = key_dik(bind(&opt, "blink key", 57)),
-      kcrouch = key_dik(bind(&opt, "crouch key", 29));
-  int hud = hudmode(&opt), sprintdev = getenv("SCPCB_SPRINT") != NULL;
-  if (getenv("SCPCB_HUD")) { // dev: auto|always|off
-    Ini o = {0};
-    IniKV kv = {"options", "hud mode", getenv("SCPCB_HUD")};
-    o.kv = &kv;
-    o.n = 1;
-    hud = hudmode(&o);
+  // press any key, like the original
+  for (int f = 0; !dev && !WindowShouldClose(); f++) {
+    loadframe(&ld, 100);
+    if (shot &&
+        f == 3) { // dev: SCPCB_LOADING. a few frames in, the swap's settled
+      TakeScreenshot(shot);
+      dev = -1;
+      break;
+    }
+    if (GetKeyPressed() || IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+      break;
   }
-  ini_free(&opt);
+
+  MenuAct out = MENU_QUIT;
+  if (dev < 0)
+    goto done;
+  int click = (int)envf("SCPCB_CLICK", -1), walk = (int)envf("SCPCB_WALK", 0);
+  int sprintdev = getenv("SCPCB_SPRINT") != NULL;
   float fovy = 2 * atanf(tanf(45 * DEG2RAD) * sh / (float)sw) *
                RAD2DEG; // the original's 90 degrees across
 
   float acc = 0;
   int ticks = 0, crouch = 0, blink = 0, btn = -1,
-      debug = getenv("SCPCB_DEBUG") != NULL;
+      debug = getenv("SCPCB_DEBUG") != NULL,
+      paused = getenv("SCPCB_PAUSE") != NULL;
   Vector3 btnat = {0};
-  hud_init(sw, sh, hud);
   if (getenv("SCPCB_MSG")) // dev: show a message
     hud_msg(getenv("SCPCB_MSG"), 70 * 6);
+  if (!shot && !paused)
+    DisableCursor();
+  else if (paused)
+    HideCursor();
   Vector2 mouse = {0};
   for (int f = 0; !WindowShouldClose(); f++) {
-    acc = minf(acc + (shot ? 1 / TICK : GetFrameTime()), .25f);
-    mouse = Vector2Add(mouse, shot ? Vector2Zero() : GetMouseDelta());
-    crouch |= IsKeyPressed(kcrouch);
-    blink |= IsKeyPressed(kblink);
-    while (acc >= 1 / TICK) {
+    if (IsKeyPressed(KEY_ESCAPE)) {
+      paused = !paused;
+      if (paused) {
+        EnableCursor();
+        HideCursor(); // ui_cursor draws the original's
+      } else
+        DisableCursor();
+      mouse = Vector2Zero();
+    }
+    if (!paused) {
+      acc = minf(acc + (shot ? 1 / TICK : GetFrameTime()), .25f);
+      mouse = Vector2Add(mouse, shot ? Vector2Zero() : GetMouseDelta());
+      crouch |= IsKeyPressed(settings_key(s, K_CROUCH));
+      blink |= IsKeyPressed(settings_key(s, K_BLINK));
+    }
+    while (!paused && acc >= 1 / TICK) {
       int fw = ticks < walk;
-      PlayerIn in = {.up = IsKeyDown(kup) || fw,
-                     .down = IsKeyDown(kdown),
-                     .left = IsKeyDown(kleft),
-                     .right = IsKeyDown(kright),
-                     .sprint = IsKeyDown(ksprint) || (fw && sprintdev),
+      PlayerIn in = {.up = IsKeyDown(settings_key(s, K_UP)) || fw,
+                     .down = IsKeyDown(settings_key(s, K_DOWN)),
+                     .left = IsKeyDown(settings_key(s, K_LEFT)),
+                     .right = IsKeyDown(settings_key(s, K_RIGHT)),
+                     .sprint = IsKeyDown(settings_key(s, K_SPRINT)) ||
+                               (fw && sprintdev),
                      .crouch = crouch,
                      .blink = blink,
-                     .blinkheld = IsKeyDown(kblink),
+                     .blinkheld = IsKeyDown(settings_key(s, K_BLINK)),
                      .mouse = mouse};
       mouse = Vector2Zero();
       crouch = blink = 0;
@@ -258,14 +274,15 @@ int main(void) {
       player_tick(&p, in);
       door_tick(&w, player_eye(&p));
       snd_listener(player_eye(&p), p.yaw);
-      sfx_tick(&w, &p, IsKeyDown(ksprint) || (fw && sprintdev));
+      sfx_tick(&w, &p,
+               IsKeyDown(settings_key(s, K_SPRINT)) || (fw && sprintdev));
       snd_tick();
       hud_tick(&(HudIn){
           .stamina = p.stamina, .blink = p.blink, .blinkfreq = p.blinkfreq});
       acc -= 1 / TICK;
       ticks++;
     }
-    btn = door_button(&w, player_eye(&p), p.pos, &btnat);
+    btn = paused ? -1 : door_button(&w, player_eye(&p), p.pos, &btnat);
     HudIn hi = hudin(&p, btn, btnat);
     if (btn >= 0 && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || f == click)) {
       snd_play3d("sfx/interact/button", btnat, 10, 1);
@@ -278,14 +295,31 @@ int main(void) {
     BeginMode3D(player_camera(&p, fovy));
     draw(&w, player_eye(&p));
     EndMode3D();
-    hud_draw(&hi);
+    if (!paused)
+      hud_draw(&hi);
     if (IsKeyPressed(KEY_F2))
       debug = !debug;
     if (debug)
       DrawText(TextFormat("%d fps  (%.2f %.2f %.2f)  stamina %.0f", GetFPS(),
                           p.pos.x, p.pos.y, p.pos.z, p.stamina),
                10, 10, 20, DARKGRAY);
+    else if (s->fps)
+      DrawText(TextFormat("FPS: %d", GetFPS()), 20, 20, 20, WHITE);
+    MenuAct a = MENU_NONE;
+    if (paused) {
+      a = menu_pause(ng, s, 0);
+      apply(s, &p);
+      ui_cursor();
+    }
     EndDrawing();
+    if (a == MENU_RESUME) {
+      paused = 0;
+      DisableCursor();
+      mouse = Vector2Zero();
+    } else if (a == MENU_TOMENU) {
+      out = MENU_TOMENU;
+      break;
+    }
     if (shot && f == shotf) {
       TakeScreenshot(shot);
       printf("pos %.2f %.2f %.2f, button %d, stamina %.0f, blink %.0f/%.0f\n",
@@ -297,10 +331,95 @@ int main(void) {
       break;
     }
   }
-  snd_close();
+done:
+  EnableCursor();
   prop_clear();
   world_free(&w);
   coll_reset();
+  return out;
+}
+
+// the main menu until it starts a game or quits
+static MenuAct mainmenu(NewGame *ng, Settings *s) {
+  HideCursor();
+  snd_music("sfx/music/menu");
+  float acc = 0;
+  for (int f = 0; !WindowShouldClose(); f++) {
+    acc = minf(acc + GetFrameTime(), .25f);
+    while (acc >= 1 / TICK) {
+      snd_tick();
+      acc -= 1 / TICK;
+    }
+    snd_frame();
+    BeginDrawing();
+    MenuAct a = menu_main(ng, s);
+    snd_volumes(s->sound, getenv("SCPCB_NOMUSIC") ? 0 : s->music);
+    hud_mode(s->hud);
+    settings_apply(s);
+    ui_cursor();
+    EndDrawing();
+    if (shot && f == shotf) {
+      TakeScreenshot(shot);
+      return MENU_QUIT;
+    }
+    if (a != MENU_NONE)
+      return a;
+  }
+  return MENU_QUIT;
+}
+
+int main(void) {
+  Settings s;
+  settings_load(&s, "options.ini");
+  shot = getenv("SCPCB_SHOT");
+  shotf = (int)envf("SCPCB_SHOT_FRAME", 60);
+  SetTraceLogLevel(getenv("SCPCB_LOG") ? LOG_INFO : LOG_WARNING);
+#ifdef SCPCB_ANGLE
+  SetConfigFlags(FLAG_WINDOW_TRANSPARENT); // see tools/view.c
+#endif
+  InitWindow(s.width, s.height, "SCP - Containment Breach");
+  SetExitKey(KEY_NULL); // esc pauses / goes back
+  settings_apply(&s);
+  shd_init();
+  snd_init(s.sound, getenv("SCPCB_NOMUSIC") ? 0 : s.music);
+  sfx_init();
+  ui_init(s.width, s.height);
+  float fogn = s.fognear, fogf = s.fogfar;
+  if (getenv("SCPCB_NOFOG")) // dev: see past the fog
+    fogf = 60, fogn = 59;
+  shd_fog(fogn, fogf, BLACK);
+  shd_lights((Vector3){.5f, .5f, .5f}, 0, NULL,
+             NULL); // placeholder until rooms light their props/npcs
+  rlSetClipPlanes(.05f, fogf);
+  World probe = {0};
+  if (!world_templates(&probe, "Data/rooms.ini")) {
+    TraceLog(LOG_ERROR, "game: no Data/rooms.ini, run me from the repo root");
+    CloseWindow();
+    return 1;
+  }
+  world_free(&probe);
+  const char *m = getenv("SCPCB_HUD");
+  if (m) // dev: auto|always|off
+    s.hud = !strcasecmp(m, "off")      ? HUD_OFF
+            : !strcasecmp(m, "always") ? HUD_ALWAYS
+                                       : HUD_AUTO;
+  hud_init(s.width, s.height, s.hud);
+
+  NewGame ng = {.sel = D_SAFE, .d = difficulties[D_SAFE]};
+  const char *seeds = getenv("SCPCB_SEED");
+  menu_init((int)envf("SCPCB_TAB", 0), (int)envf("SCPCB_OPT", 0));
+  for (MenuAct a = MENU_TOMENU; a == MENU_TOMENU;) {
+    if (seeds) { // dev: straight in
+      snprintf(ng.seed, sizeof ng.seed, "%s", seeds);
+      play(&s, &ng, (unsigned)atol(seeds), !getenv("SCPCB_LOADING"));
+      break;
+    }
+    if (mainmenu(&ng, &s) != MENU_START)
+      break;
+    a = play(&s, &ng, seednum(ng.seed), 0);
+    menu_init(0, 0);
+  }
+  snd_close();
   CloseWindow();
   return 0;
 }

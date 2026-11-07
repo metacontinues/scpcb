@@ -18,6 +18,7 @@ typedef struct {
 enum { HUD_OFF, HUD_ALWAYS, HUD_AUTO };
 
 void hud_init(int sw, int sh, int mode);
+void hud_mode(int mode); // live, from the options screen
 // shown for `ticks`, at alpha min(ticks left / 2, 255) / 255 like the original
 void hud_msg(const char *text, float ticks);
 void hud_tick(const HudIn *in); // fades + message timer

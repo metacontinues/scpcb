@@ -11,14 +11,17 @@
 static const Vector3 RADII = {.15f, .30f, .15f};
 
 void player_spawn(Player *p, Vector3 pos, float yaw) {
-  float sens = p->sens, smooth = p->smooth;
-  int inv = p->invert;
-  float f = frnd(455, 665); // normal difficulty's blink interval
+  Player o = *p; // the settings survive
+  if (o.blinkhi <= o.blinklo)
+    o.blinklo = 455, o.blinkhi = 665; // normal
+  float f = frnd(o.blinklo, o.blinkhi);
   *p = (Player){
       .pos = pos, .yaw = yaw, .stamina = 100, .blink = f, .blinkfreq = f};
-  p->sens = sens;
-  p->smooth = smooth > 0 ? smooth : 1;
-  p->invert = inv;
+  p->sens = o.sens;
+  p->smooth = o.smooth > 0 ? o.smooth : 1;
+  p->invert = o.invert;
+  p->blinklo = o.blinklo;
+  p->blinkhi = o.blinkhi;
 }
 
 Vector3 player_forward(const Player *p) {
@@ -58,7 +61,7 @@ static void blink(Player *p, PlayerIn in) {
     return;
   }
   if (p->blink <= -20)
-    p->blink = p->blinkfreq = frnd(455, 665);
+    p->blink = p->blinkfreq = frnd(p->blinklo, p->blinkhi);
   p->blink -= 1;
 }
 
