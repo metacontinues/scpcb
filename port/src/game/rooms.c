@@ -2,8 +2,13 @@
 #include "g.h"
 #include "../fmt/rmesh.h"
 
-TLIST(Materials); TLIST(RoomTemplates); TLIST(Rooms); TLIST(LightTemplates);
-TLIST(TempWayPoints); TLIST(WayPoints); TLIST(Screens); TLIST(TempScreens); TLIST(MapZones);
+static void matfree(Materials *m) { free(m->name); }
+static void rtfree(RoomTemplates *t) { free(t->objPath); free(t->Name); for (int i = 0; i < 129; i++) free(t->TempTriggerboxName[i]); }
+static void roomfree(Rooms *r) { for (int i = 0; i < 129; i++) free(r->TriggerboxName[i]); }
+static void scrfree(Screens *s) { free(s->imgpath); }
+static void tscrfree(TempScreens *s) { free(s->imgpath); }
+TLIST_DTOR(Materials, matfree); TLIST_DTOR(RoomTemplates, rtfree); TLIST_DTOR(Rooms, roomfree); TLIST(LightTemplates);
+TLIST(TempWayPoints); TLIST(WayPoints); TLIST_DTOR(Screens, scrfree); TLIST_DTOR(TempScreens, tscrfree); TLIST(MapZones);
 
 // ---- strings
 str StripPath(const char *f) {
@@ -473,4 +478,21 @@ void AmbientLightRooms(int value) {
 	if (value == AmbientLightRoomVal) return;
 	AmbientLightRoomVal = value;
 	texture_fill(AmbientLightRoomTex, value, value, value, 255); // blitz: SetBuffer + ClsColor + Cls
+}
+
+// frees a room + clears everything that points at it (only the intro's room ever goes away)
+void RemoveRoom(Rooms *r) {
+	if (!r->n.ls) return;
+	if (PlayerRoom == r) PlayerRoom = NULL;
+	for (int i = 0; i < 11; i++) if (MTFrooms[i] == r) MTFrooms[i] = NULL;
+	each(Rooms, o) for (int i = 0; i < 5; i++) if (o->Adjacent[i] == r) o->Adjacent[i] = NULL;
+	each(WayPoints, w) if (w->room == r) w->room = NULL;
+	each(Doors, d) if (d->room == r) d->room = NULL;
+	each(Events, e) if (e->room == r) e->room = NULL;
+	each(Screens, s) if (s->room == r) s->room = NULL;
+	each(Emitters, em) if (em->Room == r) em->Room = NULL;
+	each(DevilEmitters, de) if (de->room == r) de->room = NULL;
+	each(SecurityCams, sc) if (sc->room == r) sc->room = NULL;
+	free_entity(r->obj);
+	ldel(r);
 }

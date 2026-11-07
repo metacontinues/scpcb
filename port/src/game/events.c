@@ -2,7 +2,8 @@
 // events.c: Main.bb's CreateEvent/InitEvents/RemoveEvent. TODO UpdateEvents.bb (the per-event logic)
 #include "g.h"
 
-TLIST(Events);
+static void evfree(Events *e) { free(e->EventName); free(e->EventStr); }
+TLIST_DTOR(Events, evfree);
 
 static int taken(Rooms *r) { each(Events, e) if (e->room == r) return 1; return 0; }
 
@@ -115,6 +116,8 @@ void InitEvents(void) {
 }
 
 void RemoveEvent(Events *e) {
+	if (!e->n.ls) return;
+	if (QuickLoad_CurrEvent == e) QuickLoad_CurrEvent = NULL;
 	if (e->Sound) FreeSound_Strict(e->Sound);
 	if (e->Sound2) FreeSound_Strict(e->Sound2);
 	if (e->img) free_image(e->img);

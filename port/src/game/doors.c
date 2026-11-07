@@ -1,7 +1,8 @@
 // doors.c: Main.bb's CreateDoor/CreateButton (UpdateDoors & co come w/ the in-game loop)
 #include "g.h"
 
-TLIST(Doors);
+static void doorfree(Doors *d) { free(d->Code); }
+TLIST_DTOR(Doors, doorfree);
 
 static int hitmesh(Doors *d) { // shared doorhit.b3d, loaded once
 	each(Doors, d2) if (d2 != d && d2->DoorHitOBJ) return copy_entity(d2->DoorHitOBJ, d->frameobj);
@@ -330,6 +331,16 @@ void UseDoor(Doors *d, int showmsg, int playsfx) {
 }
 
 void RemoveDoor(Doors *d) {
+	if (!d->n.ls) return;
+	if (ClosestDoor == d) ClosestDoor = NULL;
+	if (SelectedDoor == d) SelectedDoor = NULL;
+	each(Rooms, r) {
+		for (int i = 0; i < 8; i++) if (r->RoomDoors[i] == d) r->RoomDoors[i] = NULL;
+		for (int i = 0; i < 5; i++) if (r->AdjDoor[i] == d) r->AdjDoor[i] = NULL;
+	}
+	each(Doors, o) if (o->LinkedDoor == d) o->LinkedDoor = NULL;
+	each(WayPoints, w) if (w->door == d) w->door = NULL;
+	each(ElevatorObj, eo) if (eo->door == d) eo->door = NULL;
 	for (int i = 0; i <= 1; i++) if (d->buttons[i]) entity_parent(d->buttons[i], 0, 1);
 	int e[] = {d->obj, d->obj2, d->frameobj, d->buttons[0], d->buttons[1]};
 	for (int i = 0; i < 5; i++) if (e[i]) free_entity(e[i]);

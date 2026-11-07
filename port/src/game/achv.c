@@ -15,7 +15,8 @@ void InitAchievements(void) {
 	AchvLocked = fit(LoadImage_Strict("GFX\\menu\\achievements\\achvlocked.jpg"));
 }
 
-TLIST(AchievementMsg);
+static void amfree(AchievementMsg *a) { free(a->txt); }
+TLIST_DTOR(AchievementMsg, amfree);
 
 void GiveAchievement(int id, int showMessage) {
 	if (Achievements[id] == 1) return;

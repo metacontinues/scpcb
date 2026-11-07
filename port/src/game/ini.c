@@ -2,7 +2,8 @@
 #include "g.h"
 
 typedef struct INIFile { lnode n; str name, buf; int bankOffset, size; } INIFile;
-static TLIST(INIFile);
+static void inifree(INIFile *f) { free(f->name); free(f->buf); }
+static TLIST_DTOR(INIFile, inifree);
 
 static str ReadINILine(INIFile *f) {
 	int o = f->bankOffset, a;

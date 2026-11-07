@@ -3,7 +3,8 @@
 #define G_DEFINE
 #include "g.h"
 
-TLIST(ConsoleMsg);
+static void cmfree(ConsoleMsg *c) { free(c->txt); }
+TLIST_DTOR(ConsoleMsg, cmfree);
 
 _Noreturn void RuntimeError(const char *msg) { fprintf(stderr, "runtime error: %s\n", msg); exit(1); }
 int MilliSecs2(void) { int r = milli_secs(); return r < 0 ? r + 2147483647 + 1 : r; }

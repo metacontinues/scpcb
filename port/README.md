@@ -10,11 +10,10 @@ entities are int handles (0 = null), angles are degrees, indices count from 0, `
 
 ```
 port/
-  meson.build      meson build (plain syntax, muon works too), builds raylib + bdwgc + mimalloc from vendor/ too
+  meson.build      meson build (plain syntax, muon works too), builds raylib + mimalloc from vendor/ too
   src/rlconfig.h   overrides for raylib's config.h: only the formats the game loads (qoi, qoa, ttf)
   data/            converted assets (gitignored), written by tools/assetconv.c
   vendor/raylib    submodule, pinned to 6.2
-  vendor/bdwgc     submodule, boehm gc v8.2.12 (Type objects, until those move off it)
   vendor/mimalloc  submodule, v3.5.4, overrides malloc for the whole process (-Dmimalloc=false to skip)
   setup.sh         configures port/build w/ the llvm toolchain (clang, llvm-ar, lld)
   src/rt/          the runtime
@@ -118,8 +117,10 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
   frame arena, valid until the main loop's `tmp_reset()` (so through a whole load too). anything kept (fields, globals,
   tables) is an owned heap copy set w/ `sset(&field, value)`. `s_mid`/`s_find` use 0-based positions.
   debug: build w/ `-Dc_args=-DTMP_POISON` (plus `-Db_sanitize=address -Dmimalloc=false`) to make stale temps visible.
-- **Types**: `typedef struct T { lnode n; ...fields } T;` + `TLIST(T)` in one .c. objects are gc'd, Delete just
-  unlinks, so dangling refs stay readable (blitz would error). `lobject(T, h)` is Null after Delete, like blitz.
+- **Types**: `typedef struct T { lnode n; ...fields } T;` + `TLIST(T)` (or `TLIST_DTOR(T, fn)` when it owns strings) in one .c.
+  objects are calloc'd. `ldel` unlinks at once, the memory goes at the next `tl_flush()` (main loop, once a frame), so
+  deleting while iterating is fine and `llive(p)` spots a dead object for the rest of that frame. refs kept across frames
+  get cleared by the Remove* fns (RemoveNPC/Item/Event/Door/Waypoint/Room/SecurityCam). `lobject(T, h)` is NULL after delete.
 - **assets**: the game only reads qoi (images) and qoa (sound), so raylib is built w/o its png/jpg/bmp/ogg decoders.
   tools/assetconv.c converts every asset once into `port/data/<path>.qoi|qoa` (full name kept, so foo.png and
   foo.jpg can't collide; files are recognised by content, the game hides jpgs as .dc/.pt/.it/.s and an ogg as

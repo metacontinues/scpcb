@@ -46,12 +46,8 @@ raylib = static_library('raylib',
 	files(rl / 'rcore.c', rl / 'rshapes.c', rl / 'rtextures.c', rl / 'rtext.c', rl / 'rmodels.c',
 		rl / 'raudio.c', rl / 'rglfw.c'),
 	c_args: rldefs + ['-w'], include_directories: rl / 'external/glfw/include')
-# bdwgc as one tu, single threaded (only the main thread touches gc memory)
-gc = static_library('gc', 'vendor/bdwgc/extra/gc.c',
-	c_args: ['-w', '-DNO_EXECUTE_PERMISSION'], include_directories: 'vendor/bdwgc/include')
 
 # mimalloc replaces malloc/free for the whole process: one tu w/ the override, linked whole so it wins over libc.
-# bdwgc keeps its own heap (mmap), so the two don't overlap
 mi = []
 if get_option('mimalloc')
 	mi = static_library('mimalloc', 'vendor/mimalloc/src/static.c',
@@ -69,9 +65,9 @@ rtlib = static_library('rt',
 	files('src/rt/ent.c', 'src/rt/mesh.c', 'src/rt/tex.c', 'src/rt/rend.c', 'src/rt/fs.c', 'src/rt/sys.c',
 		'src/rt/coll.c', 'src/rt/anim.c', 'src/rt/snd.c', 'src/rt/g2d.c', 'src/rt/input.c', 'src/rt/misc.c',
 		'src/rt/str.c', 'src/rt/tl.c', 'src/fmt/b3d.c', 'src/fmt/x.c', 'src/fmt/rmesh.c'),
-	c_args: rldefs, include_directories: [rl, 'vendor/bdwgc/include'])
-rt = declare_dependency(link_with: [rtlib, raylib, gc], link_whole: mi, dependencies: sys, compile_args: rldefs,
-	include_directories: include_directories(rl, 'vendor/bdwgc/include'), link_args: link)
+	c_args: rldefs, include_directories: rl)
+rt = declare_dependency(link_with: [rtlib, raylib], link_whole: mi, dependencies: sys, compile_args: rldefs,
+	include_directories: include_directories(rl), link_args: link)
 
 executable('scpcb', files(
 	'src/game/achv.c', 'src/game/blur.c', 'src/game/difficulty.c', 'src/game/doors.c', 'src/game/entities.c',

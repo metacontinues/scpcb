@@ -150,3 +150,9 @@ void UpdateDecals(void) {
 		if (d->Size <= 0 || d->Alpha <= 0 || d->lifetime == 5) { free_entity(d->obj); ldel(d); }
 	}
 }
+
+void RemoveSecurityCam(SecurityCams *sc) {
+	if (SelectedMonitor == sc) SelectedMonitor = NULL;
+	if (CoffinCam == sc) CoffinCam = NULL;
+	ldel(sc);
+}

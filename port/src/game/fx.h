@@ -27,6 +27,7 @@ Emitters *CreateEmitter(float x, float y, float z, int type);
 DevilEmitters *CreateDevilEmitter(float x, float y, float z, Rooms *room, int particleID, float maxTime);
 Decals *CreateDecal(int id, float x, float y, float z, float pitch, float yaw, float roll);
 SecurityCams *CreateSecurityCam(float x, float y, float z, Rooms *r, int screen);
+void RemoveSecurityCam(SecurityCams *sc);
 ElevatorObj *AssignElevatorObj(int obj, Doors *door, int in_facility);
 void LoadParticleTextures(void);
 void UpdateDecals(void);

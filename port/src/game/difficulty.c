@@ -1,7 +1,8 @@
 // difficulty.c: Difficulty.bb
 #include "g.h"
 
-TLIST(Difficulty);
+static void dfree(Difficulty *d) { free(d->name); free(d->description); }
+TLIST_DTOR(Difficulty, dfree);
 
 static Difficulty *mk(int i, const char *name, const char *desc, int pd, int agg, int save, int other, int r, int g, int b) {
 	Difficulty *d = difficulties[i] = lnew(Difficulty);
