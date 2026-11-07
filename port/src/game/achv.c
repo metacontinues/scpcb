@@ -59,3 +59,22 @@ void UpdateAchievementMsg(void) {
 		}
 	}
 }
+
+// the pause menu's achievement grid: 4 a row, 64px tiles
+void DrawAchvIMG(int x, int y, int no) {
+	float sc = GraphicHeight / 768.0f;
+	int ax = iround(x + no % 4 * iround(76 * sc)), s = iround(64 * sc);
+	set_color(0, 0, 0); draw_rect(ax, y, s, s, 1);
+	draw_image(Achievements[no] ? AchvIMG[no] : AchvLocked, ax, y, 0);
+	set_color(50, 50, 50); draw_rect(ax, y, s, s, 0);
+}
+void AchievementTooltip(int no) {
+	float M = MenuScale;
+	AASetFont(Font3); int w = AAStringWidth(AchievementStrings[no]);
+	AASetFont(Font1); w = iround(Max(w, AAStringWidth(AchievementDescs[no])) + 20 * M);
+	int h = iround(38 * GraphicHeight / 768.0f), x = iround(ScaledMouseX() + 20 * M), y = iround(ScaledMouseY() + 20 * M);
+	set_color(25, 25, 25); draw_rect(x, y, w, h, 1);
+	set_color(150, 150, 150); draw_rect(x, y, w, h, 0);
+	AASetFont(Font3); AAText(x + w / 2, iround(ScaledMouseY() + 35 * M), AchievementStrings[no], 1, 1);
+	AASetFont(Font1); AAText(x + w / 2, iround(ScaledMouseY() + 55 * M), AchievementDescs[no], 1, 1);
+}

@@ -3,7 +3,7 @@
 #include "rt.h"
 #include "raylib.h"
 
-#define die(...) (fprintf(stderr, "bb: " __VA_ARGS__), fputc('\n', stderr), exit(1))
+#define die(...) (fprintf(stderr, "rt: " __VA_ARGS__), fputc('\n', stderr), exit(1))
 #define grow(p, n, cap) do { if ((n) >= (cap)) { (cap) = (cap) ? (cap)*2 : 16; \
 	(p) = realloc((p), sizeof *(p) * (cap)); } } while (0)
 
@@ -96,6 +96,8 @@ mdat *md_new(void);
 surf *md_addsurf(mdat *m, brush br);
 mdat *md_copy(mdat *m);
 void md_unref(mdat *m);
+void rt_brclear(void);
+void rt_texclear(void);
 void md_bounds(mdat *m);
 void surf_upload(surf *s);
 

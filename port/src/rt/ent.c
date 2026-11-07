@@ -75,6 +75,11 @@ static void freerec(ent e) {
 	fl[nfl++] = e;
 }
 void free_entity(ent e) { if (e) freerec(e); }
+// ClearWorld: every entity, brush + texture goes. the game drops its own handles
+void clear_world(void) {
+	for (ent e = 1; e < rt_nents; e++) if (rt_ents[e].used && !rt_ents[e].par) freerec(e);
+	rt_brclear(); rt_texclear();
+}
 
 static ent copyrec(ent e, ent par) {
 	E src = *rt_e(e); // copy, pool may move

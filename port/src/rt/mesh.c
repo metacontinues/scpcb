@@ -36,6 +36,7 @@ hbrush create_brush(float r, float g, float b) {
 	x.r = r/255; x.g = g/255; x.b = b/255;
 	return br_new(x);
 }
+void rt_brclear(void) { for (int i = 1; i < nbs; i++) if (bused[i]) free_brush(i); }
 void free_brush(hbrush h) { if (!h) return; br_unref(rt_brp(h)); bused[h] = 0; }
 void brush_color(hbrush h, float r, float g, float b) { brush *x = rt_brp(h); x->r = r/255; x->g = g/255; x->b = b/255; }
 void brush_alpha(hbrush h, float a) { rt_brp(h)->a = a; }
@@ -133,7 +134,7 @@ void surf_upload(surf *s) {
 	gpu_free(s);
 	s->dirty = 0;
 	if (!s->nv || !s->nt) return;
-	if (s->nv > 65535) fprintf(stderr, "bb: surface has %d verts (>65535), es2 can't index it\n", s->nv);
+	if (s->nv > 65535) fprintf(stderr, "rt: surface has %d verts (>65535), es2 can't index it\n", s->nv);
 	s->gpu = (Mesh){.vertexCount = s->nv, .triangleCount = s->nt, .vertices = s->pos, .normals = s->nrm,
 	                .texcoords = s->uv0, .texcoords2 = s->uv1, .colors = s->col, .indices = s->idx};
 	UploadMesh(&s->gpu, false);

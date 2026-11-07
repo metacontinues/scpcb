@@ -29,3 +29,4 @@ typedef struct {
 // amb: the shared "AmbientLightRoomTex" (0 = none). returns 0 on failure.
 int rmesh_load(const char *path, htex amb, rmesh *out);
 void rmesh_free(rmesh *r);
+void rmesh_clear_cache(void); // after clear_world

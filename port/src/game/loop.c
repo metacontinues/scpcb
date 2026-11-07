@@ -87,15 +87,6 @@ static void darkness(void) {
 }
 
 // TODO DrawMenu (Main.bb 7116): until it's ported, a bare pause screen so you can get out
-static void pausestub(void) {
-	set_color(0, 0, 0); draw_rect(0, 0, GraphicWidth, GraphicHeight, 1);
-	set_color(255, 255, 255); AASetFont(Font2);
-	AAText(GraphicWidth / 2, GraphicHeight / 2 - 40, "PAUSED", 1, 1);
-	AASetFont(Font1);
-	AAText(GraphicWidth / 2, GraphicHeight / 2 + 20, "(the pause menu isn't ported yet)  esc: resume   q: quit", 1, 1);
-	if (key_hit(16)) End();
-}
-
 // Main.bb's main loop, in-game side. what isn't ported yet is listed as TODOs in order
 void UpdateGame(void) {
 	UpdateStreamSounds();
@@ -146,7 +137,7 @@ void UpdateGame(void) {
 	InventoryKey();
 	// TODO quick save, console key
 	DrawGUI();
-	if (EndingTimer >= 0 && MenuOpen) pausestub(); // TODO DrawEnding when EndingTimer < 0
+	if (EndingTimer >= 0) DrawMenu(); // TODO else DrawEnding if SelectedEnding
 	// TODO UpdateConsole, the 173 intro document hint
 	DrawMessages();
 	set_color(255, 255, 255);
