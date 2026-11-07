@@ -52,7 +52,8 @@ from the repo root:
 - **models**: rooms, props, npcs, items as `.glb` via `LoadModel`/`LoadModelAnimations` + `UpdateModelAnimation`
   (frame ranges = the old ExtractAnimSeq clips). picking w/ `GetRayCollisionMesh/Triangle/Box`. billboards
   (`DrawBillboardPro`) for sprites, particles, decals that face the camera.
-- **shaders**: one world shader on every material: diffuse (uv0) x lightmap (`MATERIAL_MAP_OCCLUSION`, uv1) or vertex
+- **shaders**: glsl es 100 in `next/shaders/`, read at startup (`SCPCB_SHADERS=dir` to point elsewhere), variants by
+  `#define`s src/shd.c prepends. one world shader on every material: diffuse (uv0) x lightmap (`MATERIAL_MAP_OCCLUSION`, uv1) or vertex
   light, up to n point lights, linear fog, alpha cutout. plus small post shaders (blur, nvg, gasmask, vignette).
 - **textures**: qoi via `LoadTexture`, mipmaps via `GenTextureMipmaps`, `RenderTexture2D` for screen fx + 3d icons.
 - **text**: `LoadFontEx` on GFX/font's ttfs, `DrawTextEx`/`MeasureTextEx`. no AAText.
