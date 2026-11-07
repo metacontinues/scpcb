@@ -16,7 +16,7 @@ float CurveAngle(float val, float old, float smooth) {
 	return WrapAngle(old + diff * (1.0f / smooth * FPSfactor));
 }
 float Distance(float x1, float y1, float x2, float y2) { float x = x2 - x1, y = y2 - y1; return sqrtf(x * x + y * y); }
-// blitz's Int() of NaN/out of range floats is INT_MIN (x87 fistp), the game compares against that
+// NaN/huge floats: bail out instead of carrying them around
 static int badf(float v) { return isnan(v) || fabsf(v) >= 2147483648.0f; }
 
 void Kill(void) {
@@ -86,8 +86,7 @@ void MovePlayer(void) {
 	else CrouchState = CurveValue(Crouch, CrouchState, 10);
 
 	if (!NoClip) {
-		// blitz And/Or share one precedence level, left to right: ((down Or up) Or (right Or left)) And Playable
-		int moving = ((bbKeyDown(KEY_DOWN) | bbKeyDown(KEY_UP)) | (bbKeyDown(KEY_RIGHT) | bbKeyDown(KEY_LEFT))) & Playable;
+		int moving = (bbKeyDown(KEY_DOWN) || bbKeyDown(KEY_UP) || bbKeyDown(KEY_RIGHT) || bbKeyDown(KEY_LEFT)) && Playable;
 		if (moving || ForceMove > 0) {
 			if (Crouch == 0 && bbKeyDown(KEY_SPRINT) && Stamina > 0 && !IsZombie) {
 				Sprint = 2.5f;
@@ -172,18 +171,18 @@ void MovePlayer(void) {
 	if (Injuries > 1) {
 		temp2 = Bloodloss;
 		BlurTimer = Max(Max(sinf(MilliSecs2() / 100.0f * DTOR) * Bloodloss * 30, Bloodloss * 2 * (2 - CrouchState)), BlurTimer);
-		if (!(I_427->Using & (I_427->Timer < 70 * 360)) /* blitz Not covers the whole And */) Bloodloss = Min(Bloodloss + Min(Injuries, 3.5f) / 300 * FPSfactor, 100);
+		if (!(I_427->Using && I_427->Timer < 70 * 360)) Bloodloss = Min(Bloodloss + Min(Injuries, 3.5f) / 300 * FPSfactor, 100);
 		if (temp2 <= 60 && Bloodloss > 60) { Msg = "You are feeling faint from the amount of blood you have lost."; MsgTimer = 70 * 4; }
 	}
 	UpdateInfect();
 	if (Bloodloss > 0) {
 		if (bbRnd(200, 0) < Min(Injuries, 4)) {
 			int pvt = bbCreatePivot(0);
-			float rx = bbRnd(-.05f, .05f), rz = bbRnd(-.05f, .05f); // x arg first, then z: blitz codegen order
+			float rx = bbRnd(-.05f, .05f), rz = bbRnd(-.05f, .05f);
 			bbPositionEntity(pvt, bbEntityX(Collider, 0) + rx, bbEntityY(Collider, 0) - .05f, bbEntityZ(Collider, 0) + rz, 0);
 			bbTurnEntity(pvt, 90, 0, 0, 0);
 			bbEntityPick(pvt, .3f);
-			int a = bbRand(360, 1), id = bbRand(15, 16); // Rand(360) runs before Rand(15,16) in blitz
+			int a = bbRand(360, 1), id = bbRand(15, 16);
 			Decals *de = CreateDecal(id, bbPickedX(), bbPickedY() + .005f, bbPickedZ(), 90, a, 0);
 			de->Size = bbRnd(.03f, .08f) * Min(Injuries, 3);
 			bbEntityAlpha(de->obj, 1); bbScaleSprite(de->obj, de->Size, de->Size);
@@ -270,12 +269,11 @@ void MouseLook(void) {
 		int pvt = bbCreatePivot(0);
 		bbPositionEntity(pvt, bbEntityX(Camera, 1), bbEntityY(Camera, 1), bbEntityZ(Camera, 1), 0);
 		bbRotateEntity(pvt, 0, bbRnd(360, 0), 0, 0);
-		bbRand(1, 2); // both branches are the same in blitz
 		float dy = bbRnd(-.5f, .5f), dz = bbRnd(.5f, 1);
 		bbMoveEntity(pvt, 0, dy, dz);
 		Particles *p = CreateParticle(bbEntityX(pvt, 0), bbEntityY(pvt, 0), bbEntityZ(pvt, 0), 2, .002f, 0, 300);
 		p->speed = .001f;
-		float ry = bbRnd(360, 0), rp = bbRnd(-20, 20); // Rnd(360) first, blitz codegen order
+		float ry = bbRnd(360, 0), rp = bbRnd(-20, 20);
 		bbRotateEntity(p->pvt, rp, ry, 0, 0);
 		p->SizeChange = -.00001f;
 		bbFreeEntity(pvt);
@@ -306,7 +304,7 @@ void MouseLook(void) {
 		case 1: if (bbRand(1, 9000) == 1 && !bbLen(Msg)) { Msg = "Your skin is feeling itchy."; MsgTimer = 70 * 4; } break;
 		case 2: if (FPSfactor > 0 && bbRand(1, 800) == 1) cough(); Stamina -= FPSfactor * .1f; break; // lung cancer
 		case 3: // appendicitis
-			if (!(I_427->Using & (I_427->Timer < 70 * 360)) /* blitz Not covers the whole And */) SCP1025state[i] += FPSfactor * .0005f;
+			if (!(I_427->Using && I_427->Timer < 70 * 360)) SCP1025state[i] += FPSfactor * .0005f;
 			if (SCP1025state[i] > 20) { if (SCP1025state[i] - FPSfactor <= 20) Msg = "The pain in your stomach is becoming unbearable."; Stamina -= FPSfactor * .3f; }
 			else if (SCP1025state[i] > 10 && SCP1025state[i] - FPSfactor <= 10) Msg = "Your stomach is aching.";
 			break;
@@ -317,7 +315,7 @@ void MouseLook(void) {
 			}
 			break;
 		case 5: // cardiac arrest
-			if (!(I_427->Using & (I_427->Timer < 70 * 360)) /* blitz Not covers the whole And */) SCP1025state[i] += FPSfactor * .35f;
+			if (!(I_427->Using && I_427->Timer < 70 * 360)) SCP1025state[i] += FPSfactor * .35f;
 			if (SCP1025state[i] > 110) {
 				HeartBeatRate = 0;
 				BlurTimer = Max(BlurTimer, 500);

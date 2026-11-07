@@ -118,7 +118,7 @@ static int scp008(Events *e) {
 		else { // the leak
 			Particles *p = CreateParticle(XG(o0), YG(o0), ZG(o0), 6, .02f, -.12f, 200);
 			bbRotateEntity(p->pvt, -90, 0, 0, 1);
-			float ry = bbRnd(-26, 26), rr = bbRnd(360, 0), rp = bbRnd(-26, 26); // codegen order: yaw, roll, pitch (the defaulted global arg)
+			float ry = bbRnd(-26, 26), rr = bbRnd(360, 0), rp = bbRnd(-26, 26);
 			bbTurnEntity(p->pvt, rp, ry, rr, 0);
 			p->SizeChange = .012f; p->Achange = -.015f;
 		}
@@ -194,9 +194,8 @@ static int checkpoint(Events *e) {
 	return 0;
 }
 
-// ---- tesla gates. EventState: shock timer, EventState2: mtf announcement timer, EventStr: the clerk's script / smoke timer
+// ---- tesla gates. EventState: shock timer, EventState2: mtf announcement timer, EventStr: the clerk's script, EventVal: his body's smoke timer
 
-static float strf(Events *e) { return bbLen(e->EventStr) ? bbFloat(e->EventStr) : 0; }
 static void activate(Events *e) {
 	bbStopChannel(e->SoundCHN);
 	e->SoundCHN = PlaySound2(TeslaActivateSFX, Camera, R->Objects[3], 4, .5f);
@@ -242,7 +241,7 @@ static void zap106(void) {
 	if (ParticleAmount > 0) for (int i = 0; i <= 5 + 5 * (ParticleAmount - 1); i++) {
 		Particles *p = CreateParticle(bbEntityX(Curr106->Collider, 1), bbEntityY(Curr106->Collider, 1), bbEntityZ(Curr106->Collider, 1), 0, .015f, -.2f, 250);
 		p->size = .03f; p->gravity = -.2f; p->lifetime = 200; p->SizeChange = .005f; p->speed = .001f;
-		float ry = bbRnd(360, 0), rp = bbRnd(360, 0); // yaw's Rnd first: codegen order
+		float ry = bbRnd(360, 0), rp = bbRnd(360, 0);
 		bbRotateEntity(p->pvt, rp, ry, 0, 1);
 	}
 	Curr106->State = -20000;
@@ -273,7 +272,7 @@ static void shock(Events *e) { // EventState counting up: charge, zap, power bac
 	if (Curr106->State < -10) {
 		for (int i = 0; i <= 2; i++) if (flat(Curr106->Collider, R->Objects[i]) < 250 * RS) {
 			zap106();
-			if (ParticleAmount > 0) break; // blitz: the particle loop reuses i, which ends this loop too
+			break;
 		}
 	}
 	bbHideEntity(R->Objects[3]); bbHideEntity(R->Objects[4]);
@@ -297,19 +296,19 @@ static void clerk(Events *e) { // the clerk who runs into the gate
 		if (n->Frame == 60) { n->IsDead = 1; e->EventStr = "step2"; SetNPCFrame(n, 57); }
 	} else if (bbSeq(s, "step2")) {
 		AnimateNPC(n, 57, 60, .5f, 0);
-		if (n->Frame == 60) e->EventStr = "0";
+		if (n->Frame == 60) { e->EventStr = "smoke"; e->EventVal = 0; }
 	} else if (bbLen(s) && !bbSeq(s, "step1") && !bbSeq(s, "done")) { // the body smokes for 10s
-		if (strf(e) < 70 * 10) {
+		if (e->EventVal < 70 * 10) {
 			if (ParticleAmount > 0 && bbRand(20 - 10 * (ParticleAmount - 1), 1) == 1) {
 				Particles *p = CreateParticle(bbEntityX(n->Collider, 0), bbEntityY(n->obj, 0) + .05f, bbEntityZ(n->Collider, 0), 0, .05f, 0, 60);
 				p->speed = .002f;
 				bbRotateEntity(p->pvt, 0, bbEntityYaw(n->Collider, 0), 0, 0);
-				float mx = bbRnd(-.1f, .1f), mz = bbRnd(0, .5f); // x then z: codegen order
+				float mx = bbRnd(-.1f, .1f), mz = bbRnd(0, .5f);
 				bbMoveEntity(p->pvt, mx, 0, .1f + mz);
 				bbRotateEntity(p->pvt, -90, bbEntityYaw(n->Collider, 0), 0, 0);
 				p->Achange = -.02f;
 			}
-			e->EventStr = bbStr(strf(e) + FPSfactor);
+			e->EventVal += FPSfactor;
 		} else e->EventStr = "done";
 	}
 }

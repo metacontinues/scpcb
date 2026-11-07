@@ -51,6 +51,7 @@ typedef struct Events {
 	float EventState, EventState2, EventState3;
 	int SoundCHN, SoundCHN2, Sound, Sound2, SoundCHN_isStream, SoundCHN2_isStream;
 	str EventStr;
+	float EventVal; // a spare float (the pocket dimension's stare timer, the tesla clerk's smoke timer)
 	int img;
 } Events;
 TLIST_DECL(Events);

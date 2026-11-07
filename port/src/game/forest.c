@@ -5,7 +5,7 @@ TLIST(Forest);
 static int LastForestID;
 enum { deviation_chance = 40, branch_chance = 65, branch_max_life = 4, branch_die_chance = 18,
 	max_deviation_distance = 3, return_chance = 27, center = 5 };
-static int cobble_chance; // never declared in blitz, so an implicit 0 (chance() still rolls)
+static int cobble_chance; // never had a value upstream, so paths get no cobbles
 
 #define GN (gridsize * gridsize + 12)
 // blitz didn't bounds check in release builds; out of range reads give 0 and writes are dropped here
@@ -40,7 +40,7 @@ void GenForestGrid(Forest *fr) {
 		} else {
 			dir = turnif(px, dir);
 			int dev = deviates(px, dir);
-			if (dev | chance(return_chance)) dir = 1; // blitz Or: both sides always run
+			if (dev || chance(return_chance)) dir = 1;
 			px = fwdx(dir, px); py = fwdy(dir, py);
 			if (dir == 1) { // going forward again: step twice, no 2x2 blobs
 				gset(fr, CELL(py) + px, 1);
@@ -86,7 +86,7 @@ void GenForestGrid(Forest *fr) {
 }
 
 static int red(int argb) { return (argb >> 16) & 255; }
-static int alpha1(int argb) { return ((unsigned)argb >> 24) / 255; } // blitz: int division, so 0 or 1
+static float alpha1(int argb) { return ((unsigned)argb >> 24) / 255.0f; }
 
 // heightmap -> terrain: mesh w/ t1, a child copy 0.01 above w/ t2 faded in by the mask's alpha
 static int load_terrain(int hmap, float yscale, int t1, int t2, int mask) {
@@ -144,7 +144,8 @@ static void details(Forest *fr, int tile, int hmap, float tempf3) {
 		if (cr <= bbRand(100, 260)) continue;
 		int de = 0;
 		float px = lx * tempf4 - tempf3 / 2.0f, pz = ly * tempf4 - tempf3 / 2.0f;
-		if (bbRand(0, 7) <= 6) { // tree (case 6, the stump, is unreachable in blitz: 0..6 matched first)
+		int kind = bbRand(0, 7);
+		if (kind <= 5) { // tree
 			de = bbCopyEntity(fr->DetailMesh[1], 0);
 			float t2 = bbRnd(.25f, .4f);
 			for (int i = 0; i <= 3; i++) {
@@ -155,12 +156,14 @@ static void details(Forest *fr, int tile, int hmap, float tempf3) {
 			}
 			bbScaleEntity(de, t2 * 1.1f, t2, t2 * 1.1f, 1);
 			bbPositionEntity(de, px, cr * .03f - bbRnd(3, 3.2f), pz, 1);
-			// blitz codegen runs the needier Rnd(360) arg first (see README "rng order")
-			float ry = bbRnd(360, 0), rp = bbRnd(-5, 5);
-			bbRotateEntity(de, rp, ry, 0, 1);
+			bbRotateEntity(de, bbRnd(-5, 5), bbRnd(360, 0), 0, 1);
+		} else if (kind == 6) { // stump
+			de = bbCopyEntity(fr->DetailMesh[4], 0);
+			float t = bbRnd(.1f, .12f);
+			bbScaleEntity(de, t, t, t, 1);
+			bbPositionEntity(de, px, cr * .03f - 1.3f, pz, 1);
 		} else { // rock
 			de = bbCopyEntity(fr->DetailMesh[2], 0);
-			bbRnd(.01f, .012f); // tempf2, unused for rocks but still rolled
 			bbPositionEntity(de, px, cr * .03f - 1.3f, pz, 1);
 			bbEntityFX(de, 1);
 			bbRotateEntity(de, 0, bbRnd(360, 0), 0, 1);

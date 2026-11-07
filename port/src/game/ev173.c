@@ -1,5 +1,5 @@
 // ev173.c: the intro ("173": cell, escort, 173's chamber) and "alarm" (the start room after the breach). UpdateEvents.bb
-// event fns return 1 for blitz's `Exit` out of the whole event loop
+// event fns return 1 to stop the event loop for this frame
 #include "g.h"
 
 #define R (e->room)
@@ -28,8 +28,8 @@ static void face(NPCs *n, int t, float smooth) {
 static void spot5(Events *e) {
 	NPCs *n3 = N(3), *n4 = N(4), *n5 = N(5);
 	if (n5->State == 11) return;
-	// blitz: `d > 5 And EntityDistance(..)`, And is bitwise on the rounded distance, so this is true only for odd ones
-	if (((bbEntityDistance(n3->Collider, n5->Collider) > 5) & bbInt(bbEntityDistance(n4->Collider, n5->Collider))) && bbEntityDistance(n5->Collider, Collider) < 3.5f) {
+	// both escorts are away from him and you're close: he stops you
+	if (bbEntityDistance(n3->Collider, n5->Collider) > 5 && bbEntityDistance(n4->Collider, n5->Collider) > 5 && bbEntityDistance(n5->Collider, Collider) < 3.5f) {
 		n5->State = 11; n5->State3 = 1;
 		n5->SoundChn2 = PlaySound2(n5->Sound2, Camera, n5->Collider, 10, 1);
 		n5->Reload = 70 * 3;
@@ -45,7 +45,7 @@ static str pamsg(void) {
 	case 2: who = "scientist"; s = cat(s, "|2\\scientist", bbStr(bbRand(0, 19)), ".ogg"); break;
 	case 3: who = "security"; s = cat(s, "|2\\security", bbStr(bbRand(0, 5)), ".ogg"); break;
 	}
-	if ((bbRand(2, 1) == 1) & bbSeq(who, "scientist")) { // call on line, blitz And: Rand always rolls
+	if (bbSeq(who, "scientist") && bbRand(2, 1) == 1) { // call on line
 		s = cat(s, "|3\\callonline.ogg");
 		s = cat(s, "|numbers\\", bbStr(bbRand(1, 9)), ".ogg");
 		if (bbRand(2, 1) == 1) s = cat(s, "|numbers\\", bbStr(bbRand(1, 9)), ".ogg");
@@ -67,11 +67,9 @@ static str pamsg(void) {
 
 // ---- the walk from the cell to 173's chamber (EventState3 > 0)
 
-static void wakeup(Events *e, float *x, float *y, float *z) { // waking up in the cell
+static void wakeup(Events *e) { // waking up in the cell (cell() places the camera right after)
 	if (e->EventState3 == 1) {
-		bbPositionEntity(Camera, *x, *y, *z, 0);
 		bbHideEntity(Collider);
-		bbPositionEntity(Collider, *x, .302f, *z, 0);
 		bbRotateEntity(Camera, -70, 0, 0, 0);
 		CurrMusicVolume = MusicVolume;
 		StopStream_Strict(MusicCHN);
@@ -86,9 +84,8 @@ static void wakeup(Events *e, float *x, float *y, float *z) { // waking up in th
 }
 
 static int cell(Events *e) {
-	float x = 0, y = 0, z = 0; // blitz's function-wide locals; the intro is the first event, so they're 0 here
-	float s3;
-	wakeup(e, &x, &y, &z);
+	float x, y, z, s3;
+	wakeup(e);
 	s3 = e->EventState3;
 	if (s3 < 15) {
 		x = X(R->obj) - (3224.0f + 1024) * RS; y = 136 * RS; z = Z(R->obj) + 8 * RS;
@@ -373,8 +370,7 @@ static void setup(Events *e) { // first frame in the room: everyone's spawned
 	IntroSFX[17] = LoadSound_Strict("SFX\\Room\\Intro\\See173.ogg");
 	IntroSFX[18] = LoadSound_Strict("SFX\\Room\\Intro\\173Chamber.ogg");
 	Curr173->Idle = 1;
-	float rx = bbRnd(-.3f, .3f); int rz = bbRand(860, 896); // x's Rnd, then z's Rand: codegen order (x is needier)
-	NPCs *n = R->NPC[3] = CreateNPC(NPCtypeGuard, R->x - 4096 * RS + rx, .3f, R->z + rz * RS);
+	NPCs *n = R->NPC[3] = CreateNPC(NPCtypeGuard, R->x - 4096 * RS + bbRnd(-.3f, .3f), .3f, R->z + bbRand(860, 896) * RS);
 	bbRotateEntity(n->Collider, 0, R->angle + 180, 0, 0); n->State = 7;
 	n = R->NPC[4] = CreateNPC(NPCtypeGuard, R->x - 3840 * RS, .3f, R->z + 768 * RS);
 	bbRotateEntity(n->Collider, 0, R->angle + 135, 0, 0); n->State = 7;
@@ -493,7 +489,7 @@ static void test(Events *e) { // < 14000: inside w/ 173, the door, the problem, 
 		R->NPC[2]->Sound = LoadSound_Strict("SFX\\Room\\Intro\\ClassD\\Breen.ogg");
 		PlaySound2(R->NPC[2]->Sound, Camera, R->NPC[1]->Collider, 10, 1);
 	}
-	s = e->EventState; // blitz reads it fresh: lights out just jumped it to 14000
+	s = e->EventState; // lights out may have just jumped it to 14000
 	if (s >= 10440 && s - fl() < 11561 && X(Collider) < XG(R->RoomDoors[1]->frameobj) && N(0)->State != 12) { // guard alert: get back in there
 		NPCs *g = N(0);
 		g->Sound = LoadSound_Strict(sf("SFX\\Room\\Intro\\Guard\\Balcony\\Alert%d.ogg", bbRand(1, 2)));
@@ -616,9 +612,8 @@ static void tostart(Events *e) {
 		Rooms *dead = R;
 		bbFreeEntity(dead->obj);
 		bbDelete(dead);
-		e->room = NULL; // blitz: refs to a deleted room read Null from here on
-		// so this deletes the cams whose room is Null, which now includes the intro room's
-		each(SecurityCams, sc) if (!sc->room || sc->room == dead) bbDelete(sc);
+		e->room = NULL;
+		each(SecurityCams, sc) if (sc->room == dead) bbDelete(sc); // the intro room's cams
 		bbShowEntity(Fog);
 		bbAmbientLight(Brightness, Brightness, Brightness);
 		bbCameraFogRange(Camera, CameraFogNear, CameraFogFar);

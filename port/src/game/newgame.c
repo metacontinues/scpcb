@@ -28,7 +28,7 @@ void InitNewGame(void) {
 		for (int i = 0; i <= MaxRoomLights; i++) if (r->Lights[i]) bbEntityParent(r->Lights[i], 0, 1);
 		if (!r->RoomTemplate->DisableDecals) {
 			if (bbRand(1, 4) == 1) {
-				// blitz codegen order for these args: x's Rnd, z's Rnd, Rand(360), then Rand(2, 3)
+
 				float rx = bbRnd(-2, 2), rz = bbRnd(-2, 2); int a = bbRand(360, 1), id = bbRand(2, 3);
 				Decals *de = CreateDecal(id, bbEntityX(r->obj, 0) + rx, .003f, bbEntityZ(r->obj, 0) + rz, 90, a, 0);
 				de->Size = bbRnd(.1f, .4f); bbScaleSprite(de->obj, de->Size, de->Size);

@@ -26,12 +26,10 @@ void InitWayPoints(int loadingstart) {
 	each(WayPoints, w) {
 		number++; iter++;
 		if (iter == 20) { DrawLoading(loadingstart + (int)floorf(35.0f / amount * number), 0); iter = 0; }
-		int can = 0; // blitz's canCreateWayPoint is never reset, so once true it stays true for this w
 		for (WayPoints *w2 = bbAfter(w); w2; w2 = bbAfter(w2)) {
 			if (!(w->room == w2->room || w->door || w2->door)) continue;
 			float dist = bbEntityDistance(w->obj, w2->obj);
-			if (w->room->MaxWayPointY == 0 || w2->room->MaxWayPointY == 0) can = 1;
-			else if (fabsf(bbEntityY(w->obj, 0) - bbEntityY(w2->obj, 0)) <= w->room->MaxWayPointY) can = 1;
+			int can = w->room->MaxWayPointY == 0 || w2->room->MaxWayPointY == 0 || fabsf(bbEntityY(w->obj, 0) - bbEntityY(w2->obj, 0)) <= w->room->MaxWayPointY;
 			if (dist < 7 && can && bbEntityVisible(w->obj, w2->obj)) {
 				for (int i = 0; i <= 4; i++) if (!w->connected[i]) { w->connected[i] = w2; w->dist[i] = dist; break; }
 				for (int i = 0; i <= 4; i++) if (!w2->connected[i]) { w2->connected[i] = w; w2->dist[i] = dist; break; }
@@ -96,7 +94,7 @@ int FindPath(NPCs *n, float x, float y, float z) {
 			WayPoints *w = sm;
 			w->state = 2;
 			for (int i = 0; i <= 4; i++) {
-				WayPoints *c = bbLive(w->connected[i]); // links to deleted waypoints (the intro's) read Null in blitz
+				WayPoints *c = bbLive(w->connected[i]); // links to deleted waypoints (the intro's) don't count
 				if (!c || c->state >= 2) continue;
 				float g = w->Gcost + w->dist[i];
 				if (n->NPCtype == NPCtypeMTF && !c->door) g += .5f;
@@ -105,7 +103,7 @@ int FindPath(NPCs *n, float x, float y, float z) {
 				} else {
 					c->Hcost = fabsf(bbEntityX(c->obj, 1) - bbEntityX(ep->obj, 1)) + fabsf(bbEntityZ(c->obj, 1) - bbEntityZ(ep->obj, 1));
 					c->Gcost = g;
-					c->Fcost = w->Gcost + w->Hcost; // sic: blitz uses the parent's costs here
+					c->Fcost = c->Gcost + c->Hcost;
 					c->parent = w;
 					c->state = 1;
 				}

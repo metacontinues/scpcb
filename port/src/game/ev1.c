@@ -266,7 +266,7 @@ static int room3pitduck(Events *e) {
 		LoadEventSound(e, "SFX\\SCP\\Joke\\Saxophone.ogg", 0);
 	} else if (!bbEntityInView(*o, Camera)) {
 		e->EventState += FPSfactor;
-		if ((bbRand(200, 1) == 1) & (e->EventState > 300)) { e->EventState = 0; e->SoundCHN = PlaySound2(e->Sound, Camera, *o, 6, 1); } // blitz And: Rand always rolls
+		if (e->EventState > 300 && bbRand(200, 1) == 1) { e->EventState = 0; e->SoundCHN = PlaySound2(e->Sound, Camera, *o, 6, 1); }
 	} else if (e->SoundCHN && bbChannelPlaying(e->SoundCHN)) bbStopChannel(e->SoundCHN);
 	return 0;
 }
