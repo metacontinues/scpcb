@@ -21,7 +21,7 @@ int main(void) {
 	}
 	CHECK(lo == -3 && hi == 3, "rand range %d..%d", lo, hi);
 	CHECK(flo > 0 && fhi < 1, "rnd open range %f..%f", flo, fhi);
-	CHECK(irand(5, 1) >= 1, "swapped args");
+	CHECK(irand(1, 5) >= 1, "swapped args");
 
 	char dir[256]; snprintf(dir, sizeof dir, "%s/bbmisc", getenv("TMPDIR") ? getenv("TMPDIR") : "/tmp");
 	char p[300]; snprintf(p, sizeof p, "%s\\Test.DAT", dir);
@@ -45,7 +45,7 @@ int main(void) {
 	ent root = create_pivot(0), a = create_pivot(root);
 	create_pivot(a); create_pivot(a);
 	ent c = copy_entity(root, 0), c2 = copy_entity(a, root);
-	CHECK(count_children(c) == 1 && count_children(get_child(c, 1)) == 2, "copy keeps the tree");
+	CHECK(count_children(c) == 1 && count_children(get_child(c, 0)) == 2, "copy keeps the tree");
 	CHECK(count_children(root) == 2 && count_children(c2) == 2 && get_parent(c2) == root, "copy into a parent: %d", count_children(root));
 	scale_entity(c, 2, 2, 2, 0); // walks the copied tree, hung on the cycle
 	printf("%s (%d failed)\n", fails ? "FAILED" : "all good", fails);

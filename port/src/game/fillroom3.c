@@ -219,10 +219,10 @@ static void f_room2test1074(Rooms *r) {
 	r->Objects[1] = create_pivot(0);
 	position_entity(r->Objects[1], r->x + 835.0f * RoomScale, r->y + 10.0f * RoomScale, r->z + 300.0f * RoomScale, 1);
 	entity_parent(r->Objects[1], r->obj, 1);
-	msh = get_child(r->obj, 2);
-	r->NonFreeAble[0] = get_surface(msh, 1);
+	msh = get_child(r->obj, 1);
+	r->NonFreeAble[0] = get_surface(msh, 0);
 	{ int to_ = count_surfaces(msh);
-	for (tempint = 1; tempint <= to_; tempint += 1) {
+	for (tempint = 0; tempint < to_; tempint += 1) {
 		sf = get_surface(msh, tempint);
 		b = get_surface_brush(sf);
 		t = get_brush_texture(b, 1);
@@ -468,7 +468,7 @@ static void f_room2servers2(Rooms *r) {
 	d->DisableWaypoint = 1;
 	it = CreateItem("Night Vision Goggles", "nvgoggles", r->x + 56.0154f * RoomScale, r->y - 648.0f * RoomScale, r->z + 749.638f * RoomScale, 0, 0, 0, 1, 0);
 	it->state = 200;
-	rotate_entity(it->collider, 0, r->angle + irand(245, 1), 0, 0);
+	rotate_entity(it->collider, 0, r->angle + irand(1, 245), 0, 0);
 	entity_parent(it->collider, r->obj, 1);
 }
 
@@ -480,7 +480,7 @@ static void f_room2gw(Rooms *r) {
 	if (s_eq(r->RoomTemplate->Name, "room2gw_b")) {
 		r->Objects[2] = create_pivot(r->obj);
 		position_entity(r->Objects[2], r->x - 156.825f * RoomScale, -37.3458f * RoomScale, r->z + 121.364f * RoomScale, 1);
-		de = CreateDecal(3, r->x - 156.825f * RoomScale, -37.3458f * RoomScale, r->z + 121.364f * RoomScale, 90, frnd(360, 0), 0);
+		de = CreateDecal(3, r->x - 156.825f * RoomScale, -37.3458f * RoomScale, r->z + 121.364f * RoomScale, 90, frnd(0, 360), 0);
 		de->Size = 0.5f;
 		scale_sprite(de->obj, de->Size, de->Size);
 		entity_parent(de->obj, r->obj, 1);

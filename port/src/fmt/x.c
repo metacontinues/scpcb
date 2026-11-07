@@ -1,5 +1,5 @@
 // x.c: directx .x loader. text + binary, plus mszip ("bzip") if it's one block.
-// one tokenizer over both encodings, one parser on top. dx is lh/cw like blitz, so no conversion.
+// one tokenizer over both encodings, one parser on top. dx is lh/cw like us, so no conversion.
 // skin weights / AnimationSet are skipped.
 #include <stdlib.h>
 #include <string.h>

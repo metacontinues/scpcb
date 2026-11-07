@@ -1,4 +1,4 @@
-// snd.c: blitz sounds/channels + the fmod stream bits scpcb uses, on raylib audio.
+// snd.c: sounds/channels + music streams, on raylib audio.
 // a channel is a raylib sound alias (its own voice). handles carry a generation so a
 // stale channel never steers a recycled voice. the game does its own 3d (vol + pan).
 #include <stdlib.h>
@@ -71,7 +71,7 @@ static chan *gch(int h) {
 	if (h <= 0 || i >= NCH || !ch[i].used || ch[i].gen != h >> 12) return NULL;
 	return &ch[i];
 }
-static float rlpan(float p) { return fmaxf(-1, fminf(1, p)); } // blitz and raylib 6: -1 left .. 1 right
+static float rlpan(float p) { return fmaxf(-1, fminf(1, p)); } // -1 left .. 1 right
 
 int play_sound(int h) {
 	snd *s = gsnd(h);
@@ -100,7 +100,7 @@ void resume_channel(int h) { chan *c = gch(h); if (c && c->paused) { ResumeSound
 void channel_volume(int h, float v) { chan *c = gch(h); if (c) SetSoundVolume(c->a, fmaxf(0, v)); }
 void channel_pan(int h, float p) { chan *c = gch(h); if (c) SetSoundPan(c->a, rlpan(p)); }
 void channel_pitch(int h, float hz) { chan *c = gch(h); if (c && gsnd(c->snd)) SetSoundPitch(c->a, hz / ss[c->snd].rate); }
-// paused counts as playing, like blitz
+// paused counts as playing
 int channel_playing(int h) { chan *c = gch(h); return c && (c->paused || c->loop || IsSoundPlaying(c->a)); }
 
 // ---- streams (what StreamSound_Strict & co need from fmod)

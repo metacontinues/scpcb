@@ -1,4 +1,4 @@
-// m3.h: blitz3d-style math. left-handed, y up, z fwd. column vecs.
+// m3.h: math. left-handed, y up, z fwd. column vecs.
 // mat3 stores axes i,j,k as columns: M*v = i*x + j*y + k*z
 #pragma once
 #include <math.h>
@@ -19,7 +19,7 @@ static inline float v3dot(v3 a, v3 b) { return a.x*b.x + a.y*b.y + a.z*b.z; }
 static inline v3 v3cross(v3 a, v3 b) { return (v3){a.y*b.z-a.z*b.y, a.z*b.x-a.x*b.z, a.x*b.y-a.y*b.x}; }
 static inline float v3len(v3 a) { return sqrtf(v3dot(a, a)); }
 static inline v3 v3norm(v3 a) { float l = v3len(a); return l > 0 ? v3mul(a, 1/l) : a; }
-// blitz vector yaw/pitch (radians)
+// vector yaw/pitch (radians)
 static inline float v3yaw(v3 a) { return atan2f(-a.x, a.z); }
 static inline float v3pitch(v3 a) { return -atan2f(a.y, sqrtf(a.x*a.x + a.z*a.z)); }
 
@@ -43,7 +43,7 @@ static inline m3 m3ortho(m3 m) {
 static inline m3 m3pitch(float q) { float c = cosf(q), s = sinf(q); return (m3){{1,0,0},{0,c,s},{0,-s,c}}; }
 static inline m3 m3yaw(float q) { float c = cosf(q), s = sinf(q); return (m3){{c,0,s},{0,1,0},{-s,0,c}}; }
 static inline m3 m3roll(float q) { float c = cosf(q), s = sinf(q); return (m3){{c,s,0},{-s,c,0},{0,0,1}}; }
-// radians in, yaw*pitch*roll like blitz
+// radians in, yaw*pitch*roll
 static inline m3 m3rot(float p, float y, float r) { return m3mul(m3mul(m3yaw(y), m3pitch(p)), m3roll(r)); }
 static inline float m3getpitch(m3 m) { return -atan2f(m.k.y, sqrtf(m.k.x*m.k.x + m.k.z*m.k.z)); }
 static inline float m3getyaw(m3 m) { return atan2f(-m.k.x, m.k.z); }

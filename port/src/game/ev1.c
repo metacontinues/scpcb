@@ -29,7 +29,7 @@ static int room2offices2(Events *e) { // the duck moves while you blink
 	if (!IN || !(BlinkTimer < -8 && BlinkTimer > -12)) return 0;
 	int t = R->Objects[irand(1, 4)];
 	position_entity(R->Objects[0], XG(t), YG(t), ZG(t), 1);
-	rotate_entity(R->Objects[0], 0, frnd(360, 0), 0, 0);
+	rotate_entity(R->Objects[0], 0, frnd(0, 360), 0, 0);
 	return 0;
 }
 
@@ -98,7 +98,7 @@ static int buttghost(Events *e) {
 static int room2elevator2(Events *e) { // a body by the elevator
 	if (!near(e, 8)) return 0;
 	int o = R->Objects[0];
-	CreateDecal(3, XG(o), .0005f, ZG(o), 90, frnd(360, 0), 0);
+	CreateDecal(3, XG(o), .0005f, ZG(o), 90, frnd(0, 360), 0);
 	NPCs *n = R->NPC[0] = body(NPCtypeD, XG(o), .5f, ZG(o));
 	ChangeNPCTextureID(n, 0);
 	rotate_entity(n->Collider, 0, entity_yaw(R->obj, 0) - 80, 0, 1);
@@ -266,7 +266,7 @@ static int room3pitduck(Events *e) {
 		LoadEventSound(e, "SFX\\SCP\\Joke\\Saxophone.ogg", 0);
 	} else if (!entity_in_view(*o, Camera)) {
 		e->EventState += FPSfactor;
-		if (e->EventState > 300 && irand(200, 1) == 1) { e->EventState = 0; e->SoundCHN = PlaySound2(e->Sound, Camera, *o, 6, 1); }
+		if (e->EventState > 300 && irand(1, 200) == 1) { e->EventState = 0; e->SoundCHN = PlaySound2(e->Sound, Camera, *o, 6, 1); }
 	} else if (e->SoundCHN && channel_playing(e->SoundCHN)) stop_channel(e->SoundCHN);
 	return 0;
 }
@@ -283,7 +283,7 @@ static int tunnel2smoke(Events *e) {
 		for (int z = 0, k = (int)ceilf(3.3333f * (ParticleAmount + 1)); z <= k; z++) {
 			Particles *p = CreateParticle(entity_x(em->Obj, 1), 448 * RS, entity_z(em->Obj, 1), irand(em->MinImage, em->MaxImage), em->Size, em->Gravity, em->LifeTime);
 			p->speed = em->Speed;
-			float ry = frnd(360, 0), rp = frnd(360, 0); // yaw's Rnd first: RotateEntity's trailing args make that tail needier
+			float ry = frnd(0, 360), rp = frnd(0, 360); // yaw's Rnd first: RotateEntity's trailing args make that tail needier
 			rotate_entity(p->pvt, rp, ry, 0, 1);
 			p->size = .05f; p->SizeChange = .008f;
 		}
@@ -303,11 +303,11 @@ static int room3servers(Events *e) {
 	int o = R->Objects[3];
 	if (o <= 0) return 0;
 	if (BlinkTimer < -8 && BlinkTimer > -12) { point_entity(o, Camera, 0); rotate_entity(o, 0, entity_yaw(o, 1), 0, 1); }
-	if (e->EventState2 == 0) { e->EventState = CurveValue(0, e->EventState, 15); if (irand(800, 1) == 1) e->EventState2 = 1; }
+	if (e->EventState2 == 0) { e->EventState = CurveValue(0, e->EventState, 15); if (irand(1, 800) == 1) e->EventState2 = 1; }
 	else {
 		e->EventState += FPSfactor * .5f;
 		if (e->EventState > 360) e->EventState = 0;
-		if (irand(1200, 1) == 1) e->EventState2 = 0;
+		if (irand(1, 1200) == 1) e->EventState2 = 0;
 	}
 	position_entity(o, XG(o), -608 * RS + .05f + sinf((e->EventState + 270) * DTOR) * .05f, ZG(o), 1);
 	return 0;
@@ -332,7 +332,7 @@ static int room2fan(Events *e) { // EventState: on/off timer, 2: on/off, 3: fan 
 
 static void blood(Events *e) { // the decal room2scps2 leaves either way
 	int o = R->Objects[0];
-	Decals *de = CreateDecal(0, XG(o), R->y + 2 * RS, ZG(o), 90, irand(360, 1), 0);
+	Decals *de = CreateDecal(0, XG(o), R->y + 2 * RS, ZG(o), 90, irand(1, 360), 0);
 	if (!de) return;
 	de->Size = .5f; entity_alpha(de->obj, .8f);
 	entity_fx(de->obj, 1);

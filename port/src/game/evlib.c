@@ -167,7 +167,7 @@ float UpdateElevators(float State, Doors *door1, Doors *door2, int room1, int ro
 // ---- checkpoint monitors (MapSystem.bb)
 
 static void paintmon(int ent, int tex) {
-	for (int i = 2; i <= count_surfaces(ent); i++) {
+	for (int i = 1; i < count_surfaces(ent); i++) {
 		surf *sf = get_surface(ent, i);
 		hbrush b = get_surface_brush(sf);
 		if (!b) continue;

@@ -26,7 +26,7 @@ int ScaledMouseY(void) { return iround(mouse_y() * (float)GraphicHeight / RealGr
 
 // TODO InitFastResize: the fresize_* camera/sprite are only for borderless upscaling + gamma
 void Graphics3DExt(int w, int h, int depth, int mode) {
-	graphics3_d(w, h, depth, mode);
+	graphics_3d(w, h, depth, mode);
 	anti_alias(GetINIInt(OptionFile, "options", "antialias", 0));
 }
 // blitz version rendered the image scaled through a camera and grabbed it back
@@ -67,7 +67,7 @@ static void InitOptions(void) {
 	Depth = 0; Fullscreen = GetINIInt(OptionFile, "options", "fullscreen", 0);
 	SelectedGFXDriver = Max(GetINIInt(OptionFile, "options", "gfx driver", 0), 1);
 	ShowFPS = GetINIInt(OptionFile, "options", "show FPS", 0);
-	TotalGFXModes = count_gfx_modes3_d();
+	TotalGFXModes = count_gfx_modes_3d();
 	GfxModeWidths = calloc(TotalGFXModes + 1, sizeof(int));
 	GfxModeHeights = calloc(TotalGFXModes + 1, sizeof(int));
 	BorderlessWindowed = GetINIInt(OptionFile, "options", "borderless windowed", 0);

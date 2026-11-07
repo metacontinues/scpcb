@@ -63,7 +63,7 @@ static void composition(Events *e) {
 			Injuries += .8f;
 			PlaySound_Strict(LoadTempSound("SFX\\SCP\\012\\Speech7.ogg"));
 			Crouch = 1;
-			Decals *de = CreateDecal(17, X(Collider), -768 * RS + .01f, Z(Collider), 90, frnd(360, 0), 0);
+			Decals *de = CreateDecal(17, X(Collider), -768 * RS + .01f, Z(Collider), 90, frnd(0, 360), 0);
 			if (de) { de->Size = .1f; de->MaxSize = .45f; de->SizeChange = .0002f; UpdateDecals(); }
 		} else if (AT(85)) {
 			DeathMSG = "Subject D-9341 found in a pool of blood next to SCP-012. Subject seems to have ripped open his wrists and written three extra "
@@ -160,7 +160,7 @@ static void guard(Events *e) { // the guard who falls into the shaft
 			if (!e->Sound) {
 				LoadEventSound(e, "SFX\\General\\BodyFall.ogg", 0);
 				e->SoundCHN = PlaySound_Strict(e->Sound);
-				Decals *de = CreateDecal(3, X(R->obj), -1531 * RS, Z(R->obj), 90, irand(360, 1), 0);
+				Decals *de = CreateDecal(3, X(R->obj), -1531 * RS, Z(R->obj), 90, irand(1, 360), 0);
 				if (de) { de->Size = .4f; scale_sprite(de->obj, de->Size, de->Size); UpdateDecals(); }
 			}
 			if (n->Frame == 286) n->PrevState = 2;
@@ -204,13 +204,13 @@ static void nv895(Events *e) { // looking at 895 through nv goggles
 		entity_texture(NVOverlay, NVTexture, 0, 0);
 		if (VomitTimer < -10) Kill();
 	} else if (Sanity < -800) {
-		if (irand(3, 1) == 1) entity_texture(NVOverlay, NVTexture, 0, 0);
-		if (irand(6, 1) < 5) gore(2, 1);
+		if (irand(1, 3) == 1) entity_texture(NVOverlay, NVTexture, 0, 0);
+		if (irand(1, 6) < 5) gore(2, 1);
 		BlurTimer = 1000;
 		if (VomitTimer == 0) VomitTimer = 1;
 	} else if (Sanity < -500) {
-		if (irand(7, 1) == 1) entity_texture(NVOverlay, NVTexture, 0, 0);
-		if (irand(50, 1) == 1) gore(1, 0);
+		if (irand(1, 7) == 1) entity_texture(NVOverlay, NVTexture, 0, 0);
+		if (irand(1, 50) == 1) gore(1, 0);
 	} else {
 		entity_texture(NVOverlay, NVTexture, 0, 0);
 		for (int i = 0; i < MaxItemAmount; i++) if (worn(Inventory[i])) Inventory[i]->state2 = 0;
@@ -228,7 +228,7 @@ static int coffin(Events *e) {
 	if (CoffinDistance < 1.5f) {
 		GiveAchievement(Achv895, 1);
 		if (!Contained106 && s_eq(e->EventName, "coffin106") && e->EventState2 == 0) {
-			Decals *de = CreateDecal(0, XG(o1), -1531 * RS, ZG(o1), 90, irand(360, 1), 0);
+			Decals *de = CreateDecal(0, XG(o1), -1531 * RS, ZG(o1), 90, irand(1, 360), 0);
 			if (de) { de->Size = .05f; de->SizeChange = .001f; entity_alpha(de->obj, .8f); UpdateDecals(); }
 			if (Curr106->State > 0) {
 				position_entity(Curr106->Collider, XG(o1), -10240 * RS, ZG(o1), 0);

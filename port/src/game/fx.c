@@ -15,7 +15,7 @@ Particles *CreateParticle(float x, float y, float z, int image, float size, floa
 	p->obj = create_sprite(0);
 	position_entity(p->obj, x, y, z, 1);
 	entity_texture(p->obj, ParticleTextures[image], 0, 0);
-	rotate_entity(p->obj, 0, 0, frnd(360, 0), 0); // blitz Rnd(x) is Rnd(x, 0)
+	rotate_entity(p->obj, 0, 0, frnd(0, 360), 0); // blitz Rnd(x) is Rnd(x, 0)
 	entity_fx(p->obj, 1 + 8);
 	sprite_view_mode(p->obj, 3);
 	if (image == 0 || image == 5 || image == 6) entity_blend(p->obj, 1);
@@ -133,8 +133,8 @@ void UpdateDecals(void) {
 			scale_sprite(d->obj, d->Size, d->Size);
 			if (d->ID == 0) {
 				if (d->Timer <= 0) {
-					float a = irand(360, 1), t = frnd(d->Size, 0);
-					float yaw = frnd(360, 0); // the decal's only rng arg
+					float a = irand(1, 360), t = frnd(0, d->Size);
+					float yaw = frnd(0, 360); // the decal's only rng arg
 					Decals *d2 = CreateDecal(1, entity_x(d->obj, 0) + cosf(a * DTOR) * t, entity_y(d->obj, 0) - .0005f, entity_z(d->obj, 0) + sinf(a * DTOR) * t, entity_pitch(d->obj, 0), yaw, entity_roll(d->obj, 0));
 					d2 = d2 ? d2 : llast(Decals); // blitz gets the decal back even when its texture is missing
 					d2->Size = frnd(.1f, .5f); scale_sprite(d2->obj, d2->Size, d2->Size);

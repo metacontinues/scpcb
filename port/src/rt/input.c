@@ -1,5 +1,5 @@
-// input.c: blitz keyboard/mouse. keys are directinput scancodes (options.ini binds use them).
-// hits/speeds accumulate per frame in input_update (from flip_frame) and reset when read, like blitz.
+// input.c: keyboard/mouse. keys are directinput scancodes (options.ini binds use them).
+// hits/speeds accumulate per frame in input_update (from flip_frame) and reset when read.
 #include <stdlib.h>
 #include <string.h>
 #include "in.h"
@@ -89,6 +89,6 @@ void input_update(void) {
 	if (IsKeyPressed(KEY_TAB)) push(9);
 	if (IsKeyPressed(KEY_ENTER) || IsKeyPressed(KEY_KP_ENTER)) push(13);
 	if (IsKeyPressed(KEY_ESCAPE)) push(27);
-	for (int c; (c = GetCharPressed());) push(c < 256 ? c : '?'); // blitz is ascii/latin1
+	for (int c; (c = GetCharPressed());) push(c < 256 ? c : '?'); // ascii/latin1 only
 	script();
 }

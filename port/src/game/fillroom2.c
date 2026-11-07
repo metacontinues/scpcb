@@ -172,7 +172,7 @@ static void f_room012(Rooms *r) {
 	entity_parent(it->collider, r->obj, 1);
 	it = CreateItem("Severed Hand", "hand", r->x - 784 * RoomScale, -576 * RoomScale + 0.3f, r->z + 640 * RoomScale, 0, 0, 0, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
-	de = CreateDecal(3, r->x - 784 * RoomScale, -768 * RoomScale + 0.01f, r->z + 640 * RoomScale, 90, frnd(360, 0), 0);
+	de = CreateDecal(3, r->x - 784 * RoomScale, -768 * RoomScale + 0.01f, r->z + 640 * RoomScale, 90, frnd(0, 360), 0);
 	de->Size = 0.5f;
 	scale_sprite(de->obj, de->Size, de->Size);
 	entity_parent(de->obj, r->obj, 1);
@@ -276,11 +276,11 @@ static void f_room3servers(Rooms *r) {
 	U int tex = 0;
 	it = CreateItem("9V Battery", "bat", r->x - 132.0f * RoomScale, r->y - 368.0f * RoomScale, r->z - 648.0f * RoomScale, 0, 0, 0, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
-	if (irand(2, 1) == 1) {
+	if (irand(1, 2) == 1) {
 		it = CreateItem("9V Battery", "bat", r->x - 76.0f * RoomScale, r->y - 368.0f * RoomScale, r->z - 648.0f * RoomScale, 0, 0, 0, 1, 0);
 		entity_parent(it->collider, r->obj, 1);
 	}
-	if (irand(2, 1) == 1) {
+	if (irand(1, 2) == 1) {
 		it = CreateItem("9V Battery", "bat", r->x - 196.0f * RoomScale, r->y - 368.0f * RoomScale, r->z - 648.0f * RoomScale, 0, 0, 0, 1, 0);
 		entity_parent(it->collider, r->obj, 1);
 	}
@@ -353,11 +353,11 @@ static void f_room2closets(Rooms *r) {
 	entity_parent(it->collider, r->obj, 1);
 	it = CreateItem("9V Battery", "bat", r->x + 736.0f * RoomScale, r->y + 176.0f * RoomScale, r->z - 448.0f * RoomScale, 0, 0, 0, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
-	if (irand(2, 1) == 1) {
+	if (irand(1, 2) == 1) {
 		it = CreateItem("9V Battery", "bat", r->x + 730.0f * RoomScale, r->y + 176.0f * RoomScale, r->z - 496.0f * RoomScale, 0, 0, 0, 1, 0);
 		entity_parent(it->collider, r->obj, 1);
 	}
-	if (irand(2, 1) == 1) {
+	if (irand(1, 2) == 1) {
 		it = CreateItem("9V Battery", "bat", r->x + 740.0f * RoomScale, r->y + 176.0f * RoomScale, r->z - 560.0f * RoomScale, 0, 0, 0, 1, 0);
 		entity_parent(it->collider, r->obj, 1);
 	}
@@ -412,7 +412,7 @@ static void f_room2offices2(Rooms *r) {
 	entity_parent(it->collider, r->obj, 1);
 	it = CreateItem("Document SCP-895", "paper", r->x - 800.0f * RoomScale, r->y - 48.0f * RoomScale, r->z + 368.0f * RoomScale, 0, 0, 0, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
-	if (irand(2, 1) == 1) {
+	if (irand(1, 2) == 1) {
 		it = CreateItem("Document SCP-860", "paper", r->x - 800.0f * RoomScale, r->y - 48.0f * RoomScale, r->z - 464.0f * RoomScale, 0, 0, 0, 1, 0);
 	} else {
 		it = CreateItem("SCP-093 Recovered Materials", "paper", r->x - 800.0f * RoomScale, r->y - 48.0f * RoomScale, r->z - 464.0f * RoomScale, 0, 0, 0, 1, 0);
@@ -440,7 +440,7 @@ static void f_room2offices2(Rooms *r) {
 static void f_room2offices3(Rooms *r) {
 	U int i = 0;
 	U Items * it = NULL;
-	if (irand(2, 1) == 1) {
+	if (irand(1, 2) == 1) {
 		it = CreateItem("Mobile Task Forces", "paper", r->x + 744.0f * RoomScale, r->y + 240.0f * RoomScale, r->z + 944.0f * RoomScale, 0, 0, 0, 1, 0);
 		entity_parent(it->collider, r->obj, 1);
 	} else {
@@ -460,11 +460,11 @@ static void f_room2offices3(Rooms *r) {
 	} }
 	it = CreateItem("9V Battery", "bat", r->x - 1545.0f * RoomScale, r->y + 603.0f * RoomScale, r->z - 372.0f * RoomScale, 0, 0, 0, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
-	if (irand(2, 1) == 1) {
+	if (irand(1, 2) == 1) {
 		it = CreateItem("9V Battery", "bat", r->x - 1540.0f * RoomScale, r->y + 603.0f * RoomScale, r->z - 340.0f * RoomScale, 0, 0, 0, 1, 0);
 		entity_parent(it->collider, r->obj, 1);
 	}
-	if (irand(2, 1) == 1) {
+	if (irand(1, 2) == 1) {
 		it = CreateItem("9V Battery", "bat", r->x - 1529.0f * RoomScale, r->y + 603.0f * RoomScale, r->z - 308.0f * RoomScale, 0, 0, 0, 1, 0);
 		entity_parent(it->collider, r->obj, 1);
 	}
@@ -520,13 +520,13 @@ static void f_start(Rooms *r) {
 	scale_entity(r->Objects[0], RoomScale, RoomScale, RoomScale, 0);
 	position_entity(r->Objects[0], r->x + 272.0f * RoomScale, 0, r->z + 400.0f * RoomScale, 0);
 	entity_parent(r->Objects[0], r->obj, 1);
-	de = CreateDecal(0, r->x + 272.0f * RoomScale, 0.005f, r->z + 262.0f * RoomScale, 90, irand(360, 1), 0);
+	de = CreateDecal(0, r->x + 272.0f * RoomScale, 0.005f, r->z + 262.0f * RoomScale, 90, irand(1, 360), 0);
 	entity_parent(de->obj, r->obj, 1);
 	r->Objects[1] = LoadMesh_Strict("GFX\\map\\IntroDrawer.b3d", 0);
 	scale_entity(r->Objects[1], RoomScale, RoomScale, RoomScale, 0);
 	position_entity(r->Objects[1], r->x + 448.0f * RoomScale, 0, r->z + 192.0f * RoomScale, 0);
 	entity_parent(r->Objects[1], r->obj, 1);
-	de = CreateDecal(0, r->x + 456.0f * RoomScale, 0.005f, r->z + 135.0f * RoomScale, 90, irand(360, 1), 0);
+	de = CreateDecal(0, r->x + 456.0f * RoomScale, 0.005f, r->z + 135.0f * RoomScale, 90, irand(1, 360), 0);
 	entity_parent(de->obj, r->obj, 1);
 	sc = CreateSecurityCam(r->x - 336.0f * RoomScale, r->y + 352 * RoomScale, r->z + 48.0f * RoomScale, r, 1);
 	sc->angle = 270;
@@ -663,7 +663,7 @@ static void f_room2scps(Rooms *r) {
 			dx = -544.0f;
 			dz = 636.0f;
 		}
-		int rn2 = irand(360, 1);
+		int rn2 = irand(1, 360);
 		int rn1 = irand(15, 16);
 		de = CreateDecal(rn1, r->x + dx * RoomScale, 0.005f, r->z + dz * RoomScale, 90, rn2, 0);
 		if (i > 10) {
@@ -941,7 +941,7 @@ static void f_173(Rooms *r) {
 	r->RoomDoors[1]->buttons[0] = 0;
 	free_entity(r->RoomDoors[1]->buttons[1]);
 	r->RoomDoors[1]->buttons[1] = 0;
-	float rn2 = frnd(360, 0);
+	float rn2 = frnd(0, 360);
 	int rn1 = irand(4, 5);
 	de = CreateDecal(rn1, entity_x(r->Objects[5], 1), 0.002f, entity_z(r->Objects[5], 1), 90, rn2, 0);
 	de->Size = 1.2f;
@@ -950,7 +950,7 @@ static void f_173(Rooms *r) {
 		for (ztemp = 0; ztemp <= 1; ztemp += 1) {
 			float rn4 = frnd(-0.5f, 0.5f);
 			float rn6 = frnd(-0.5f, 0.5f);
-			float rn7 = frnd(360, 0);
+			float rn7 = frnd(0, 360);
 			float rn5 = frnd(0.001f, 0.0018f);
 			int rn3 = irand(4, 6);
 			de = CreateDecal(rn3, r->x + 700.0f * RoomScale + xtemp * 700.0f * RoomScale + rn4, rn5, r->z + 600 * ztemp * RoomScale + rn6, 90, rn7, 0);

@@ -9,7 +9,7 @@ static int fails;
 #define CHECK(c, ...) do { if (!(c)) { fails++; printf("FAIL %s:%d: ", __FILE__, __LINE__); printf(__VA_ARGS__); puts(""); } else printf("ok   " #c "\n"); } while (0)
 
 int main(int argc, char **argv) {
-	if (!graphics3_d(1024, 600, 0, 2)) return 1;
+	if (!graphics_3d(1024, 600, 0, 2)) return 1;
 	app_title("g2dtest");
 	int fnt = load_font("GFX\\font\\cour\\Courier New.ttf", 22, 0, 0, 0), big = load_font("GFX\\font\\courbd\\Courier New.ttf", 48, 0, 0, 0);
 	CHECK(fnt && big, "fonts");

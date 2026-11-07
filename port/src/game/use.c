@@ -61,7 +61,7 @@ static void scp500(void) {
 
 static void veryfinekit(void) {
 	if (!CanUseItem(0, 0, 1)) return;
-	switch (irand(5, 1)) {
+	switch (irand(1, 5)) {
 	case 1: Injuries = 3.5f; say("You started bleeding heavily.", 70 * 7); break;
 	case 2: Injuries = 0; Bloodloss = 0; say("Your wounds are healing up rapidly.", 70 * 7); break;
 	case 3: Injuries = Max(0, Injuries - frnd(.5f, 3.5f)); Bloodloss = Max(0, Bloodloss - frnd(10, 100)); say("You feel much better.", 70 * 7); break;
@@ -111,7 +111,7 @@ static void firstaid(void) {
 		Injuries = Max(.5f, Injuries - frnd(.5f, 1));
 		Msg = Injuries > 1 ? "You bandaged the wounds but were unable to staunch the bleeding completely." : "You managed to stop the bleeding.";
 	} else { Msg = Injuries > .5f ? "You took a painkiller, easing the pain slightly." : "You took a painkiller, but it still hurts to walk."; Injuries = .5f; }
-	if (is("firstaid2")) switch (irand(6, 1)) {
+	if (is("firstaid2")) switch (irand(1, 6)) {
 		case 1: SuperMan = 1; Msg = "You have becomed overwhelmedwithadrenalineholyshitWOOOOOO~!"; break;
 		case 2: InvertMouse = !InvertMouse; Msg = "You suddenly find it very difficult to turn your head."; break;
 		case 3: BlurTimer = 5000; Msg = "You feel nauseated."; break;
@@ -165,7 +165,7 @@ static void cigarette(void) {
 	if (!CanUseItem(0, 0, 1)) return;
 	if (SI->state == 0) {
 		int gone = 0;
-		switch (irand(6, 1)) {
+		switch (irand(1, 6)) {
 		case 1: Msg = quote("I don't have anything to light it with. Umm, what about that... Nevermind."); break;
 		case 2: Msg = "You are unable to get lit."; break;
 		case 3: Msg = quote("I quit that a long time ago."); gone = 1; break;
@@ -260,7 +260,7 @@ static void syringe(int fine) {
 	else if (fine == 1) {
 		HealTimer = frnd(20, 40); StaminaEffect = frnd(.5f, .8f); StaminaEffectTimer = frnd(20, 30);
 		Msg = "You injected yourself with the syringe and feel an adrenaline rush.";
-	} else switch (irand(3, 1)) {
+	} else switch (irand(1, 3)) {
 		case 1: HealTimer = frnd(40, 60); StaminaEffect = .1f; StaminaEffectTimer = 30; Msg = "You injected yourself with the syringe and feel a huge adrenaline rush."; break;
 		case 2: SuperMan = 1; Msg = "You injected yourself with the syringe and feel a humongous adrenaline rush."; break;
 		case 3: VomitTimer = 30; Msg = "You injected yourself with the syringe and feel a pain in your stomach."; break;

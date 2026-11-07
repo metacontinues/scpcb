@@ -114,10 +114,10 @@ void entity_parent(ent e, ent par, int glob) {
 ent get_parent(ent e) { return rt_e(e)->par; }
 int count_children(ent e) { int n = 0; for (ent c = rt_e(e)->first; c; c = rt_e(c)->next) n++; return n; }
 ent get_child(ent e, int n) {
-	for (ent c = rt_e(e)->first; c; c = rt_e(c)->next) if (--n == 0) return c;
+	for (ent c = rt_e(e)->first; c; c = rt_e(c)->next) if (n-- == 0) return c;
 	return 0;
 }
-ent find_child(ent e, const char *nm) { // recursive like blitz
+ent find_child(ent e, const char *nm) { // searches the whole subtree
 	for (ent c = rt_e(e)->first; c; c = rt_e(c)->next) {
 		if (!strcasecmp(rt_e(c)->name, nm)) return c;
 		ent r = find_child(c, nm);

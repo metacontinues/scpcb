@@ -325,7 +325,7 @@ static void gravity(NPCs *n) {
 	if (!(gd < HideDistance * .7f || n->NPCtype == NPCtype1499) || n->InFacility != InFacility) { n->DropSpeed = 0; return; }
 	translate_entity(n->Collider, 0, n->DropSpeed, 0, 0);
 	int floor = 0;
-	for (int i = 1; i <= count_collisions(n->Collider); i++) if (collision_y(n->Collider, i) < entity_y(n->Collider, 0) - .01f) { floor = 1; break; }
+	for (int i = 0; i < count_collisions(n->Collider); i++) if (collision_y(n->Collider, i) < entity_y(n->Collider, 0) - .01f) { floor = 1; break; }
 	if (floor) { n->DropSpeed = 0; return; }
 	if (!ShouldEntitiesFall) { n->DropSpeed = 0; return; }
 	int upd = 0;

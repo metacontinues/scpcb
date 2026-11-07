@@ -10,10 +10,10 @@
 static brush *bs; static char *bused; static int nbs, cbs;
 
 brush rt_brdef(void) { return (brush){.r = 1, .g = 1, .b = 1, .a = 1}; }
-void br_ref(brush *b) { for (int i = 0; i < BB_NTEX; i++) tex_ref(b->tex[i]); }
-void br_unref(brush *b) { for (int i = 0; i < BB_NTEX; i++) tex_unref(b->tex[i]); }
+void br_ref(brush *b) { for (int i = 0; i < RT_NTEX; i++) tex_ref(b->tex[i]); }
+void br_unref(brush *b) { for (int i = 0; i < RT_NTEX; i++) tex_unref(b->tex[i]); }
 static void br_settex(brush *b, htex t, int i) {
-	if (i < 0 || i >= BB_NTEX) return;
+	if (i < 0 || i >= RT_NTEX) return;
 	tex_ref(t); tex_unref(b->tex[i]); b->tex[i] = t;
 }
 static void br_assign(brush *d, brush s) { br_ref(&s); br_unref(d); *d = s; }
@@ -42,8 +42,8 @@ void brush_alpha(hbrush h, float a) { rt_brp(h)->a = a; }
 void brush_fx(hbrush h, int fx) { rt_brp(h)->fx = fx; }
 void brush_blend(hbrush h, int bl) { rt_brp(h)->blend = bl; }
 void brush_texture(hbrush h, htex t, int fr, int i) { br_settex(rt_brp(h), rt_texframe(t, fr), i); }
-// like blitz, the caller gets its own reference and is expected to FreeTexture it
-htex get_brush_texture(hbrush h, int i) { htex t = i >= 0 && i < BB_NTEX ? rt_brp(h)->tex[i] : 0; tex_ref(t); return t; }
+// the caller gets its own reference and is expected to free_texture it
+htex get_brush_texture(hbrush h, int i) { htex t = i >= 0 && i < RT_NTEX ? rt_brp(h)->tex[i] : 0; tex_ref(t); return t; }
 hbrush get_surface_brush(surf *s) { return br_new(s->br); }
 hbrush get_entity_brush(ent e) { return br_new(rt_e(e)->br); }
 
@@ -148,7 +148,7 @@ ent copy_mesh(ent e, ent par) {
 	return n;
 }
 int count_surfaces(ent e) { return rt_md(e)->ns; }
-surf *get_surface(ent e, int n) { mdat *m = rt_md(e); return n >= 1 && n <= m->ns ? m->s[n-1] : NULL; }
+surf *get_surface(ent e, int n) { mdat *m = rt_md(e); return n >= 0 && n < m->ns ? m->s[n] : NULL; }
 surf *create_surface(ent e, hbrush b) {
 	mdat *m = rt_md(e);
 	m->bdirty = 1;
@@ -157,7 +157,7 @@ surf *create_surface(ent e, hbrush b) {
 void paint_surface(surf *s, hbrush b) { br_assign(&s->br, *rt_brp(b)); }
 void paint_mesh(ent e, hbrush b) { mdat *m = rt_md(e); for (int i = 0; i < m->ns; i++) paint_surface(m->s[i], b); }
 
-// blitz merges into a dst surface with an equal brush
+// merges into a dst surface with an equal brush
 static int breq(brush *a, brush *b) { return !memcmp(a, b, sizeof *a); }
 static void surf_append(surf *d, surf *s) {
 	int base = d->nv;
@@ -249,7 +249,7 @@ int add_vertex(surf *s, float x, float y, float z, float u, float v, float w) {
 	}
 	int i = s->nv++;
 	float *p = s->pos + i*3, *n = s->nrm + i*3;
-	p[0] = x; p[1] = y; p[2] = z; n[0] = n[1] = n[2] = 0; // blitz default: no normal
+	p[0] = x; p[1] = y; p[2] = z; n[0] = n[1] = n[2] = 0; // no normal by default
 	s->uv0[i*2] = s->uv1[i*2] = u; s->uv0[i*2+1] = s->uv1[i*2+1] = v;
 	memset(s->col + i*4, 255, 4);
 	s->dirty = 1, s->ver++;
