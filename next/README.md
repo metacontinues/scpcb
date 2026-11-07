@@ -5,7 +5,16 @@ to diff against) until this reaches parity, then it goes.
 
 ## build + run
 
-same toolchain as port/ (`./setup.sh && ninja -C build`, muon works, `-Dangle=` rpaths angle). from the repo root:
+same toolchain as port/ (`./setup.sh && ninja -C build`, muon works). linux builds glfw w/ x11 + wayland (picked at
+runtime), the wayland protocol glue comes from `wayland-scanner`. `./setup.sh -Dangle=/opt/angle/usr/lib` runs on angle:
+- glfw gets angle's unversioned sonames (it'd dlopen the system's libEGL.so.1 otherwise) + an rpath to that dir
+- src/glfw.c replaces raylib's rglfw.c so glfw's wayland backend asks for EGL_PLATFORM_ANGLE_ANGLE (angle refuses
+  plain EGL_PLATFORM_WAYLAND_EXT), and angle builds ask for a "transparent" fb (every angle config has alpha, glfw's
+  wayland backend skips those otherwise; angle's swapchain presents opaque)
+- angle dlopens libvulkan.so.1 from its own dir only, so that dir needs one (`ln -s /usr/lib/libvulkan.so.1` there)
+- check w/ `VIEW_LOG=1 next/build/view`: the renderer line should say ANGLE
+
+from the repo root:
 - `next/build/bake [x.rmesh ...]` bakes into `next/data` (only stale outputs; all of GFX/map takes ~2s)
 - `next/build/view [room id]` flies around a baked room, eg `gfx/map/room2cafeteria_opt`. f fog, g ambient,
   t/l/p trigger boxes, lights, waypoints. `VIEW_CAM="x y z tx ty tz" VIEW_SHOT=a.png VIEW_FRAME=n VIEW_FOG=0` for
@@ -55,6 +64,7 @@ same toolchain as port/ (`./setup.sh && ninja -C build`, muon works, `-Dangle=` 
 
 ## milestones
 
+0. portability should be the goal, not strictly only for x11 because the game should be able to run on windows/mac later
 1. bake: every room + model -> glb, checked in a tiny viewer (orbit cam, anim scrub).
    rooms done: 112 baked, screenshots match port/'s rmview. models (.b3d/.x, props, npcs) next.
 2. one room rendered w/ the world shader + fog, screenshot-diffed against `port/`.

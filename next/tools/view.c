@@ -15,7 +15,12 @@ int main(int argc, char **argv) {
 	const char *id = argc > 1 ? argv[1] : "gfx/map/room2_opt";
 	const char *shot = getenv("VIEW_SHOT");
 	int shotf = getenv("VIEW_FRAME") ? atoi(getenv("VIEW_FRAME")) : 3;
-	SetTraceLogLevel(LOG_WARNING);
+	SetTraceLogLevel(getenv("VIEW_LOG") ? LOG_INFO : LOG_WARNING);
+#ifdef SCPCB_ANGLE
+	// angle's configs all have alpha and no EGL_EXT_present_opaque, and glfw's wayland backend skips those unless
+	// the framebuffer is "transparent". angle's swapchain presents opaque anyway
+	SetConfigFlags(FLAG_WINDOW_TRANSPARENT);
+#endif
 	InitWindow(1280, 720, "scpcb view");
 	SetTargetFPS(60);
 	shd_init();
