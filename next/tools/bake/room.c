@@ -104,7 +104,8 @@ static int writeglb(const char *path, group *g, int n, int render) {
 				memcpy(p + k * 3, ch->v[k].p, 12); memcpy(t0 + k * 2, ch->v[k].t0, 8); memcpy(t1 + k * 2, ch->v[k].t1, 8);
 				memcpy(cl + k * 4, ch->v[k].c, 4);
 			}
-			ps[c] = (gbprim){.pos = gb_vec3(&b, p, ch->nv), .uv0 = -1, .uv1 = -1, .col = -1, .idx = gb_idx16(&b, ch->ix, ch->ni), .mat = mat};
+			ps[c] = gb_prim0();
+			ps[c].pos = gb_vec3(&b, p, ch->nv); ps[c].idx = gb_idx16(&b, ch->ix, ch->ni); ps[c].mat = mat;
 			if (render) {
 				ps[c].uv0 = gb_vec2(&b, t0, ch->nv);
 				if (g[i].kind == K_LIT) ps[c].uv1 = gb_vec2(&b, t1, ch->nv);
@@ -112,7 +113,7 @@ static int writeglb(const char *path, group *g, int n, int render) {
 			}
 			free(p); free(t0); free(t1); free(cl);
 		}
-		if (g[i].nch) gb_mesh(&b, ps, g[i].nch);
+		if (g[i].nch) { char j[32]; snprintf(j, sizeof j, "\"mesh\":%d", gb_mesh(&b, ps, g[i].nch)); gb_node(&b, 1, j); }
 		free(ps);
 	}
 	return gb_write(&b, path);

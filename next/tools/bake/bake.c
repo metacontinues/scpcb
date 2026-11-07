@@ -1,5 +1,5 @@
-// bake: source assets -> next/data. run from the repo root: next/build/bake [file.rmesh ...]
-// w/o args it bakes every room under GFX/map. only redoes outputs older than their source.
+// bake: source assets -> next/data. run from the repo root: next/build/bake [file.rmesh|.b3d|.x ...]
+// w/o args it bakes every room + model under GFX. only redoes outputs older than their source.
 #define _POSIX_C_SOURCE 200809L // dirent, stat, strcasecmp
 #include <ctype.h>
 #include <dirent.h>
@@ -88,7 +88,15 @@ int stale(const char *src, const char *out) {
 	return stat(src, &a) || a.st_mtime > b.st_mtime;
 }
 
-static int nrooms, nfail;
+static int nrooms, nmodels, nfail;
+static int ends(const char *p, const char *e) { size_t l = strlen(p), k = strlen(e); return l >= k && !strcasecmp(p + l - k, e); }
+static void one(const char *p) {
+	int ok;
+	if (ends(p, ".rmesh")) { nrooms++; ok = bake_room(p); }
+	else if (ends(p, ".b3d") || ends(p, ".x")) { nmodels++; ok = bake_model(p); }
+	else { warn("%s: don't know what that is", p); ok = 0; }
+	if (!ok) nfail++;
+}
 static void walk(const char *dir) {
 	DIR *d = opendir(dir);
 	if (!d) return;
@@ -99,11 +107,9 @@ static void walk(const char *dir) {
 		struct stat st;
 		if (stat(p, &st)) continue;
 		if (S_ISDIR(st.st_mode)) { walk(p); continue; }
-		size_t l = strlen(p);
-		if (l < 6 || strcasecmp(p + l - 6, ".rmesh")) continue;
+		if (!ends(p, ".rmesh") && !ends(p, ".b3d") && !ends(p, ".x")) continue;
 		if (!st.st_size) { warn("%s is empty, skipped", p); continue; }
-		nrooms++;
-		if (!bake_room(p)) nfail++;
+		one(p);
 	}
 	closedir(d);
 }
@@ -111,8 +117,8 @@ static void walk(const char *dir) {
 int main(int argc, char **argv) {
 	SetTraceLogLevel(LOG_WARNING);
 	if (!DirectoryExists("GFX") || !DirectoryExists("next")) { fprintf(stderr, "bake: run me from the repo root\n"); return 1; }
-	if (argc > 1) for (int i = 1; i < argc; i++) { nrooms++; if (!bake_room(argv[i])) nfail++; }
-	else walk("GFX/map");
-	printf("bake: %d rooms, %d failed, %d warnings\n", nrooms, nfail, nwarn);
+	if (argc > 1) for (int i = 1; i < argc; i++) one(argv[i]);
+	else walk("GFX");
+	printf("bake: %d rooms, %d models, %d failed, %d warnings\n", nrooms, nmodels, nfail, nwarn);
 	return nfail != 0;
 }

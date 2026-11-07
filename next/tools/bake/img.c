@@ -23,8 +23,8 @@ const char *bake_tex(const char *path, int mode) {
 	if (!src) return NULL;
 	char s[4096], out[4096];
 	snprintf(s, sizeof s, "%s", src);
-	mkid(s, id, sizeof id - 2);
-	if (mode == IM_ALPHA) strcat(id, ".a");
+	mkid(s, id, sizeof id - 4);
+	if (mode) strcat(id, mode == IM_ALPHA ? ".a" : mode == IM_MASK ? ".m" : ".am");
 	snprintf(out, sizeof out, OUT "%s.qoi", id);
 	if (!stale(s, out)) return id;
 
@@ -40,8 +40,11 @@ const char *bake_tex(const char *path, int mode) {
 	if (mode == IM_OPAQUE) ImageFormat(&im, PIXELFORMAT_UNCOMPRESSED_R8G8B8);
 	else {
 		ImageFormat(&im, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
-		if (!hasa) for (unsigned char *p = im.data, *end = p + im.width * im.height * 4; p < end; p += 4)
-			p[3] = (p[0] + p[1] + p[2]) / 3;
+		for (unsigned char *p = im.data, *end = p + im.width * im.height * 4; p < end; p += 4) {
+			if (!(mode & IM_ALPHA)) p[3] = 255;
+			else if (!hasa) p[3] = (p[0] + p[1] + p[2]) / 3;
+			if (mode & IM_MASK && !p[0] && !p[1] && !p[2]) p[3] = 0;
+		}
 	}
 	// es2: npot can't mip or repeat
 	int pw = pot(im.width), ph = pot(im.height);
