@@ -1,0 +1,5 @@
+option('angle', type: 'string', value: '', description: 'dir w/ angle libEGL.so + libGLESv2.so to rpath')
+option('mimalloc', type: 'boolean', value: true, description: 'override malloc w/ the vendored mimalloc')
+option('linker', type: 'string', value: 'lld', description: 'passed as -fuse-ld=, empty = compiler default')
+option('lto', type: 'string', value: 'thin', description: 'passed as -flto= (thin or full), empty = off')
+option('march', type: 'string', value: 'native', description: 'passed as -march=, empty = compiler default. native binaries only run on cpus like this one')
