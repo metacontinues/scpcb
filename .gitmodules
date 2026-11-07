@@ -4,3 +4,9 @@
 [submodule "port/vendor/mimalloc"]
 	path = port/vendor/mimalloc
 	url = https://github.com/microsoft/mimalloc.git
+[submodule "next/vendor/raylib"]
+	path = next/vendor/raylib
+	url = https://github.com/raysan5/raylib.git
+[submodule "next/vendor/mimalloc"]
+	path = next/vendor/mimalloc
+	url = https://github.com/microsoft/mimalloc.git
