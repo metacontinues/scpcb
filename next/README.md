@@ -19,6 +19,10 @@ other platforms: `TARGET=windows ./setup.sh && ninja -C build-windows` cross bui
 (`cross/windows.ini`), es2 via angle's dlls next to the exe. mac has its meson branch (cocoa as objective-c +
 frameworks, angle's dylibs) but needs an apple sdk, so it's untested; from linux that'd be osxcross + your own sdk.
 
+style: `.clang-format` (yours, `clang-format -i` on src/ + tools/; vendor/ and src/glfw.c are in .clang-format-ignore,
+glfw.c's include order is load-bearing). lint: `next/tools/lint.sh [build dir]` runs clang-tidy w/ `.clang-tidy`
+(bug-finding checks; the ones that fight the house style are off, see the comment there). both clean right now.
+
 from the repo root:
 - `next/build/bake [x.rmesh|.b3d|.x ...]` bakes into `next/data` (only stale outputs; all of GFX/map takes ~2s)
 - `next/build/view [id]` flies around a baked room (eg `gfx/map/room2cafeteria_opt`) or orbits a model (eg
