@@ -25,12 +25,17 @@ void hud_msg(const char *text, float ticks) {
 
 void hud_tick(void) { msgt = maxf(msgt - 1, 0); }
 
-// a bar of 10 px segments in a white frame, the icon left of it in a black box
+// a smooth bar in a white frame, the icon left of it in a black box. the fill
+// is the middle of the original's 8 x 14 segment image stretched out, so it
+// keeps that image's shading w/o the gaps between segments
 static void meter(int x, int y, float frac, const char *seg, const char *icon) {
   Texture2D s = tex_ui(seg), ic = tex_ui(icon);
   DrawRectangleLines(x, y, 204, 20, WHITE);
-  for (int i = 0; i < (int)(202 * frac / 10); i++)
-    DrawTexture(s, x + 3 + 10 * i, y + 3, WHITE);
+  float w = 198 * clampf(frac, 0, 1);
+  if (w > 0)
+    DrawTexturePro(s, (Rectangle){s.width / 2.0f - 1, 0, 2, s.height},
+                   (Rectangle){x + 3, y + 3, w, s.height}, (Vector2){0}, 0,
+                   WHITE);
   DrawRectangle(x - 50, y, 30, 30, BLACK);
   DrawRectangleLines(x - 51, y - 1, 32, 32, WHITE);
   DrawTexture(ic, x - 50, y, WHITE);
