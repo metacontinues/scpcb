@@ -1,0 +1,59 @@
+# next: scpcb on raylib, no blitz baggage
+
+same game to play + look at, new tech. `port/` stays as the visual/behaviour reference (+ `SCPCB_SHOT` screenshots
+to diff against) until this reaches parity, then it goes.
+
+## rules
+
+- raylib types all the way down: `Vector3`/`Matrix`/`Quaternion` + raymath, `Model`/`Mesh`/`Material`/`Shader`,
+  `Camera3D`, `Texture2D`/`RenderTexture2D`, `Font`, `Sound`/`Music`, `Color`, `BoundingBox`/`Ray`. no int handles, no
+  entity-tree emulation, no blitz api names or semantics (no SetBuffer, no brushes, no TextureBlend, no black-key masks).
+- raylib's space: right-handed, y up. converted once at bake time, the game never flips anything.
+- the game only loads what raylib loads natively. anything else is baked offline.
+- fixed 70hz sim tick (keeps the original's tuning, which was all in 1/70s units), render every frame. no FPSfactor.
+- gameplay is ported from what the .bb *does*, not how it's written: real structs + state enums instead of
+  EventState/EventState2/EventState3 floats, no global soup, no `Dim n+1`, no iround/Not-precedence rules.
+
+## raylib module -> what we use it for
+
+- **core**: window, input (keybinds stored as `KeyboardKey`), `Camera3D`, `BeginMode3D`, timing, `TakeScreenshot` for tests.
+- **models**: rooms, props, npcs, items as `.glb` via `LoadModel`/`LoadModelAnimations` + `UpdateModelAnimation`
+  (frame ranges = the old ExtractAnimSeq clips). picking w/ `GetRayCollisionMesh/Triangle/Box`. billboards
+  (`DrawBillboardPro`) for sprites, particles, decals that face the camera.
+- **shaders**: one world shader on every material: diffuse (uv0) x lightmap (`MATERIAL_MAP_OCCLUSION`, uv1) or vertex
+  light, up to n point lights, linear fog, alpha cutout. plus small post shaders (blur, nvg, gasmask, vignette).
+- **textures**: qoi via `LoadTexture`, mipmaps via `GenTextureMipmaps`, `RenderTexture2D` for screen fx + 3d icons.
+- **text**: `LoadFontEx` on GFX/font's ttfs, `DrawTextEx`/`MeasureTextEx`. no AAText.
+- **shapes**: menu frames, bars, cursor, debug draw (`DrawBoundingBox`, `DrawLine3D` for waypoints/triggers).
+- **audio**: `Sound` + `LoadSoundAlias` voices, `Music` for ambience/tracks. 3d = falloff + pan from the camera's
+  right vector -> `SetSoundVolume/Pan/Pitch`.
+
+## what raylib doesn't have (so it's ours, kept small)
+
+- **collision response**: swept ellipsoid vs triangles (player + npcs), static tris per room in a uniform grid; doors
+  and other movers are `BoundingBox`es. rays go through the same grid -> `GetRayCollisionTriangle`.
+- **attachments**: raylib flattens gltf node trees, so attach points come from bones (`model.bones` by name) or the
+  bake sidecar, and parenting is just `MatrixMultiply` in the owner's update. no generic hierarchy.
+- **config/saves**: options as key=value text, saves in our own format (no Save.bb compat).
+
+## bake (`tools/bake`, offline, reuses port/'s fmt parsers)
+
+- `.rmesh` -> `room.glb` (uv0 diffuse, uv1 + occlusion texture = lightmap) + `room.col` (collision tris) +
+  `room.txt` sidecar (lights, spawns, waypoints, triggerboxes, sound emitters, props, screens), one record per line.
+- `.b3d`/`.x` -> `.glb` w/ skin + one anim track, writer = raylib's vendored `cgltf_write.h`. lh -> rh + winding here.
+- images -> qoi w/ real alpha (masks + "alpha from brightness" baked in), sounds -> qoa (as now).
+
+## milestones
+
+1. bake: every room + model -> glb, checked in a tiny viewer (orbit cam, anim scrub).
+2. one room rendered w/ the world shader + fog, screenshot-diffed against `port/`.
+3. map gen + rooms + doors + player controller/collision: walkable facility (= port/'s state).
+4. hud, menus, text, audio, options.
+5. 173/106/guard/class-d, items + inventory, the events port/ already has.
+6. the rest of port/README's "left to port" list, written straight against this.
+
+## risks to check early
+
+- es2 uniform limits for gpu skinning (~128 vec4 -> ~30 bones); fallback is cpu skinning, few npcs on screen anyway.
+- lightmap look: blitz's TextureBlend multiply (+ the 2x on some) has to match in the shader, verify on milestone 2.
+- room meshes w/ alpha surfaces need sorting; raylib's DrawModel doesn't sort, so the draw list does.
