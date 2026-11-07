@@ -7,14 +7,17 @@
 #include <math.h>
 #include <stdio.h>
 
-static int W, H;
+static int W, H, mode;
+static float salpha, balpha, shold; // meters' opacity, ticks stamina stays up
 static Font msgfont;
 static char msg[256];
 static float msgt;
 
-void hud_init(int sw, int sh) {
+void hud_init(int sw, int sh, int m) {
   W = sw;
   H = sh;
+  mode = m;
+  salpha = balpha = m == HUD_ALWAYS;
   msgfont = font_get("gfx/font/cour/courier_new", (int)(19 * (sh / 1024.0f)));
 }
 
@@ -23,22 +26,40 @@ void hud_msg(const char *text, float ticks) {
   msgt = ticks;
 }
 
-void hud_tick(void) { msgt = maxf(msgt - 1, 0); }
+// toward 1 fast (~.3 s), back to 0 slower (~.5 s)
+static float fade(float a, int on) {
+  return on ? minf(a + .05f, 1) : maxf(a - .03f, 0);
+}
+
+void hud_tick(const HudIn *in) {
+  msgt = maxf(msgt - 1, 0);
+  if (mode != HUD_AUTO) {
+    salpha = balpha = mode == HUD_ALWAYS;
+    return;
+  }
+  shold = in->stamina < 100 ? 140 : maxf(shold - 1, 0); // 2 s after it's full
+  salpha = fade(salpha, shold > 0);
+  float left = in->blinkfreq > 0 ? in->blink / in->blinkfreq : 0;
+  balpha = fade(balpha, left < 1 / 3.0f || in->watched);
+}
 
 // a smooth bar in a white frame, the icon left of it in a black box. the fill
 // is the middle of the original's 8 x 14 segment image stretched out, so it
 // keeps that image's shading w/o the gaps between segments
-static void meter(int x, int y, float frac, const char *seg, const char *icon) {
+static void meter(int x, int y, float frac, float a, const char *seg,
+                  const char *icon) {
+  if (a <= 0)
+    return;
   Texture2D s = tex_ui(seg), ic = tex_ui(icon);
-  DrawRectangleLines(x, y, 204, 20, WHITE);
+  Color wa = Fade(WHITE, a);
+  DrawRectangleLines(x, y, 204, 20, wa);
   float w = 198 * clampf(frac, 0, 1);
   if (w > 0)
     DrawTexturePro(s, (Rectangle){s.width / 2.0f - 1, 0, 2, s.height},
-                   (Rectangle){x + 3, y + 3, w, s.height}, (Vector2){0}, 0,
-                   WHITE);
-  DrawRectangle(x - 50, y, 30, 30, BLACK);
-  DrawRectangleLines(x - 51, y - 1, 32, 32, WHITE);
-  DrawTexture(ic, x - 50, y, WHITE);
+                   (Rectangle){x + 3, y + 3, w, s.height}, (Vector2){0}, 0, wa);
+  DrawRectangle(x - 50, y, 30, 30, Fade(BLACK, a));
+  DrawRectangleLines(x - 51, y - 1, 32, 32, wa);
+  DrawTexture(ic, x - 50, y, wa);
 }
 
 // past 90 degrees off to a side the hand sticks to the screen's edge
@@ -62,9 +83,9 @@ void hud_draw(const HudIn *in) {
                         sinf(edge(in->handpitch) * DEG2RAD) * (H / 3.0f) - 32);
     DrawTexture(tex_ui("gfx/handsymbol.mu"), x, y, WHITE);
   }
-  meter(80, H - 95, in->blinkfreq > 0 ? in->blink / in->blinkfreq : 0,
+  meter(80, H - 95, in->blinkfreq > 0 ? in->blink / in->blinkfreq : 0, balpha,
         "gfx/blinkmeter.mu", "gfx/blinkicon.mu");
-  meter(80, H - 55, in->stamina / 100, "gfx/staminameter.mu",
+  meter(80, H - 55, in->stamina / 100, salpha, "gfx/staminameter.mu",
         in->crouch ? "gfx/sneakicon.mu" : "gfx/sprinticon.mu");
   if (msgt > 0) {
     float a = minf(msgt / 2, 255) / 255;
