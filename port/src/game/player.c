@@ -151,7 +151,7 @@ void MovePlayer(void) {
 		if (!UnableToMove) translate_entity(Collider, cosf(angle * DTOR) * CurrSpeed * FPSfactor, 0, sinf(angle * DTOR) * CurrSpeed * FPSfactor, 1);
 
 		int floor = 0;
-		for (int i = 1; i <= count_collisions(Collider); i++) if (collision_y(Collider, i) < entity_y(Collider, 0) - .25f) floor = 1;
+		for (int i = 0; i < count_collisions(Collider); i++) if (collision_y(Collider, i) < entity_y(Collider, 0) - .25f) floor = 1;
 		if (floor) {
 			if (DropSpeed < -.07f) {
 				if (CurrStepSFX == 0) PlaySound_Strict(StepSFX[GetStepSound(Collider)][0][irand(0, 7)]);
@@ -176,13 +176,13 @@ void MovePlayer(void) {
 	}
 	UpdateInfect();
 	if (Bloodloss > 0) {
-		if (frnd(200, 0) < Min(Injuries, 4)) {
+		if (frnd(0, 200) < Min(Injuries, 4)) {
 			int pvt = create_pivot(0);
 			float rx = frnd(-.05f, .05f), rz = frnd(-.05f, .05f);
 			position_entity(pvt, entity_x(Collider, 0) + rx, entity_y(Collider, 0) - .05f, entity_z(Collider, 0) + rz, 0);
 			turn_entity(pvt, 90, 0, 0, 0);
 			entity_pick(pvt, .3f);
-			int a = irand(360, 1), id = irand(15, 16);
+			int a = irand(1, 360), id = irand(15, 16);
 			Decals *de = CreateDecal(id, picked_x(), picked_y() + .005f, picked_z(), 90, a, 0);
 			de->Size = frnd(.03f, .08f) * Min(Injuries, 3);
 			entity_alpha(de->obj, 1); scale_sprite(de->obj, de->Size, de->Size);
@@ -253,7 +253,7 @@ void MouseLook(void) {
 		hide_entity(Collider);
 		position_entity(Camera, entity_x(Head, 0), entity_y(Head, 0), entity_z(Head, 0), 0);
 		int floor = 0;
-		for (int i = 1; i <= count_collisions(Head); i++) if (collision_y(Head, i) < entity_y(Head, 0) - .01f) floor = 1;
+		for (int i = 0; i < count_collisions(Head); i++) if (collision_y(Head, i) < entity_y(Head, 0) - .01f) floor = 1;
 		if (floor) HeadDropSpeed = 0;
 		else {
 			float s = KillAnim == 0 ? 1 : -1;
@@ -268,12 +268,12 @@ void MouseLook(void) {
 	if (ParticleAmount == 2 && irand(1, 35) == 1) {
 		int pvt = create_pivot(0);
 		position_entity(pvt, entity_x(Camera, 1), entity_y(Camera, 1), entity_z(Camera, 1), 0);
-		rotate_entity(pvt, 0, frnd(360, 0), 0, 0);
+		rotate_entity(pvt, 0, frnd(0, 360), 0, 0);
 		float dy = frnd(-.5f, .5f), dz = frnd(.5f, 1);
 		move_entity(pvt, 0, dy, dz);
 		Particles *p = CreateParticle(entity_x(pvt, 0), entity_y(pvt, 0), entity_z(pvt, 0), 2, .002f, 0, 300);
 		p->speed = .001f;
-		float ry = frnd(360, 0), rp = frnd(-20, 20);
+		float ry = frnd(0, 360), rp = frnd(-20, 20);
 		rotate_entity(p->pvt, rp, ry, 0, 0);
 		p->SizeChange = -.00001f;
 		free_entity(pvt);
@@ -310,7 +310,7 @@ void MouseLook(void) {
 			break;
 		case 4: // asthma
 			if (Stamina < 35) {
-				if (irand(iround(140 + Stamina * 8), 1) == 1) cough();
+				if (irand(1, iround(140 + Stamina * 8)) == 1) cough();
 				CurrSpeed = CurveValue(0, CurrSpeed, 10 + Stamina * 15);
 			}
 			break;

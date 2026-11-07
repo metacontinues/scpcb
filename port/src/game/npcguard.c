@@ -117,7 +117,7 @@ void UpdateGuard(NPCs *n) {
 		break;
 	case 4:
 		AnimateNPC(n, 77, 201, .2f, 1);
-		if (irand(400, 1) == 1) n->Angle = frnd(-180, 180);
+		if (irand(1, 400) == 1) n->Angle = frnd(-180, 180);
 		rotate_entity(n->Collider, 0, CurveAngle(n->Angle + sinf(MilliSecs2() / 50 * DTOR) * 2, entity_yaw(n->Collider, 0), 150), 0, 1);
 		dist = entity_distance(n->Collider, Collider);
 		if (dist < 15 && WrapAngle(entity_yaw(n->Collider, 0) - delta_yaw(n->Collider, Collider)) < 90 && entity_visible(n->Collider, Collider)) n->State = 1; // spots you
@@ -192,7 +192,7 @@ void UpdateGuard(NPCs *n) {
 		walksteps(n, pf);
 		break;
 	default:
-		if (irand(400, 1) == 1) n->PrevState = iround(frnd(-30, 30)); // PrevState is an int field
+		if (irand(1, 400) == 1) n->PrevState = iround(frnd(-30, 30)); // PrevState is an int field
 		n->PathStatus = 0;
 		AnimateNPC(n, 77, 201, .2f, 1);
 		rotate_entity(n->Collider, 0, CurveAngle(n->Angle + n->PrevState + sinf(MilliSecs2() / 50 * DTOR) * 2, entity_yaw(n->Collider, 0), 50), 0, 1);
@@ -244,27 +244,27 @@ static void hit(const char **m, const char *txt, float lo, float hi) { BlurTimer
 
 void Shoot(float x, float y, float z, float hitProb, int particles, int instaKill) {
 	Particles *p = CreateParticle(x, y, z, 1, frnd(.08f, .1f), 0, 5); // muzzle flash
-	turn_entity(p->obj, 0, 0, frnd(360, 0), 0);
+	turn_entity(p->obj, 0, 0, frnd(0, 360), 0);
 	p->Achange = -.15f;
 	LightVolume = TempLightVolume * 1.2f;
 	if (GodMode) return;
 	if (instaKill) { Kill(); PlaySound_Strict(BullethitSFX); return; }
-	if (frnd(1, 0) <= hitProb) {
+	if (frnd(0, 1) <= hitProb) {
 		float ry = frnd(-3, 3), rp = frnd(-3, 3); // yaw's Rnd first: TurnEntity's defaulted global arg makes the tail needier
 		turn_entity(Camera, rp, ry, 0, 0);
 		const char *m = "";
 		if (WearingVest > 0) {
 			if (WearingVest == 1) {
-				int r = irand(8, 1);
+				int r = irand(1, 8);
 				if (r <= 5) { Stamina = 0; hit(&m, "A bullet penetrated your vest, making you gasp.", .1f, .5f); }
 				else if (r == 6) hit(&m, "A bullet hit your left leg.", .8f, 1.2f);
 				else if (r == 7) hit(&m, "A bullet hit your right leg.", .8f, 1.2f);
 				else { Stamina = 0; hit(&m, "A bullet struck your neck, making you gasp.", 1.2f, 1.6f); }
-			} else if (irand(10, 1) == 1) { Stamina -= 1; hit(&m, "A bullet hit your chest. The vest absorbed some of the damage.", .8f, 1.1f); }
+			} else if (irand(1, 10) == 1) { Stamina -= 1; hit(&m, "A bullet hit your chest. The vest absorbed some of the damage.", .8f, 1.1f); }
 			else { m = "A bullet hit your chest. The vest absorbed most of the damage."; Injuries += frnd(.1f, .5f); }
-			if (Injuries >= 5 && irand(3, 1) == 1) Kill();
+			if (Injuries >= 5 && irand(1, 3) == 1) Kill();
 		} else {
-			switch (irand(6, 1)) {
+			switch (irand(1, 6)) {
 			case 1: Kill(); break;
 			case 2: hit(&m, "A bullet hit your left leg.", .8f, 1.2f); break;
 			case 3: hit(&m, "A bullet hit your right leg.", .8f, 1.2f); break;

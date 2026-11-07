@@ -158,7 +158,7 @@ int rmesh_load(const char *file, htex amb, rmesh *out) {
 			p.range = read_float(f) / 2000;
 			rs(f, b2, sizeof b2);
 			float in = fminf(read_float(f) * 0.8f, 1);
-			p.r = roundf((int)piecef(b2, 1) * in); // blitz float->int rounds
+			p.r = roundf((int)piecef(b2, 1) * in); // rounds to nearest
 			p.g = roundf((int)piecef(b2, 2) * in);
 			p.b = roundf((int)piecef(b2, 3) * in);
 			if (p.kind == RP_SPOT) {
@@ -203,7 +203,7 @@ int rmesh_load(const char *file, htex amb, rmesh *out) {
 	free_texture(blank);
 
 	ent obj = create_pivot(0);
-	create_pivot(obj); // "meshes" slot, kept so child indices match the bb code
+	create_pivot(obj); // slot 0 ("meshes"): the opaque mesh is child 1, the game looks it up by that index
 	entity_parent(opaque, obj, 1); entity_parent(hidden, obj, 1);
 	create_pivot(obj); create_pivot(obj);
 	entity_parent(coll, obj, 1);

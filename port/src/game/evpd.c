@@ -165,7 +165,7 @@ static void throne(Events *e) { // the throne room w/ the moving pillars, 106's 
 				UpdateRooms(); UpdateDoors();
 				Curr106->State = 10000; Curr106->Idle = 0;
 				int o = r->Objects[0];
-				Decals *de = CreateDecal(0, XG(o), YG(o), ZG(o), 270, irand(360, 1), 0);
+				Decals *de = CreateDecal(0, XG(o), YG(o), ZG(o), 270, irand(1, 360), 0);
 				if (de) TeleportEntity(de->obj, XG(o), YG(o) + .6f, ZG(o), 0, 1, 4, 1);
 				break;
 			}
@@ -227,7 +227,7 @@ static void startroom(Events *e) { // EventState2 = 0: walking too far out gets 
 	if (dist <= 1700 * RS) return;
 	BlinkTimer = -10;
 	int o8 = R->Objects[8];
-	int r25 = irand(25, 1);
+	int r25 = irand(1, 25);
 	if (r25 <= 4) { // back through the middle, 106's doorway in front of you
 		PlaySound_Strict(OldManSFX[3]);
 		int pvt = create_pivot(0);
@@ -274,7 +274,7 @@ static void startroom(Events *e) { // EventState2 = 0: walking too far out gets 
 
 static void pillars(Events *e) { // EventState2 12-15
 	fog(19, 27, 23); // blitz passes 38*.5, 55*.5, 47*.5 as floats (27.5, 23.5); our fog colors are ints
-	if (ParticleAmount > 0 && irand(800, 1) == 1) {
+	if (ParticleAmount > 0 && irand(1, 800) == 1) {
 		float angle = entity_yaw(Camera, 1) + frnd(150, 210);
 		Particles *p = CreateParticle(X(Collider) + cosd(angle) * 7.5f, 0, Z(Collider) + sind(angle) * 7.5f, 3, 4, 0, 2500);
 		entity_blend(p->obj, 2);
@@ -287,7 +287,7 @@ static void pillars(Events *e) { // EventState2 12-15
 		int o = R->Objects[iround(e->EventState2)];
 		the106(o, .27f);
 		show106();
-		if (irand(750, 1) == 1) { BlinkTimer = -10; e->EventState2--; PlaySound_Strict(HorrorSFX[8]); }
+		if (irand(1, 750) == 1) { BlinkTimer = -10; e->EventState2--; PlaySound_Strict(HorrorSFX[8]); }
 		if (e->EventState2 == 12) {
 			CameraShake = 1;
 			int o12 = R->Objects[12];
@@ -346,7 +346,7 @@ int EvPocketDimension(Events *e) {
 			rotate_entity(n->Collider, 0, angle + 90, 0, 0);
 			n->Idle = 1;
 			show106();
-			if (s > 65 * 70 && irand(800, 1) == 1) {
+			if (s > 65 * 70 && irand(1, 800) == 1) {
 				PlaySound_Strict(HorrorSFX[8]);
 				n->State = -.1f; n->Idle = 0;
 				e->EventState = 601;
@@ -370,11 +370,11 @@ void PocketDimensionFaces(void) {
 			if (e->EventState <= 600) continue;
 			if (blink) {
 				if (!e->img) {
-					if (BlinkTimer > -5 && irand(30, 1) == 1) {
+					if (BlinkTimer > -5 && irand(1, 30) == 1) {
 						PlaySound_Strict(DripSFX[0]);
 						if (!e->img) e->img = LoadImage_Strict("GFX\\npcs\\106face.jpg");
 					}
-				} else { int x = irand(390, 310), y = irand(290, 310); draw_image(e->img, GraphicWidth / 2 - x, GraphicHeight / 2 - y, 0); }
+				} else { int x = irand(310, 390), y = irand(290, 310); draw_image(e->img, GraphicWidth / 2 - x, GraphicHeight / 2 - y, 0); }
 			} else if (e->img) { free_image(e->img); e->img = 0; }
 			break;
 		}
@@ -385,7 +385,7 @@ void PocketDimensionFaces(void) {
 					if (channel_playing(e->SoundCHN)) stop_channel(e->SoundCHN);
 					e->SoundCHN = PlaySound_Strict(e->Sound);
 				}
-			} else { int x = irand(390, 310), y = irand(290, 310); draw_image(e->img, GraphicWidth / 2 - x, GraphicHeight / 2 - y, 0); }
+			} else { int x = irand(310, 390), y = irand(290, 310); draw_image(e->img, GraphicWidth / 2 - x, GraphicHeight / 2 - y, 0); }
 		} else {
 			if (e->img) { free_image(e->img); e->img = 0; }
 			if (BlinkTimer < -3) { if (!channel_playing(e->SoundCHN)) e->SoundCHN = PlaySound_Strict(e->Sound); }

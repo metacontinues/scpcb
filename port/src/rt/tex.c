@@ -1,4 +1,4 @@
-// tex.c: textures, blitz flag semantics
+// tex.c: textures + their flags
 #include <stdlib.h>
 #include <string.h>
 #include "in.h"
@@ -23,7 +23,7 @@ static htex upload(Image im, int flags, const char *name) {
 	*t = (tex){.used = 1, .rc = 1, .w = im.width, .h = im.height, .flags = flags,
 	           .blend = TB_MUL, .su = 1, .sv = 1};
 	snprintf(t->name, sizeof t->name, "%s", name);
-	// es2: npot can't mip or repeat, blitz resized too
+	// es2: npot can't mip or repeat, so resize to pow2
 	int pw = pot(im.width), ph = pot(im.height);
 	if (pw != im.width || ph != im.height) ImageResize(&im, pw, ph);
 	if (flags & TF_MIP) ImageMipmaps(&im);
@@ -52,9 +52,9 @@ static Image texload(const char *p, int flags) {
 }
 htex load_texture(const char *p, int flags) {
 	Image im = texload(p, flags);
-	return im.data ? upload(im, (flags ? flags : TF_COLOR) | TF_MIP, p) : 0; // always mip, looks like blitz
+	return im.data ? upload(im, (flags ? flags : TF_COLOR) | TF_MIP, p) : 0; // always mip
 }
-// frames are fw x fh cells, left to right then down, like blitz. each frame is its own gl texture
+// frames are fw x fh cells, left to right then down. each frame is its own gl texture
 htex load_anim_texture(const char *p, int flags, int fw, int fh, int first, int count) {
 	Image im = texload(p, flags);
 	if (!im.data || fw <= 0 || fh <= 0 || count < 1) { UnloadImage(im); return 0; }

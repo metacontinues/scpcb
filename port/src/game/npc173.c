@@ -35,7 +35,7 @@ static void snapneck(NPCs *n) {
 	else DeathMSG = "Subject D-9341. Cause of death: Fatal cervical fracture. Assumed to be attacked by SCP-173.";
 	if (!GodMode) n->Idle = 1;
 	PlaySound_Strict(NeckSnapSFX[irand(0, 2)]);
-	if (irand(2, 1) == 1) turn_entity(Camera, 0, irand(80, 100), 0, 0);
+	if (irand(1, 2) == 1) turn_entity(Camera, 0, irand(80, 100), 0, 0);
 	else turn_entity(Camera, 0, irand(-100, -80), 0, 0);
 	Kill();
 }
@@ -94,20 +94,20 @@ void Update173(NPCs *n) {
 			BlurVolume = Max(Max(Min((4 - dist) / 6, .9f), .1f), BlurVolume);
 			CurrCameraZoom = Max(CurrCameraZoom, (sinf((float)MilliSecs2() / 20 * DTOR) + 1) * 15 * Max((3.5f - dist) / 3.5f, 0));
 			if (dist < 3.5f && MilliSecs2() - n->LastSeen > 60000 && temp) { PlaySound_Strict(HorrorSFX[irand(3, 4)]); n->LastSeen = MilliSecs2(); }
-			if (dist < 1.5f && irand(700, 1) == 1) PlaySound2(Scp173SFX[irand(0, 2)], Camera, n->obj, 10, 1);
+			if (dist < 1.5f && irand(1, 700) == 1) PlaySound2(Scp173SFX[irand(0, 2)], Camera, n->obj, 10, 1);
 			if (dist < 1.5f && n->LastDist > 2 && temp) {
 				CurrCameraZoom = 40;
 				HeartBeatRate = Max(HeartBeatRate, 140);
 				HeartBeatVolume = .5f;
 				static const int h[] = {1, 2, 9, 10, 14};
-				PlaySound_Strict(HorrorSFX[h[irand(5, 1) - 1]]);
+				PlaySound_Strict(HorrorSFX[h[irand(1, 5) - 1]]);
 			}
 			n->LastDist = dist;
 			n->State = Max(0, n->State - FPSfactor / 20);
 		} else if (dist > 50) { // 6+ rooms away: teleport somewhere 15-25 units from the player
-			if (irand(70, 1) == 1 && !is(RN, "exit1") && !is(RN, "gatea") && !is(RN, "pocketdimension")) {
+			if (irand(1, 70) == 1 && !is(RN, "exit1") && !is(RN, "gatea") && !is(RN, "pocketdimension")) {
 				each(WayPoints, w) {
-					if (w->door || irand(5, 1) != 1) continue;
+					if (w->door || irand(1, 5) != 1) continue;
 					float x = fabsf(entity_x(Collider, 0) - entity_x(w->obj, 1));
 					if (!(x < 25 && x > 15)) continue;
 					float z = fabsf(entity_z(Collider, 0) - entity_z(w->obj, 1));
@@ -118,10 +118,10 @@ void Update173(NPCs *n) {
 				}
 			}
 		} else if (dist > HideDistance * .8f) { // 3-6 rooms away: hop between waypoints
-			if (irand(70, 1) == 1) TeleportCloser(n);
+			if (irand(1, 70) == 1) TeleportCloser(n);
 		} else { // close: hunt
 			n->State = CurveValue(SoundVol, n->State, 3);
-			if (irand(20, 1) == 1) opendoors(n);
+			if (irand(1, 20) == 1) opendoors(n);
 			if (NoTarget) { temp = 0; n->EnemyX = n->EnemyY = n->EnemyZ = 0; }
 			if (temp) { // not looked at + sees the player
 				if (dist < .65f) { if (KillTimer >= 0 && !GodMode) snapneck(n); }
@@ -134,10 +134,10 @@ void Update173(NPCs *n) {
 				if (Distance(entity_x(n->Collider, 0), entity_z(n->Collider, 0), n->EnemyX, n->EnemyZ) > .5f) {
 					align_to_vector(n->Collider, n->EnemyX - entity_x(n->Collider, 0), 0, n->EnemyZ - entity_z(n->Collider, 0), 3, 1);
 					move_entity(n->Collider, 0, 0, n->Speed * FPSfactor);
-					if (irand(500, 1) == 1) n->EnemyX = n->EnemyY = n->EnemyZ = 0;
+					if (irand(1, 500) == 1) n->EnemyX = n->EnemyY = n->EnemyZ = 0;
 				} else n->EnemyX = n->EnemyY = n->EnemyZ = 0;
 			} else {
-				if (irand(400, 1) == 1) rotate_entity(n->Collider, 0, frnd(360, 0), 10, 0);
+				if (irand(1, 400) == 1) rotate_entity(n->Collider, 0, frnd(0, 360), 10, 0);
 				fwd(n);
 			}
 		}
@@ -224,7 +224,7 @@ static void walk106(NPCs *n, float dist, int visible) {
 static void attack106(NPCs *n, float dist) {
 	if (entity_y(n->Collider, 0) < entity_y(Collider, 0) - 20 - .55f) { // rise out of the floor under the player
 		if (!PlayerRoom->RoomTemplate->DisableDecals) {
-			Decals *de = CreateDecal(0, entity_x(Collider, 0), .01f, entity_z(Collider, 0), 90, irand(360, 1), 0);
+			Decals *de = CreateDecal(0, entity_x(Collider, 0), .01f, entity_z(Collider, 0), 90, irand(1, 360), 0);
 			if (de) { de->Size = .05f; de->SizeChange = .001f; entity_alpha(de->obj, .8f); }
 			UpdateDecals();
 		}
@@ -233,7 +233,7 @@ static void attack106(NPCs *n, float dist) {
 		if (!is(RN, "coffin")) position_entity(n->Collider, entity_x(Collider, 0), entity_y(Collider, 0) - 15, entity_z(Collider, 0), 0);
 		PlaySound_Strict(DecaySFX[0]);
 	}
-	if (irand(500, 1) == 1) PlaySound2(OldManSFX[irand(0, 2)], Camera, n->Collider, 10, 1);
+	if (irand(1, 500) == 1) PlaySound2(OldManSFX[irand(0, 2)], Camera, n->Collider, 10, 1);
 	n->SoundChn = LoopSound2(OldManSFX[4], n->SoundChn, Camera, n->Collider, 8, .8f);
 	if (n->State > -10) {
 		ShouldPlay = 66;

@@ -1,4 +1,4 @@
-// anim.c: keyframes (lerp/slerp per channel) + cpu skinning, blitz style
+// anim.c: keyframes (lerp/slerp per channel) + cpu skinning
 #include <stdlib.h>
 #include <string.h>
 #include "in.h"

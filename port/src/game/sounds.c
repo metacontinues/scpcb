@@ -125,7 +125,7 @@ void UpdateSoundOrigin2(int chn, ent cam, ent e, float range, float volume) { or
 int GetStepSound(ent e) {
 	ent pk = line_pick(entity_x(e, 0), entity_y(e, 0), entity_z(e, 0), 0, -1, 0, 0);
 	if (!pk || get_entity_type(pk) != HIT_MAP) return 0;
-	hbrush b = get_surface_brush(get_surface(pk, count_surfaces(pk)));
+	hbrush b = get_surface_brush(get_surface(pk, count_surfaces(pk) - 1));
 	if (!b) return 0;
 	for (int l = 3; l >= 1; l--) {
 		htex t = get_brush_texture(b, l);

@@ -20,7 +20,7 @@ static int overlay(int tex, float w, float h, int blend, int order, int fx) {
 }
 // monitor_checkpoint: every surface but the screen gets the "off" texture
 static void monitoroff(int m) {
-	for (int i = 2; i <= count_surfaces(m); i++) {
+	for (int i = 1; i < count_surfaces(m); i++) {
 		surf *sf = get_surface(m, i);
 		hbrush b = get_surface_brush(sf);
 		if (!b) continue;

@@ -2,10 +2,9 @@
 
 c rewrite of scpcb on raylib, rendering through gles2 so it runs on [ANGLE](https://chromium.googlesource.com/angle/angle).
 
-plan: write a blitz3d-alike runtime first (`src/rt`), then port the game `.bb` files on top of it
-almost line by line. runtime fns are named after the blitz commands with a `bb` prefix (that's what
-blitz3d's own runtime calls them): `PositionEntity e,x,y,z` -> `bbPositionEntity(e, x, y, z, 0)`.
-handles are ints and 0 is null, same as blitz, so game code that stores entities in fields keeps working.
+the game (`src/game`, ported from the original `.bb` files) runs on a small runtime of its own (`src/rt`):
+an entity tree w/ collisions, picks and animation, textures, 2d, sound, input and files, on raylib.
+entities are int handles (0 = null), angles are degrees, indices count from 0, `irand`/`frnd` take (lo, hi).
 
 ## layout
 
@@ -18,25 +17,25 @@ port/
   vendor/bdwgc     submodule, boehm gc v8.2.12 (for blitz strings + Type objects)
   vendor/mimalloc  submodule, v3.5.4, overrides malloc for the whole process (-Dmimalloc=false to skip)
   setup.sh         configures port/build w/ the llvm toolchain (clang, llvm-ar, lld)
-  src/rt/          blitz runtime
+  src/rt/          the runtime
     rt.h           public api, the only header game code should include
     in.h           internals shared w/ src/fmt
-    m3.h           lh math (blitz conventions: yaw*pitch*roll, +z fwd)
+    m3.h           lh math (yaw*pitch*roll, +z fwd)
     ent.c          entity pool, hierarchy, transforms, TForm*
     mesh.c         brushes, surfaces, mesh ops
-    tex.c          textures + blitz flags, refcounted so FreeTexture on a used tex is fine
+    tex.c          textures + flags, refcounted so freeing a used tex is fine
     rend.c         cameras, lights, sprites, RenderWorld
     shd.h          the fixed-function-ish glsl es 100 shader
-    fs.c           blitz paths (backslashes, any case) + ReadInt/ReadString/etc
+    fs.c           game paths (backslashes, any case) + read_int/read_string/etc
     sys.c          window/frame/time, primitives
     coll.c         Collisions/UpdateWorld (swept ellipsoid), picks, EntityVisible
     anim.c         keyframes (lerp + slerp per channel), cpu skinning, SetAnimTime/Animate/seqs
     snd.c          sounds/channels (raylib aliases) + music streams for the FSOUND_Stream_* calls
     g2d.c          buffers, images, Text/Rect/Line/Oval, fonts, CopyRect, Read/WritePixel
-    input.c        keyboard (directinput scancodes) + mouse, hit/speed counters like blitz
-    misc.c         blitz's exact rng, file writing, dirs, dates
+    input.c        keyboard (directinput scancodes) + mouse, hit/speed counters
+    misc.c         rng, file writing, dirs, dates
     str.h/.c       blitz strings: gc'd char*, Left/Mid/Instr/Str/Int/... + cat(...)
-    tl.h/.c        blitz Types: bbNew/bbDelete/each/First/After/Insert + Handle/Object
+    tl.h/.c        blitz Types: lnew/ldel/each/First/After/Insert + Handle/Object
   src/fmt/         file formats: b3d.c (+ LoadMesh dispatch), x.c, rmesh.c
   src/game/        the game, hand-ported. g.h has every shared global/type/fn
     main.c         Main.bb top level (init order), console msgs, misc Main.bb fns
@@ -108,19 +107,19 @@ eg `SCPCB_INPUT="11:c13,14:m250x365,15:l" SCPCB_SHOT=o.png SCPCB_SHOT_FRAME=22` 
 touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data, Loadingscreens and has its own options.ini
 (the launcher rewrites options.ini on LAUNCH, like the original).
 
-## how the blitz stuff maps
+## how the runtime works
 
 - **2d**: SetBuffer on an image/texture lazily turns it into a render texture drawn w/ a y-flipped ortho,
   so row 0 stays the top row and blitz uvs keep working. images are masked like blitz (black = clear,
   alpha ignored) and get re-keyed after being drawn into. AAText.bb's sprite-camera font hack isn't
-  needed: raylib text is antialiased already, so AAText -> bbTextA (text w/ alpha). CopyRect and pixel
+  needed: raylib text is antialiased already, so AAText -> draw_text_a (text w/ alpha). CopyRect and pixel
   ops go through cpu readback (TODO: glCopyTexSubImage2D for the per-frame Dreamfilter grab).
 - **strings**: `str` is a gc'd `char *` (bdwgc), NULL reads as "". results are fresh, never freed.
-  `cat(a, b, ...)` is blitz `+`, `bbStr`/`bbInt`/`bbFloat` dispatch on the arg type. gc pointers must sit in
+  `cat(a, b, ...)` is blitz `+`, `s_str`/`iround`/`to_float` dispatch on the arg type. gc pointers must sit in
   globals, locals, or gc memory (Type objects), never in malloc'd memory, or they get collected. Chr(0) can't
   exist in a c string, so the INI code that used it as a separator is rewritten w/ a line array.
 - **Types**: `typedef struct T { lnode n; ...fields } T;` + `TLIST(T)` in one .c. objects are gc'd, Delete just
-  unlinks, so dangling refs stay readable (blitz would error). `bbObject(T, h)` is Null after Delete, like blitz.
+  unlinks, so dangling refs stay readable (blitz would error). `lobject(T, h)` is Null after Delete, like blitz.
 - **assets**: the game only reads qoi (images) and qoa (sound), so raylib is built w/o its png/jpg/bmp/ogg decoders.
   tools/assetconv.c converts every asset once into `port/data/<path>.qoi|qoa` (full name kept, so foo.png and
   foo.jpg can't collide; files are recognised by content, the game hides jpgs as .dc/.pt/.it/.s and an ogg as
@@ -130,10 +129,10 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
   -> ~508MB in port/data (qoa ~2x the oggs, qoi of jpgs is most of the rest).
 - **textures**: LoadAnimTexture keeps one gl texture per frame, EntityTexture/BrushTexture pick it.
   ReadPixel outside a Lock reads a cached download (invalidated by any draw), so per-pixel loops stay fast.
-- **game porting rules**: float -> int goes through `bbInt` (blitz rounds to nearest, c truncates), Min/Max are
+- **game porting rules**: float -> int goes through `iround` (blitz rounds to nearest, c truncates), Min/Max are
   float like blitz, `Dim a(n)` is `a[n+1]`, And/Or/Xor share one precedence level (left to right)
   and `Not` is the lowest of all (blitz3d compiler/parser.cpp), globals are declared once w/ `G(type, names)` in g.h, function
-  default args become explicit. closing the window exits in bbFlip, like blitz.
+  default args become explicit. closing the window exits in flip_frame, like blitz.
 - **rng**: Rand/Rnd/SeedRnd match blitz3d's bbruntime/bbmath.cpp exactly (park-miller, same float mapping,
   default seed 0x1234; also checked against c++'s minstd_rand). note `Rnd(x)` is `Rnd(x, 0)` (= x - u*x)
   and `Rand(x)` is `Rand(x, 1)`, so ports keep those argument orders.
@@ -142,7 +141,7 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
   only the plain blitz api is needed. each PlaySound gets its own voice (a raylib sound alias, 256 of them; when all are busy the oldest
   one-shot is stolen, like fmod); channel
   handles carry a generation so stale ones go dead instead of steering a recycled voice. fmod streams
-  map to raylib Music, fed in bbFlip. no audio device -> LoadSound still returns handles, everything's silent.
+  map to raylib Music, fed in flip_frame. no audio device -> LoadSound still returns handles, everything's silent.
   all 894 referenced oggs convert (the 895th, SFX/SCP/970/fcveny.ogg, is a text-prefixed easter egg nobody loads).
 
 - **coords**: everything stays in blitz's left-handed space. the projection matrix maps lh view space

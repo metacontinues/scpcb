@@ -26,13 +26,13 @@ static float biggest(ent e) {
 	float m = 0;
 	if (!strcmp(entity_class(e), "Mesh") && count_surfaces(e))
 		m = fmaxf(mesh_width(e), fmaxf(mesh_height(e), mesh_depth(e))) * entity_scale_x(e, 1);
-	for (int i = 1; i <= count_children(e); i++) m = fmaxf(m, biggest(get_child(e, i)));
+	for (int i = 0; i < count_children(e); i++) m = fmaxf(m, biggest(get_child(e, i)));
 	return m;
 }
 
 int main(int argc, char **argv) {
 	if (argc < 2) { fprintf(stderr, "usage: rmview file.rmesh|file.b3d [shot.png [yaw]]\n"); return 1; }
-	if (!graphics3_d(1280, 720, 0, 2)) return 1;
+	if (!graphics_3d(1280, 720, 0, 2)) return 1;
 	ambient_light(127, 127, 127);
 	ent sun = create_light(1, 0); rotate_entity(sun, 40, 30, 0, 0); // so models aren't flat black
 	htex amb = create_texture(2, 2, TF_COLOR | TF_VRAM, 1);
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 			if (IsKeyPressed(KEY_SPACE)) drop = 2.5f;
 			translate_entity(col, 0, drop * dt, 0, 1);
 			update_world(1);
-			for (int i = 1; i <= count_collisions(col); i++) if (collision_ny(col, i) > 0.7f) drop = fmaxf(drop, 0); // landed
+			for (int i = 0; i < count_collisions(col); i++) if (collision_ny(col, i) > 0.7f) drop = fmaxf(drop, 0); // landed
 			position_entity(cam, entity_x(col, 1), entity_y(col, 1) + 0.25f, entity_z(col, 1), 1);
 		} else {
 			float sp = (IsKeyDown(KEY_LEFT_SHIFT) ? 8.0f : 2.0f) * dt;

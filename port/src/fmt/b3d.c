@@ -68,7 +68,7 @@ static void brus(ctx *c) {
 		b.blend = ri(&c->r); b.fx = ri(&c->r);
 		for (int i = 0; i < nt; i++) {
 			int id = ri(&c->r);
-			if (i < BB_NTEX && id >= 0 && id < c->ntx) b.tex[i] = c->tx[id];
+			if (i < RT_NTEX && id >= 0 && id < c->ntx) b.tex[i] = c->tx[id];
 		}
 		c->br = realloc(c->br, sizeof *c->br * (c->nbr + 1));
 		c->br[c->nbr++] = b;

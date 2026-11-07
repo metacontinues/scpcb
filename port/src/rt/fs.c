@@ -1,4 +1,4 @@
-// fs.c: blitz paths on a case-sensitive fs + blitz binary io
+// fs.c: game paths (backslashes, any case) on a case-sensitive fs + binary io
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
@@ -58,7 +58,7 @@ FILE *read_file(const char *p) {
 	const char *r = res_path(p);
 	return r ? fopen(r, "rb") : NULL;
 }
-// files are little-endian, like x86 blitz
+// files are little-endian
 int read_byte(FILE *f) { int c = fgetc(f); return c == EOF ? 0 : c; }
 int read_short(FILE *f) { unsigned char b[2] = {0}; (void)!fread(b, 1, 2, f); return b[0] | b[1] << 8; }
 int read_int(FILE *f) {

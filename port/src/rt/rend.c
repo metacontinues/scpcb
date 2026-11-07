@@ -172,12 +172,12 @@ static brush combine(brush s, brush e) {
 	b.r *= e.r; b.g *= e.g; b.b *= e.b; b.a *= e.a;
 	b.fx |= e.fx;
 	if (e.blend) b.blend = e.blend;
-	for (int i = 0; i < BB_NTEX; i++) if (e.tex[i]) b.tex[i] = e.tex[i];
+	for (int i = 0; i < RT_NTEX; i++) if (e.tex[i]) b.tex[i] = e.tex[i];
 	return b;
 }
 static int isalpha_br(brush b) {
 	if (b.a < 1 || b.blend == BL_MUL || b.blend == BL_ADD || b.fx & FX_VALPHA) return 1;
-	for (int i = 0; i < BB_NTEX; i++) if (b.tex[i] && rt_t(b.tex[i])->flags & TF_ALPHA) return 1;
+	for (int i = 0; i < RT_NTEX; i++) if (b.tex[i] && rt_t(b.tex[i])->flags & TF_ALPHA) return 1;
 	return 0;
 }
 
@@ -195,8 +195,8 @@ static void drawsurf(surf *s, brush b, tf t, cam *c) {
 	float fx[4] = {b.fx & FX_FULLBRIGHT ? 1 : 0, b.fx & FX_VCOLOR ? 1 : 0, b.fx & FX_VALPHA ? 1 : 0, b.fx & FX_NOFOG ? 1 : 0};
 	float tc[4] = {0}, tb[4] = {0}, tm[4] = {0};
 	int nt = 0;
-	for (int i = 0; i < BB_NTEX; i++) mat.maps[i].texture = (Texture2D){0};
-	for (int i = 0; i < BB_NTEX; i++) {
+	for (int i = 0; i < RT_NTEX; i++) mat.maps[i].texture = (Texture2D){0};
+	for (int i = 0; i < RT_NTEX; i++) {
 		tex *x = rt_t(b.tex[i]);
 		if (!x) continue;
 		mat.maps[nt].texture = x->t;
@@ -218,7 +218,7 @@ static void drawsurf(surf *s, brush b, tf t, cam *c) {
 	ntris += s->nt;
 }
 
-// one queue item per surface (si = -1: sprite), so mixed meshes sort like blitz
+// one queue item per surface (si = -1: sprite), so mixed meshes sort per surface
 static void drawit(ent e, int si, cam *c, m3 crot) {
 	E *x = rt_e(e);
 	if (si < 0) {
@@ -275,7 +275,7 @@ static void rendcam(ent ce) {
 		rlClearScreenBuffers(); // TODO: honor color-only/z-only cls
 	}
 	float P[16] = {c->zoom,0,0,0, 0,c->zoom*a,0,0, 0,0,(f+n)/(f-n),1, 0,0,-2*f*n/(f-n),0};
-	if (c->proj == 2) { // blitz ortho (gxscene setOrthoProj): x*zoom/near across, depth linear near..far
+	if (c->proj == 2) { // ortho: x*zoom/near across, depth linear near..far
 		float O[16] = {c->zoom/n,0,0,0, 0,c->zoom*a/n,0,0, 0,0,2/(f-n),0, 0,0,-(f+n)/(f-n),1};
 		memcpy(P, O, sizeof P);
 	}
@@ -304,7 +304,7 @@ static void rendcam(ent ce) {
 	}
 	qsort(its, nits, sizeof *its, itcmp);
 	rlEnableDepthTest();
-	rlSetCullFace(RL_CULL_FACE_FRONT); // blitz front faces are cw
+	rlSetCullFace(RL_CULL_FACE_FRONT); // front faces are cw
 	for (int i = 0; i < nits; i++) {
 		if (its[i].ord) rlDisableDepthTest(); else rlEnableDepthTest();
 		if (its[i].alpha) rlDisableDepthMask(); else rlEnableDepthMask();
@@ -319,7 +319,7 @@ static void rendcam(ent ce) {
 void render_world(float tween) {
 	(void)tween;
 	rt_frame();
-	g2d_end(); // TODO: blitz renders into the current buffer; scpcb only uses the backbuffer
+	g2d_end(); // TODO: render into the current buffer; the game only uses the backbuffer so far
 	rlDrawRenderBatchActive();
 	ntris = 0;
 	for (int e = 1; e < rt_nents; e++)

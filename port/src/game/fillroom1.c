@@ -115,7 +115,7 @@ static void f_lockroom2(Rooms *r) {
 	for (i = 0; i <= 5; i += 1) {
 		float rn3 = frnd(0, 0.001f);
 		float rn4 = frnd(-392, 520);
-		float rn5 = frnd(360, 0);
+		float rn5 = frnd(0, 360);
 		float rn2 = frnd(-392, 520);
 		int rn1 = irand(2, 3);
 		de = CreateDecal(rn1, r->x + rn2 * RoomScale, 3.0f * RoomScale + rn3, r->z + rn4 * RoomScale, 90, rn5, 0);
@@ -123,7 +123,7 @@ static void f_lockroom2(Rooms *r) {
 		scale_sprite(de->obj, de->Size, de->Size);
 		float rn8 = frnd(0, 0.001f);
 		float rn9 = frnd(-392, 520);
-		float rn10 = frnd(360, 0);
+		float rn10 = frnd(0, 360);
 		float rn7 = frnd(-392, 520);
 		int rn6 = irand(15, 16);
 		CreateDecal(rn6, r->x + rn7 * RoomScale, 3.0f * RoomScale + rn8, r->z + rn9 * RoomScale, 90, rn10, 0);
@@ -131,7 +131,7 @@ static void f_lockroom2(Rooms *r) {
 		scale_sprite(de->obj, de->Size, de->Size);
 		float rn13 = frnd(0, 0.001f);
 		float rn14 = frnd(-0.5f, 0.5f);
-		float rn15 = frnd(360, 0);
+		float rn15 = frnd(0, 360);
 		float rn12 = frnd(-0.5f, 0.5f);
 		int rn11 = irand(15, 16);
 		CreateDecal(rn11, r->x + rn12, 3.0f * RoomScale + rn13, r->z + rn14, 90, rn15, 0);
@@ -403,7 +403,7 @@ static void f_room079(Rooms *r) {
 	hide_entity(r->Objects[1]);
 	r->Objects[2] = create_pivot(r->obj);
 	position_entity(r->Objects[2], r->x + 1184.0f * RoomScale, -448.0f * RoomScale, r->z + 1792.0f * RoomScale, 1);
-	de = CreateDecal(3, r->x + 1184.0f * RoomScale, -448.0f * RoomScale + 0.01f, r->z + 1792.0f * RoomScale, 90, frnd(360, 0), 0);
+	de = CreateDecal(3, r->x + 1184.0f * RoomScale, -448.0f * RoomScale + 0.01f, r->z + 1792.0f * RoomScale, 90, frnd(0, 360), 0);
 	de->Size = 0.5f;
 	scale_sprite(de->obj, de->Size, de->Size);
 	entity_parent(de->obj, r->obj, 1);
@@ -632,7 +632,7 @@ static void f_room2shaft(Rooms *r) {
 	position_entity(r->Objects[0], r->x + 1560.0f * RoomScale, r->y, r->z + 250.0f * RoomScale, 1);
 	r->Objects[1] = create_pivot(r->obj);
 	position_entity(r->Objects[1], r->x + 1344.0f * RoomScale, -752.0f * RoomScale, r->z - 384.0f * RoomScale, 1);
-	de = CreateDecal(3, r->x + 1334.0f * RoomScale, -796.0f * RoomScale + 0.01f, r->z - 220.0f * RoomScale, 90, frnd(360, 0), 0);
+	de = CreateDecal(3, r->x + 1334.0f * RoomScale, -796.0f * RoomScale + 0.01f, r->z - 220.0f * RoomScale, 90, frnd(0, 360), 0);
 	de->Size = 0.25f;
 	scale_sprite(de->obj, de->Size, de->Size);
 	entity_parent(de->obj, r->obj, 1);
@@ -691,13 +691,13 @@ static void f_room2poffices2(Rooms *r) {
 	r->RoomDoors[0]->AutoClose = 0;
 	r->RoomDoors[0]->open = 0;
 	r->RoomDoors[0]->locked = 1;
-	de = CreateDecal(0, r->x - 808.0f * RoomScale, 0.005f, r->z - 72.0f * RoomScale, 90, irand(360, 1), 0);
+	de = CreateDecal(0, r->x - 808.0f * RoomScale, 0.005f, r->z - 72.0f * RoomScale, 90, irand(1, 360), 0);
 	entity_parent(de->obj, r->obj, 1);
-	de = CreateDecal(2, r->x - 808.0f * RoomScale, 0.01f, r->z - 72.0f * RoomScale, 90, irand(360, 1), 0);
+	de = CreateDecal(2, r->x - 808.0f * RoomScale, 0.01f, r->z - 72.0f * RoomScale, 90, irand(1, 360), 0);
 	de->Size = 0.3f;
 	scale_sprite(de->obj, de->Size, de->Size);
 	entity_parent(de->obj, r->obj, 1);
-	de = CreateDecal(0, r->x - 432.0f * RoomScale, 0.01f, r->z, 90, irand(360, 1), 0);
+	de = CreateDecal(0, r->x - 432.0f * RoomScale, 0.01f, r->z, 90, irand(1, 360), 0);
 	entity_parent(de->obj, r->obj, 1);
 	r->Objects[0] = create_pivot(r->obj);
 	position_entity(r->Objects[0], r->x - 808.0f * RoomScale, 1.0f, r->z - 72.0f * RoomScale, 1);
@@ -842,7 +842,7 @@ static void f_room2tunnel(Rooms *r) {
 	rotate_entity(d->buttons[0], 0, -90, 0, 1);
 	position_entity(d->buttons[1], r->x - 224.0f * RoomScale, r->y + 0.7f, r->z + 384.0f * RoomScale, 1);
 	rotate_entity(d->buttons[1], 0, 90, 0, 1);
-	de = CreateDecal(0, r->x + 64.0f * RoomScale, 0.005f, r->z + 144.0f * RoomScale, 90, irand(360, 1), 0);
+	de = CreateDecal(0, r->x + 64.0f * RoomScale, 0.005f, r->z + 144.0f * RoomScale, 90, irand(1, 360), 0);
 	entity_parent(de->obj, r->obj, 1);
 	it = CreateItem("Scorched Note", "paper", r->x + 64.0f * RoomScale, r->y + 144.0f * RoomScale, r->z - 384.0f * RoomScale, 0, 0, 0, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
@@ -1118,7 +1118,7 @@ static void f_room3storage(Rooms *r) {
 	em->SizeChange = 0.01f;
 	em->Achange = -0.006f;
 	em->Gravity = -0.2f;
-	{ int sel1 = irand(3, 1);
+	{ int sel1 = irand(1, 3);
 	if (sel1 == 1) {
 		x = 2312;
 		z = -952;
@@ -1134,7 +1134,7 @@ static void f_room3storage(Rooms *r) {
 	it = CreateItem("Night Vision Goggles", "nvgoggles", r->x + 1936.0f * RoomScale, r->y - 5496.0f * RoomScale, r->z - 944.0f * RoomScale, 0, 0, 0, 1, 0);
 	entity_parent(it->collider, r->obj, 1);
 	it->state = 450;
-	de = CreateDecal(3, r->x + x * RoomScale, -5632.0f * RoomScale + 0.01f, r->z + z * RoomScale, 90, frnd(360, 0), 0);
+	de = CreateDecal(3, r->x + x * RoomScale, -5632.0f * RoomScale + 0.01f, r->z + z * RoomScale, 90, frnd(0, 360), 0);
 	de->Size = 0.5f;
 	scale_sprite(de->obj, de->Size, de->Size);
 	entity_parent(de->obj, r->obj, 1);

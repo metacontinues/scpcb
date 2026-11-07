@@ -106,7 +106,7 @@ static int load_terrain(int hmap, float yscale, int t1, int t2, int mask) {
 		add_triangle(s, a + 1, a + x + 1, a + x + 2);
 	}
 	int mesh2 = copy_mesh(mesh, mesh);
-	surf *s2 = get_surface(mesh2, 1);
+	surf *s2 = get_surface(mesh2, 0);
 	position_mesh(mesh, -x / 2.0f, 0, -y / 2.0f);
 	position_mesh(mesh2, -x / 2.0f, .01f, -y / 2.0f);
 	int hb = image_buffer(hmap, 0), mb = texture_buffer(mask, 0), mw = texture_width(mask), mh = texture_height(mask);
@@ -156,7 +156,7 @@ static void details(Forest *fr, int tile, int hmap, float tempf3) {
 			}
 			scale_entity(de, t2 * 1.1f, t2, t2 * 1.1f, 1);
 			position_entity(de, px, cr * .03f - frnd(3, 3.2f), pz, 1);
-			rotate_entity(de, frnd(-5, 5), frnd(360, 0), 0, 1);
+			rotate_entity(de, frnd(-5, 5), frnd(0, 360), 0, 1);
 		} else if (kind == 6) { // stump
 			de = copy_entity(fr->DetailMesh[4], 0);
 			float t = frnd(.1f, .12f);
@@ -166,7 +166,7 @@ static void details(Forest *fr, int tile, int hmap, float tempf3) {
 			de = copy_entity(fr->DetailMesh[2], 0);
 			position_entity(de, px, cr * .03f - 1.3f, pz, 1);
 			entity_fx(de, 1);
-			rotate_entity(de, 0, frnd(360, 0), 0, 1);
+			rotate_entity(de, 0, frnd(0, 360), 0, 1);
 		}
 		entity_fx(de, 1);
 		entity_parent(de, tile, 1);

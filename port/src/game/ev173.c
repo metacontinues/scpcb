@@ -38,28 +38,28 @@ static void spot5(Events *e) {
 
 // the PA message the intercom reads out while you're escorted
 static str pamsg(void) {
-	if (irand(3, 1) == 1) return cat("scripted\\scripted", s_str(irand(1, 5)), ".ogg|off.ogg|");
+	if (irand(1, 3) == 1) return cat("scripted\\scripted", s_str(irand(1, 5)), ".ogg|off.ogg|");
 	str s = cat("1\\attention", s_str(irand(1, 2)), ".ogg"), who = "";
-	switch (irand(3, 1)) {
+	switch (irand(1, 3)) {
 	case 1: who = "crew"; s = cat(s, "|2\\crew", s_str(irand(0, 5)), ".ogg"); break;
 	case 2: who = "scientist"; s = cat(s, "|2\\scientist", s_str(irand(0, 19)), ".ogg"); break;
 	case 3: who = "security"; s = cat(s, "|2\\security", s_str(irand(0, 5)), ".ogg"); break;
 	}
-	if (s_eq(who, "scientist") && irand(2, 1) == 1) { // call on line
+	if (s_eq(who, "scientist") && irand(1, 2) == 1) { // call on line
 		s = cat(s, "|3\\callonline.ogg");
 		s = cat(s, "|numbers\\", s_str(irand(1, 9)), ".ogg");
-		if (irand(2, 1) == 1) s = cat(s, "|numbers\\", s_str(irand(1, 9)), ".ogg");
+		if (irand(1, 2) == 1) s = cat(s, "|numbers\\", s_str(irand(1, 9)), ".ogg");
 	} else {
 		s = cat(s, "|3\\report", s_str(irand(0, 1)), ".ogg");
 		if (s_eq(who, "crew")) {
 			s = cat(s, "|4\\crew", s_str(irand(0, 6)), ".ogg");
-			if (irand(2, 1) == 1) s = cat(s, "|5\\crew", s_str(irand(0, 6)), ".ogg");
+			if (irand(1, 2) == 1) s = cat(s, "|5\\crew", s_str(irand(0, 6)), ".ogg");
 		} else if (s_eq(who, "scientist")) {
 			s = cat(s, "|4\\scientist", s_str(irand(0, 7)), ".ogg");
-			if (irand(2, 1) == 1) s = cat(s, "|5\\scientist0.ogg");
+			if (irand(1, 2) == 1) s = cat(s, "|5\\scientist0.ogg");
 		} else if (s_eq(who, "security")) {
 			s = cat(s, "|4\\security", s_str(irand(0, 5)), ".ogg");
-			if (irand(2, 1) == 1) s = cat(s, "|5\\security", s_str(irand(1, 2)), ".ogg");
+			if (irand(1, 2) == 1) s = cat(s, "|5\\security", s_str(irand(1, 2)), ".ogg");
 		}
 	}
 	return cat(s, "|off.ogg|");
@@ -839,7 +839,7 @@ int EvAlarm(Events *e) {
 		rotate_entity(o0, -Max(s - 1320, 0) / 130, 0, -Max(s - 1300, 0) / 40, 1);
 		position_entity(o1, XG(o1), -Max(s - 1800, 0) / 5000, ZG(o1), 1);
 		rotate_entity(o1, -Max(s - 2040, 0) / 135, 0, -Max(s - 2040, 0) / 43, 1);
-		if (entity_distance(o0, Collider) < 2.5f && irand(300, 1) == 2) PlaySound2(DecaySFX[irand(1, 3)], Camera, o0, 3, 1);
+		if (entity_distance(o0, Collider) < 2.5f && irand(1, 300) == 2) PlaySound2(DecaySFX[irand(1, 3)], Camera, o0, 3, 1);
 	}
 	if (e->EventState < 2000 && (!e->SoundCHN || !channel_playing(e->SoundCHN))) e->SoundCHN = PlaySound_Strict(AlarmSFX[0]);
 	if (e->EventState3 < 11) {

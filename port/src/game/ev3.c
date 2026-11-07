@@ -40,7 +40,7 @@ static int endroom106(Events *e) { // 106 takes the janitor
 		}
 	} else if (e->EventState == 2) {
 		if (entity_distance(n->Collider, R->obj) < 1.5f) {
-			Decals *de = CreateDecal(0, X(R->obj), .01f, Z(R->obj), 90, irand(360, 1), 0);
+			Decals *de = CreateDecal(0, X(R->obj), .01f, Z(R->obj), 90, irand(1, 360), 0);
 			if (de) { de->Size = .05f; de->SizeChange = .008f; de->Timer = 10000; UpdateDecals(); }
 			e->EventState = 3;
 		}
@@ -118,7 +118,7 @@ static int scp008(Events *e) {
 		else { // the leak
 			Particles *p = CreateParticle(XG(o0), YG(o0), ZG(o0), 6, .02f, -.12f, 200);
 			rotate_entity(p->pvt, -90, 0, 0, 1);
-			float ry = frnd(-26, 26), rr = frnd(360, 0), rp = frnd(-26, 26);
+			float ry = frnd(-26, 26), rr = frnd(0, 360), rp = frnd(-26, 26);
 			turn_entity(p->pvt, rp, ry, rr, 0);
 			p->SizeChange = .012f; p->Achange = -.015f;
 		}
@@ -141,7 +141,7 @@ static int checkpoint(Events *e) {
 		}
 		int *o1 = &R->Objects[1];
 		if (e->EventState3 == 0) { // half the time 1048 waves at you
-			if (irand(2, 1) == 1) {
+			if (irand(1, 2) == 1) {
 				GiveAchievement(Achv1048, 1);
 				*o1 = LoadAnimMesh_Strict("GFX\\npcs\\scp-1048.b3d", 0);
 				scale_entity(*o1, .05f, .05f, .05f, 0);
@@ -241,7 +241,7 @@ static void zap106(void) {
 	if (ParticleAmount > 0) for (int i = 0; i <= 5 + 5 * (ParticleAmount - 1); i++) {
 		Particles *p = CreateParticle(entity_x(Curr106->Collider, 1), entity_y(Curr106->Collider, 1), entity_z(Curr106->Collider, 1), 0, .015f, -.2f, 250);
 		p->size = .03f; p->gravity = -.2f; p->lifetime = 200; p->SizeChange = .005f; p->speed = .001f;
-		float ry = frnd(360, 0), rp = frnd(360, 0);
+		float ry = frnd(0, 360), rp = frnd(0, 360);
 		rotate_entity(p->pvt, rp, ry, 0, 1);
 	}
 	Curr106->State = -20000;
@@ -276,7 +276,7 @@ static void shock(Events *e) { // EventState counting up: charge, zap, power bac
 		}
 	}
 	hide_entity(R->Objects[3]); hide_entity(R->Objects[4]);
-	if (irand(5, 1) < 5) { position_texture(TeslaTexture, 0, frnd(0, 1)); show_entity(R->Objects[3]); }
+	if (irand(1, 5) < 5) { position_texture(TeslaTexture, 0, frnd(0, 1)); show_entity(R->Objects[3]); }
 }
 
 static void clerk(Events *e) { // the clerk who runs into the gate
@@ -299,7 +299,7 @@ static void clerk(Events *e) { // the clerk who runs into the gate
 		if (n->Frame == 60) { e->EventStr = "smoke"; e->EventVal = 0; }
 	} else if (s_len(s) && !s_eq(s, "step1") && !s_eq(s, "done")) { // the body smokes for 10s
 		if (e->EventVal < 70 * 10) {
-			if (ParticleAmount > 0 && irand(20 - 10 * (ParticleAmount - 1), 1) == 1) {
+			if (ParticleAmount > 0 && irand(1, 20 - 10 * (ParticleAmount - 1)) == 1) {
 				Particles *p = CreateParticle(entity_x(n->Collider, 0), entity_y(n->obj, 0) + .05f, entity_z(n->Collider, 0), 0, .05f, 0, 60);
 				p->speed = .002f;
 				rotate_entity(p->pvt, 0, entity_yaw(n->Collider, 0), 0, 0);

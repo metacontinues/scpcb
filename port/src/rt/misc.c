@@ -1,4 +1,4 @@
-// misc.c: blitz rng (exact, map gen depends on it), file writing, dirs, dates
+// misc.c: rng, file writing, dirs, dates
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
@@ -8,17 +8,17 @@
 #include <unistd.h>
 #include "in.h"
 
-// ---- rng: blitz3d bbmath.cpp, park-miller minimal standard via schrage
+// ---- rng: park-miller minimal standard via schrage
 static int rs = 0x1234;
 static float rnd(void) {
 	rs = 48271 * (rs % 44488) - 3399 * (rs / 44488);
 	if (rs < 0) rs += 2147483647;
 	return (rs & 65535) / 65536.0f + .5f / 65536.0f;
 }
-float frnd(float from, float to) { return rnd() * (to - from) + from; }
-int irand(int from, int to) {
-	if (to < from) { int t = from; from = to; to = t; }
-	return (int)(rnd() * (to - from + 1)) + from;
+float frnd(float lo, float hi) { return rnd() * (hi - lo) + lo; }
+int irand(int lo, int hi) {
+	if (hi < lo) { int t = lo; lo = hi; hi = t; }
+	return (int)(rnd() * (hi - lo + 1)) + lo;
 }
 void seed_rnd(int seed) { seed &= 0x7fffffff; rs = seed ? seed : 1; }
 int rnd_seed(void) { return rs; }
@@ -47,7 +47,7 @@ void write_short(FILE *f, int v) { fputc(v & 255, f); fputc(v >> 8 & 255, f); }
 void write_int(FILE *f, int v) { for (int i = 0; i < 4; i++) fputc((unsigned)v >> (i * 8) & 255, f); }
 void write_float(FILE *f, float v) { int i; memcpy(&i, &v, 4); write_int(f, i); }
 void write_string(FILE *f, const char *s) { int n = strlen(s); write_int(f, n); fwrite(s, 1, n, f); }
-void write_line(FILE *f, const char *s) { fputs(s, f); fputs("\r\n", f); } // blitz writes crlf
+void write_line(FILE *f, const char *s) { fputs(s, f); fputs("\r\n", f); } // crlf, the game's files use it
 
 int file_type(const char *p) { // 0 none, 1 file, 2 dir
 	const char *r = res_path(p);
@@ -68,7 +68,7 @@ int copy_file(const char *a, const char *b) {
 	return 1;
 }
 const char *current_dir(void) { static char b[1024]; if (!getcwd(b, sizeof b - 1)) b[0] = 0; strcat(b, "/"); return b; }
-// ReadDir/NextFile: blitz yields "." and ".." too, then "" at the end. sorted case-insensitively,
+// read_dir/next_file: yields "." and ".." too, then "" at the end. sorted case-insensitively,
 // which is the order ntfs hands them to FindNextFile (save/map lists show in that order)
 typedef struct { struct dirent **e; int n, i; } bdir;
 static int ci(const struct dirent **a, const struct dirent **b) { return strcasecmp((*a)->d_name, (*b)->d_name); }

@@ -163,10 +163,10 @@ static void bigdust(Doors *d) {
 		// all three args weigh the same, so the y..z tail outweighs x and goes first: y, z, then x
 		float ry = frnd(0, 1.2f), rz = frnd(-.2f, .2f), rx = frnd(-.2f, .2f);
 		position_entity(pvt, entity_x(d->frameobj, 1) + rx, entity_y(d->frameobj, 1) + ry, entity_z(d->frameobj, 1) + rz, 0);
-		rotate_entity(pvt, 0, frnd(360, 0), 0, 0);
+		rotate_entity(pvt, 0, frnd(0, 360), 0, 0);
 		Particles *p = CreateParticle(entity_x(pvt, 0), entity_y(pvt, 0), entity_z(pvt, 0), 2, .002f, 0, 300);
 		p->speed = .005f;
-		float py = frnd(360, 0), pp = frnd(-20, 20); // Rnd(360) first, see MouseLook
+		float py = frnd(0, 360), pp = frnd(-20, 20); // Rnd(360) first, see MouseLook
 		rotate_entity(p->pvt, pp, py, 0, 0);
 		p->SizeChange = -.00001f; p->size = .01f;
 		scale_sprite(p->obj, p->size, p->size);

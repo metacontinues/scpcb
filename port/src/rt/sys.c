@@ -7,9 +7,9 @@ static int inframe;
 
 void rt_frame(void) { if (!inframe) { BeginDrawing(); inframe = 1; } }
 
-// blitz lets you call this again (launcher -> game). we keep the window + gl context and
-// just resize it, so loaded stuff survives (blitz would free it, the game reloads anyway)
-int graphics3_d(int w, int h, int depth, int mode) {
+// can be called again (launcher -> game): keeps the window + gl context and
+// just resizes it, so loaded stuff survives
+int graphics_3d(int w, int h, int depth, int mode) {
 	(void)depth;
 	if (IsWindowReady()) {
 		if (inframe) { EndDrawing(); inframe = 0; }
@@ -28,7 +28,7 @@ int graphics3_d(int w, int h, int depth, int mode) {
 void end_graphics(void) { snd_quit(); rend_quit(); CloseWindow(); }
 int graphics_width(void) { return GetScreenWidth(); }
 int graphics_height(void) { return GetScreenHeight(); }
-// EndDrawing polls events. closing the window ends the program, like blitz w/o a close prompt
+// EndDrawing polls events. closing the window ends the program
 // png writer for screenshots. no png decoder is built, but raylib always compiles stb_image_write
 int stbi_write_png(const char *filename, int w, int h, int comp, const void *data, int stride);
 int save_png(const char *p, int w, int h, const void *rgba) { return stbi_write_png(p, w, h, 4, rgba, w * 4); }
@@ -57,7 +57,7 @@ void anti_alias(int on) { (void)on; } // msaa has to be picked before the window
 int desktop_width(void) { return IsWindowReady() ? GetMonitorWidth(GetCurrentMonitor()) : 0; }
 int desktop_height(void) { return IsWindowReady() ? GetMonitorHeight(GetCurrentMonitor()) : 0; }
 
-// ---- primitives (blitz layouts, cw front faces)
+// ---- primitives (cw front faces)
 ent create_cube(ent par) {
 	ent e = create_mesh(par);
 	surf *s = create_surface(e, 0);
@@ -93,7 +93,7 @@ ent create_sphere(int segs, ent par) {
 	}
 	return e;
 }
-ent create_plane(int segs, ent par) { // blitz planes are infinite; a big quad will do
+ent create_plane(int segs, ent par) { // a big quad stands in for an infinite plane
 	(void)segs;
 	ent e = create_mesh(par);
 	surf *s = create_surface(e, 0);

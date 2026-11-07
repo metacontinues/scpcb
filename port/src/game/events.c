@@ -30,7 +30,7 @@ void InitEvents(void) {
 	CreateEvent("alarm", "start", 0, 0);
 	CreateEvent("pocketdimension", "pocketdimension", 0, 0);
 	CreateEvent("tunnel106", "tunnel", 0, .07f + .1f * ag); // 7% (17% aggressive) of the tunnels
-	if (irand(3, 1) < 3) CreateEvent("lockroom173", "lockroom", 0, 0);
+	if (irand(1, 3) < 3) CreateEvent("lockroom173", "lockroom", 0, 0);
 	CreateEvent("lockroom173", "lockroom", 0, .3f + .5f * ag);
 	CreateEvent("room2trick", "room2", 0, .15f);
 	CreateEvent("1048a", "room2", 0, 1);
@@ -57,8 +57,8 @@ void InitEvents(void) {
 	CreateEvent("room3servers", "room3servers2", 0, 0);
 	CreateEvent("room3tunnel", "room3tunnel", 0, .08f); // the dead guard
 	CreateEvent("room4", "room4", 0, 0);
-	if (irand(5, 1) < 5) {
-		switch (irand(3, 1)) {
+	if (irand(1, 5) < 5) {
+		switch (irand(1, 3)) {
 		case 1: CreateEvent("682roar", "tunnel", irand(0, 2), 0); break;
 		case 2: CreateEvent("682roar", "room3pit", irand(0, 2), 0); break;
 		case 3: CreateEvent("682roar", "room2z3", 0, 0); break;
@@ -67,13 +67,13 @@ void InitEvents(void) {
 	CreateEvent("testroom173", "room2testroom2", 0, 1);
 	CreateEvent("room2tesla", "room2tesla", 0, .9f);
 	CreateEvent("room2nuke", "room2nuke", 0, 0);
-	if (irand(5, 1) < 5) CreateEvent("coffin106", "coffin", 0, 0);
+	if (irand(1, 5) < 5) CreateEvent("coffin106", "coffin", 0, 0);
 	else CreateEvent("coffin", "coffin", 0, 0);
 	CreateEvent("checkpoint", "checkpoint1", 0, 1);
 	CreateEvent("checkpoint", "checkpoint2", 0, 1);
 	CreateEvent("room3door", "room3", 0, .1f);
 	CreateEvent("room3door", "room3tunnel", 0, .1f);
-	if (irand(2, 1) == 1) {
+	if (irand(1, 2) == 1) {
 		CreateEvent("106victim", "room3", irand(1, 2), 0);
 		CreateEvent("106sinkhole", "room3_2", irand(2, 3), 0);
 	} else {

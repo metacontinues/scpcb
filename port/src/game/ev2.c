@@ -69,7 +69,7 @@ static int gateaentrance(Events *e) {
 
 static int sinkhole(Events *e) { // 106's sinkhole drags you to the pocket dimension
 	if (e->EventState == 0) {
-		Decals *de = CreateDecal(0, entity_x(R->obj, 0) + frnd(-.5f, .5f), .01f, entity_z(R->obj, 0) + frnd(-.5f, .5f), 90, irand(360, 1), 0);
+		Decals *de = CreateDecal(0, entity_x(R->obj, 0) + frnd(-.5f, .5f), .01f, entity_z(R->obj, 0) + frnd(-.5f, .5f), 90, irand(1, 360), 0);
 		if (de) { de->Size = 2.5f; scale_sprite(de->obj, de->Size, de->Size); }
 		e->EventState = 1;
 		return 0;
@@ -176,7 +176,7 @@ static int room2elevator(Events *e) { // a guard walks into the elevator and die
 		return 0;
 	}
 	if (e->EventState == 1) {
-		if (R->dist < 5 || irand(700, 1) == 1) {
+		if (R->dist < 5 || irand(1, 700) == 1) {
 			e->EventState = 2;
 			n->State = 5;
 			n->EnemyX = XG(R->Objects[1]); n->EnemyY = YG(R->Objects[1]); n->EnemyZ = ZG(R->Objects[1]);
@@ -198,8 +198,8 @@ static int room2elevator(Events *e) { // a guard walks into the elevator and die
 			if (s - FPSfactor < 12.6f * 70 && n) {
 				RemoveNPC(n); R->NPC[0] = NULL;
 				int o = R->Objects[0];
-				CreateDecal(3, XG(o), .0005f, ZG(o), 90, frnd(360, 0), 0);
-				Decals *de = CreateDecal(17, XG(o), .002f, ZG(o), 90, frnd(360, 0), 0);
+				CreateDecal(3, XG(o), .0005f, ZG(o), 90, frnd(0, 360), 0);
+				Decals *de = CreateDecal(17, XG(o), .002f, ZG(o), 90, frnd(0, 360), 0);
 				if (de) de->Size = .5f;
 				o = R->Objects[1];
 				de = CreateDecal(3, XG(o), YG(o), ZG(o), 0, R->angle + 270, 0);
@@ -228,7 +228,7 @@ static int room1lifts(Events *e) {
 static int victim106(Events *e) { // a class d falls out of the ceiling
 	if (Contained106) return 0;
 	if (IN && e->EventState == 0) {
-		Decals *de = CreateDecal(0, entity_x(R->obj, 0), 799 * RS, entity_z(R->obj, 0), -90, irand(360, 1), 0);
+		Decals *de = CreateDecal(0, entity_x(R->obj, 0), 799 * RS, entity_z(R->obj, 0), -90, irand(1, 360), 0);
 		if (de) {
 			de->Size = .05f; de->SizeChange = .0015f; entity_alpha(de->obj, .8f); UpdateDecals();
 			PlaySound2(DecaySFX[3], Camera, de->obj, 15, 1);
@@ -240,7 +240,7 @@ static int victim106(Events *e) { // a class d falls out of the ceiling
 	if (e->EventState <= 200) return 0;
 	if (!llive(R->NPC[0])) {
 		NPCs *n = R->NPC[0] = CreateNPC(NPCtypeD, entity_x(R->obj, 0), 900 * RS, entity_z(R->obj, 0));
-		rotate_entity(n->Collider, 0, frnd(360, 0), 0, 1);
+		rotate_entity(n->Collider, 0, frnd(0, 360), 0, 1);
 		ChangeNPCTextureID(n, 5);
 		n->State = 6;
 		PlaySound_Strict(HorrorSFX[0]);
@@ -264,7 +264,7 @@ static int victim106(Events *e) { // a class d falls out of the ceiling
 	if (!e->Sound) {
 		LoadEventSound(e, "SFX\\General\\BodyFall.ogg", 0);
 		PlaySound_Strict(e->Sound);
-		Decals *de = CreateDecal(0, entity_x(R->obj, 0), .001f, entity_z(R->obj, 0), 90, irand(360, 1), 0);
+		Decals *de = CreateDecal(0, entity_x(R->obj, 0), .001f, entity_z(R->obj, 0), 90, irand(1, 360), 0);
 		if (de) { de->Size = .4f; entity_alpha(de->obj, .8f); UpdateDecals(); }
 	}
 	if (e->EventState > 400) { if (e->Sound) { FreeSound_Strict(e->Sound); e->Sound = 0; } RemoveEvent(e); }
@@ -272,7 +272,7 @@ static int victim106(Events *e) { // a class d falls out of the ceiling
 }
 
 static void pipesdecal(Events *e, int o, float yaw) {
-	Decals *d = CreateDecal(0, XG(o), YG(o), ZG(o), 0, yaw, frnd(360, 0));
+	Decals *d = CreateDecal(0, XG(o), YG(o), ZG(o), 0, yaw, frnd(0, 360));
 	if (!d) return;
 	d->Timer = 90000; d->Alpha = .01f; d->AlphaChange = .005f; d->Size = .1f; d->SizeChange = .003f;
 }
@@ -394,16 +394,16 @@ static int tunnel106(Events *e) { // 106 rises out of the tunnel floor
 		return 0;
 	}
 	if (e->EventState == 1) {
-		if (R->dist < 3 || irand(7000, 1) == 1) {
+		if (R->dist < 3 || irand(1, 7000) == 1) {
 			e->EventState = 2;
-			Decals *d = CreateDecal(0, entity_x(R->obj, 0), 445 * RS, entity_z(R->obj, 0), -90, irand(360, 1), 0);
+			Decals *d = CreateDecal(0, entity_x(R->obj, 0), 445 * RS, entity_z(R->obj, 0), -90, irand(1, 360), 0);
 			if (d) {
 				d->Size = frnd(.5f, .7f); entity_alpha(d->obj, .7f); d->ID = 1; scale_sprite(d->obj, d->Size, d->Size);
 				entity_alpha(d->obj, frnd(.7f, .85f));
 			}
 			PlaySound_Strict(HorrorSFX[10]);
 		} else if (R->dist > 8) {
-			if (irand(5, 1) != 1) n->State = -10000;
+			if (irand(1, 5) != 1) n->State = -10000;
 			n->Idle = 0;
 			RemoveEvent(e);
 		}
@@ -426,7 +426,7 @@ static int tunnel106(Events *e) { // 106 rises out of the tunnel floor
 		n->Idle = 0; n->State = -10;
 		position_entity(n->Collider, XG(R->obj), -3, ZG(R->obj), 1);
 		n->PathTimer = 70 * 10; n->PathStatus = 0; n->PathLocation = 0;
-		Decals *de = CreateDecal(0, XG(R->obj), .01f, ZG(R->obj), 90, irand(360, 1), 0);
+		Decals *de = CreateDecal(0, XG(R->obj), .01f, ZG(R->obj), 90, irand(1, 360), 0);
 		if (de) { de->Size = .05f; de->SizeChange = .01f; entity_alpha(de->obj, .8f); UpdateDecals(); }
 		e->EventState = 300;
 	} else if (s < 800) {

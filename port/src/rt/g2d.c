@@ -1,6 +1,6 @@
-// g2d.c: blitz 2d. buffers, images, Text/Rect/Line/Oval, fonts, CopyRect, pixels.
+// g2d.c: 2d. buffers, images, text/rect/line/oval, fonts, copy_rect, pixels.
 // image/texture buffers become render textures on first SetBuffer, drawn w/ a y-flipped
-// ortho so row 0 stays the top row, which is what blitz uvs expect.
+// ortho so row 0 stays the top row, which is what the game's uvs expect.
 #include <stdlib.h>
 #include <string.h>
 #include "in.h"
@@ -63,7 +63,7 @@ void g2d_end(void) {
 	rlEnableBackfaceCulling();
 	int was = active;
 	active = BACKBUF;
-	// blitz masks images at draw time: pull the drawing back + re-key the mask color
+	// images are masked at draw time: pull the drawing back + re-key the mask color
 	if (was >> 24 == 2 && (was & 0xffffff) < nis && is[was & 0xffffff].used) { img *m = &is[was & 0xffffff]; sync(m); upload(m); }
 }
 // bumped by anything that can change a texture's pixels; ReadPixel's cache keys on it
@@ -78,7 +78,7 @@ static void target(void) {
 	int w, h;
 	RenderTexture2D *rt = rtof(cur, &w, &h);
 	BeginTextureMode(*rt);
-	rlSetMatrixProjection(MatrixOrtho(0, w, 0, h, 0, 1)); // y up in memory = blitz rows top-down
+	rlSetMatrixProjection(MatrixOrtho(0, w, 0, h, 0, 1)); // y up in memory = rows top-down
 	rlDisableBackfaceCulling();
 	active = cur;
 }
@@ -145,7 +145,7 @@ int font_height(void) { return fsize(); }
 int string_width(const char *s) { return MeasureTextEx(font(), s, fsize(), 0).x; }
 int string_height(const char *s) { (void)s; return fsize(); }
 int font_width(void) { return string_width("W"); }
-// Text + the alpha AAText adds. cx/cy center on x/y like blitz
+// text w/ alpha. cx/cy center on x/y
 void draw_text_a(int x, int y, const char *s, int cx, int cy, float a) {
 	target();
 	Vector2 sz = MeasureTextEx(font(), s, fsize(), 0);
@@ -166,7 +166,7 @@ static int newimg(Image cpu, int fw, int fh, int nfr) {
 	if (autoMid) { is[h].hx = fw / 2; is[h].hy = fh / 2; }
 	return h;
 }
-// masked texture from cpu: blitz ignores image alpha, keys out the mask color
+// masked texture from cpu: image alpha is ignored, the mask color is keyed out
 static void upload(img *m) {
 	Image c = ImageCopy(m->cpu);
 	unsigned char *p = c.data;
@@ -247,7 +247,7 @@ void resize_image(int h, float w, float hh) {
 	upload(m);
 }
 void scale_image(int h, float sx, float sy) { img *m = gi(h); resize_image(h, m->fw * sx, m->fh * sy); }
-void rotate_image(int h, float ang) { // blitz rotates clockwise around the center
+void rotate_image(int h, float ang) { // clockwise around the center
 	img *m = gi(h); sync(m);
 	ImageRotate(&m->cpu, (int)ang);
 	m->fw = m->w = m->cpu.width; m->fh = m->h = m->cpu.height; m->nfr = 1;
@@ -317,7 +317,7 @@ void unlock_buffer(int b) {
 	if (lkdirty) put(lkb, lk, 0, 0);
 	UnloadImage(lk); lkb = 0;
 }
-// argb ints like blitz. outside a Lock, reads go through a few cached downloads (one gpu readback
+// argb ints. outside a lock, reads go through a few cached downloads (one gpu readback
 // per buffer until something draws), images just read their cpu copy
 static struct { int b; unsigned gen; Image im; } pxc[4];
 static int pxn;
@@ -350,10 +350,10 @@ void write_pixel(int x, int y, int argb, int b) {
 
 // ---- window-ish bits
 static const int modes[][2] = {{640, 480}, {800, 600}, {1024, 768}, {1280, 720}, {1280, 1024}, {1366, 768}, {1600, 900}, {1920, 1080}, {2560, 1440}};
-int count_gfx_modes3_d(void) { return sizeof modes / sizeof *modes; }
-int gfx_mode_width(int i) { return i >= 1 && i <= count_gfx_modes3_d() ? modes[i-1][0] : 0; }
-int gfx_mode_height(int i) { return i >= 1 && i <= count_gfx_modes3_d() ? modes[i-1][1] : 0; }
-// blitz kept the mouse in the window by warping it to the center every frame (MouseLook), which xwayland/wayland
+int count_gfx_modes_3d(void) { return sizeof modes / sizeof *modes; }
+int gfx_mode_width(int i) { return i >= 1 && i <= count_gfx_modes_3d() ? modes[i-1][0] : 0; }
+int gfx_mode_height(int i) { return i >= 1 && i <= count_gfx_modes_3d() ? modes[i-1][1] : 0; }
+// the game used to keep the mouse in by warping it to the center every frame (MouseLook), which xwayland/wayland
 // don't allow, so a hidden pointer is a locked one here (glfw pointer lock, relative motion).
 // scripted runs (SCPCB_INPUT) only hide it, so they never grab the real mouse
 static int locked;

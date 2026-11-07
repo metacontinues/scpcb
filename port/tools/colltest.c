@@ -29,9 +29,9 @@ int main(void) {
 	ent p = mover(0, 2, 0, 0.5f);
 	translate_entity(p, 0, -5, 0, 0); update_world(1);
 	CHECK(NEAR(entity_y(p, 1), 0.5f), "rest y=%f", entity_y(p, 1));
-	CHECK(count_collisions(p) == 1 && collision_entity(p, 1) == floor, "n=%d", count_collisions(p));
-	CHECK(NEAR(collision_ny(p, 1), 1), "ny=%f", collision_ny(p, 1));
-	CHECK(NEAR(collision_y(p, 1), 0), "cy=%f", collision_y(p, 1));
+	CHECK(count_collisions(p) == 1 && collision_entity(p, 0) == floor, "n=%d", count_collisions(p));
+	CHECK(NEAR(collision_ny(p, 0), 1), "ny=%f", collision_ny(p, 0));
+	CHECK(NEAR(collision_y(p, 0), 0), "cy=%f", collision_y(p, 0));
 
 	// slide along a wall at z=5 (front face at z=4.5)
 	ent wall = box(0, 1, 5, 10, 2, 0.5f);

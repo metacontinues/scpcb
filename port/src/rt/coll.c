@@ -1,5 +1,5 @@
-// coll.c: blitz-style collisions (swept ellipsoid vs poly/sphere/box) + picking.
-// one-sided like blitz: only faces you move into count (why scpcb doubles its collision meshes).
+// coll.c: collisions (swept ellipsoid vs poly/sphere/box) + picking.
+// one-sided: only faces you move into count (why the rooms double their collision meshes).
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
@@ -245,7 +245,7 @@ static void collide(ent e) {
 }
 
 void update_world(float anim) {
-	anim_step(anim); // blitz animates first, then collides
+	anim_step(anim); // animate first, then collide
 	for (ent e = 1; e < rt_nents; e++) if (rt_ents[e].used) rt_ents[e].nhit = 0;
 	for (ent e = 1; e < rt_nents; e++) {
 		E *x = &rt_ents[e];
@@ -260,7 +260,7 @@ void update_world(float anim) {
 	}
 }
 
-static hit *gethit(ent e, int i) { E *x = rt_e(e); static hit z; return i >= 1 && i <= x->nhit ? &x->hits[i-1] : &z; }
+static hit *gethit(ent e, int i) { E *x = rt_e(e); static hit z; return i >= 0 && i < x->nhit ? &x->hits[i] : &z; }
 int count_collisions(ent e) { return rt_e(e)->nhit; }
 float collision_x(ent e, int i) { return gethit(e, i)->p.x; }
 float collision_y(ent e, int i) { return gethit(e, i)->p.y; }

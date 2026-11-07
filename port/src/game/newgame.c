@@ -29,13 +29,13 @@ void InitNewGame(void) {
 		if (!r->RoomTemplate->DisableDecals) {
 			if (irand(1, 4) == 1) {
 
-				float rx = frnd(-2, 2), rz = frnd(-2, 2); int a = irand(360, 1), id = irand(2, 3);
+				float rx = frnd(-2, 2), rz = frnd(-2, 2); int a = irand(1, 360), id = irand(2, 3);
 				Decals *de = CreateDecal(id, entity_x(r->obj, 0) + rx, .003f, entity_z(r->obj, 0) + rz, 90, a, 0);
 				de->Size = frnd(.1f, .4f); scale_sprite(de->obj, de->Size, de->Size);
 				entity_alpha(de->obj, frnd(.85f, .95f));
 			}
 			if (irand(1, 4) == 1) {
-				float rx = frnd(-2, 2), rz = frnd(-2, 2); int a = irand(360, 1); // x, z, then Rand(360)
+				float rx = frnd(-2, 2), rz = frnd(-2, 2); int a = irand(1, 360); // x, z, then Rand(360)
 				Decals *de = CreateDecal(0, entity_x(r->obj, 0) + rx, .003f, entity_z(r->obj, 0) + rz, 90, a, 0);
 				de->Size = frnd(.5f, .7f); entity_alpha(de->obj, .7f); de->ID = 1; scale_sprite(de->obj, de->Size, de->Size);
 				entity_alpha(de->obj, frnd(.7f, .85f));

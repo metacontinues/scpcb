@@ -1,6 +1,7 @@
-// bb.h: blitz3d-alike runtime on raylib. names mirror blitz w/ a bb prefix
-// (same as blitz3d's own runtime), so game code ports ~line-by-line.
-// handles are ints, 0 = null, like blitz.
+// rt.h: the game's runtime on raylib: an entity tree (pivots, meshes, cameras, lights, sprites), collisions + picks,
+// animation, textures/brushes, 2d, sound, input, files. handles are ints, 0 = null. angles are degrees, y is up,
+// +z is forward (left-handed). indices (children, surfaces, frames) count from 0.
+// irand(lo, hi) is inclusive, frnd(lo, hi) is lo + u*(hi-lo).
 #pragma once
 #include <stdint.h>
 #include <stdio.h>
@@ -13,16 +14,16 @@ typedef int htex;
 typedef int hbrush;
 typedef struct surf surf;
 
-// ---- tex flags / blend (blitz values)
+// ---- tex flags / blend
 enum { TF_COLOR = 1, TF_ALPHA = 2, TF_MASK = 4, TF_MIP = 8, TF_CLAMPU = 16, TF_CLAMPV = 32,
        TF_SPHERE = 64, TF_CUBE = 128, TF_VRAM = 256, TF_HICOLOR = 512 };
 enum { TB_NONE, TB_ALPHA, TB_MUL, TB_ADD, TB_DOT3, TB_MUL2 };
 enum { FX_FULLBRIGHT = 1, FX_VCOLOR = 2, FX_FLAT = 4, FX_NOFOG = 8, FX_2SIDED = 16, FX_VALPHA = 32 };
 enum { BL_ALPHA = 1, BL_MUL = 2, BL_ADD = 3 };
-#define BB_NTEX 4 // tex layers per brush
+#define RT_NTEX 4 // tex layers per brush
 
 // ---- system
-int graphics3_d(int w, int h, int depth, int mode);
+int graphics_3d(int w, int h, int depth, int mode);
 void end_graphics(void);
 int graphics_width(void);
 int graphics_height(void);
@@ -37,7 +38,7 @@ void anti_alias(int on);
 int desktop_width(void);  // 0 before the first Graphics3D
 int desktop_height(void);
 
-// ---- files: blitz paths (backslashes, any case) -> real paths
+// ---- files: game paths (backslashes, any case) -> real paths
 const char *res_path(const char *p); // static buf, NULL if missing
 FILE *read_file(const char *p);
 int read_byte(FILE *f);
@@ -45,7 +46,7 @@ int read_short(FILE *f);
 int read_int(FILE *f);
 float read_float(FILE *f);
 str read_string(FILE *f); // int len + bytes
-str read_line(FILE *f);   // "" at eof, like blitz
+str read_line(FILE *f);   // "" at eof
 
 // ---- entities
 ent create_pivot(ent par);
@@ -111,7 +112,7 @@ void brush_alpha(hbrush b, float a);
 void brush_fx(hbrush b, int fx);
 void brush_blend(hbrush b, int bl);
 void brush_texture(hbrush b, htex t, int frame, int idx);
-htex get_brush_texture(hbrush b, int idx); // +1 ref, FreeTexture it like in blitz
+htex get_brush_texture(hbrush b, int idx); // +1 ref, free_texture it
 hbrush get_surface_brush(surf *s);
 hbrush get_entity_brush(ent e);
 
@@ -213,7 +214,7 @@ void clear_collisions(void);
 void update_world(float anim);
 void reset_entity(ent e);
 int count_collisions(ent e);
-float collision_x(ent e, int i); // i is 1-based like blitz
+float collision_x(ent e, int i);
 float collision_y(ent e, int i);
 float collision_z(ent e, int i);
 float collision_nx(ent e, int i);
@@ -241,7 +242,7 @@ ent picked_entity(void);
 surf *picked_surface(void);
 int picked_triangle(void);
 
-// ---- animation (anim.c). times are in frames, like blitz
+// ---- animation (anim.c). times are in frames
 void set_anim_time(ent e, float t, int seq);
 float anim_time(ent e);
 int anim_seq(ent e);
@@ -328,7 +329,7 @@ int read_pixel(int x, int y, int b); // argb; Fast variants are the same thing
 void write_pixel(int x, int y, int argb, int b);
 #define read_pixel_fast read_pixel
 #define write_pixel_fast write_pixel
-int count_gfx_modes3_d(void);
+int count_gfx_modes_3d(void);
 int gfx_mode_width(int i);
 int gfx_mode_height(int i);
 void hide_pointer(void);
@@ -338,7 +339,7 @@ void app_title(const char *t);
 int total_vid_mem(void);
 int avail_vid_mem(void);
 
-// ---- input (input.c). keys are directinput scancodes like blitz; mouse buttons 1 l, 2 r, 3 m
+// ---- input (input.c). keys are directinput scancodes; mouse buttons 1 l, 2 r, 3 m
 int key_down(int sc);
 int key_hit(int sc);
 void flush_keys(void);
@@ -353,9 +354,9 @@ int mouse_y_speed(void);
 int mouse_z_speed(void);
 void flush_mouse(void);
 
-// ---- misc (misc.c). rng is blitz's exact generator, so seeds build the same maps
-float frnd(float from, float to);
-int irand(int from, int to);
+// ---- misc (misc.c)
+float frnd(float lo, float hi);
+int irand(int lo, int hi);
 void seed_rnd(int seed);
 int rnd_seed(void);
 FILE *write_file(const char *p);

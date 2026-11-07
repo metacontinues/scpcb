@@ -1,4 +1,4 @@
-// shd.h: the one blitz-fixed-function-ish shader. glsl es 100 so it runs on angle es2.
+// shd.h: the one fixed-function-ish shader. glsl es 100 so it runs on angle es2.
 #pragma once
 
 static const char *shd_vs =

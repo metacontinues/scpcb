@@ -13,7 +13,7 @@ const char *rt_media(const char *real, const char *ext); // fs.c: real asset pat
 typedef struct {
 	float r, g, b, a, shine;
 	int blend, fx;
-	htex tex[BB_NTEX];
+	htex tex[RT_NTEX];
 } brush;
 
 struct surf {
@@ -89,7 +89,7 @@ void rt_dirty(ent e);
 
 brush rt_brdef(void);
 void br_ref(brush *b);   // tex refcounts: brushes keep textures alive
-void br_unref(brush *b); // like blitz, FreeTexture on an in-use tex is fine
+void br_unref(brush *b); // textures are refcounted, freeing one still in use is fine
 brush *rt_brp(hbrush b);
 mdat *rt_md(ent e); // dies if not mesh
 mdat *md_new(void);
@@ -116,7 +116,7 @@ void tex_unref(htex t);
 ent b3d_load(const char *p, ent par);
 ent x_load(const char *p, ent par);
 void coll_free(E *x);
-m3 qmat(float w, float x, float y, float z); // blitz Quat::getMatrix
+m3 qmat(float w, float x, float y, float z); // quaternion -> matrix
 void anim_pose(ent e, float t);
 void anim_step(float k);
 ent rt_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly);

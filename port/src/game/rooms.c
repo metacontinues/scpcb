@@ -33,7 +33,7 @@ float WrapAngle(float a) {
 
 void GetMeshExtents(int mesh) {
 	float lo[3] = {INFINITY, INFINITY, INFINITY}, hi[3] = {-INFINITY, -INFINITY, -INFINITY};
-	for (int s = 1; s <= count_surfaces(mesh); s++) {
+	for (int s = 0; s < count_surfaces(mesh); s++) {
 		surf *sf = get_surface(mesh, s);
 		for (int v = 0; v < count_vertices(sf); v++) {
 			float p[3] = {vertex_x(sf, v), vertex_y(sf, v), vertex_z(sf, v)};
@@ -80,8 +80,8 @@ int LoadRMesh(const char *file, RoomTemplates *rt) {
 	rmesh rm;
 	if (!rmesh_load(file, AmbientLightRoomTex, &rm)) return 0;
 	// the room's textures go in the cache, like blitz's GetTextureFromCache/AddTextureToCache did
-	ent op = get_child(rm.obj, 2);
-	for (int s = 1; s <= count_surfaces(op); s++) {
+	ent op = get_child(rm.obj, 1);
+	for (int s = 0; s < count_surfaces(op); s++) {
 		hbrush b = get_surface_brush(get_surface(op, s));
 		for (int l = 0; l < 2; l++) { htex t = get_brush_texture(b, l); if (t && t != AmbientLightRoomTex) AddTextureToCache(t); }
 		free_brush(b);
@@ -316,7 +316,7 @@ Screens *CreateScreen(float x, float y, float z, const char *imgpath, Rooms *r) 
 // ---- extents + overlap
 void CalculateRoomTemplateExtents(RoomTemplates *r) {
 	if (r->DisableOverlapCheck) return;
-	GetMeshExtents(get_child(r->obj, 2));
+	GetMeshExtents(get_child(r->obj, 1));
 	r->MinX = Mesh_MinX; r->MinY = Mesh_MinY; r->MinZ = Mesh_MinZ;
 	r->MaxX = Mesh_MaxX; r->MaxY = Mesh_MaxY; r->MaxZ = Mesh_MaxZ;
 }
@@ -466,13 +466,13 @@ void UpdateRooms(void) {
 	PlayerRoom->found = 1;
 	TempLightVolume = Max(TempLightVolume / 4.5f, 1);
 	// only draw the next room's opaque mesh through doors that are open + on screen
-	entity_alpha(get_child(PlayerRoom->obj, 2), 1);
+	entity_alpha(get_child(PlayerRoom->obj, 1), 1);
 	for (int i = 0; i <= 3; i++) {
 		Rooms *a = PlayerRoom->Adjacent[i];
 		if (!a) continue;
 		Doors *d = PlayerRoom->AdjDoor[i];
-		if (d) entity_alpha(get_child(a->obj, 2), d->openstate == 0 || !entity_in_view(d->frameobj, Camera) ? 0 : 1);
-		for (int j = 0; j <= 3; j++) if (a->Adjacent[j] && a->Adjacent[j] != PlayerRoom) entity_alpha(get_child(a->Adjacent[j]->obj, 2), 0);
+		if (d) entity_alpha(get_child(a->obj, 1), d->openstate == 0 || !entity_in_view(d->frameobj, Camera) ? 0 : 1);
+		for (int j = 0; j <= 3; j++) if (a->Adjacent[j] && a->Adjacent[j] != PlayerRoom) entity_alpha(get_child(a->Adjacent[j]->obj, 1), 0);
 	}
 }
 
