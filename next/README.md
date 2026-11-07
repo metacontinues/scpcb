@@ -3,7 +3,17 @@
 same game to play + look at, new tech. `port/` stays as the visual/behaviour reference (+ `SCPCB_SHOT` screenshots
 to diff against) until this reaches parity, then it goes.
 
+## build + run
+
+same toolchain as port/ (`./setup.sh && ninja -C build`, muon works, `-Dangle=` rpaths angle). from the repo root:
+- `next/build/bake [x.rmesh ...]` bakes into `next/data` (only stale outputs; all of GFX/map takes ~2s)
+- `next/build/view [room id]` flies around a baked room, eg `gfx/map/room2cafeteria_opt`. f fog, g ambient,
+  t/l/p trigger boxes, lights, waypoints. `VIEW_CAM="x y z tx ty tz" VIEW_SHOT=a.png VIEW_FRAME=n VIEW_FOG=0` for
+  scripted screenshots (port/build/rmview takes the same shot w/ `rmview GFX/map/x.rmesh a.png 0` from the first waypoint)
+
 ## rules
+
+- strict c99 (+ posix in tools) for our code; only the vendored libs get gnu11.
 
 - raylib types all the way down: `Vector3`/`Matrix`/`Quaternion` + raymath, `Model`/`Mesh`/`Material`/`Shader`,
   `Camera3D`, `Texture2D`/`RenderTexture2D`, `Font`, `Sound`/`Music`, `Color`, `BoundingBox`/`Ray`. no int handles, no
@@ -46,6 +56,7 @@ to diff against) until this reaches parity, then it goes.
 ## milestones
 
 1. bake: every room + model -> glb, checked in a tiny viewer (orbit cam, anim scrub).
+   rooms done: 112 baked, screenshots match port/'s rmview. models (.b3d/.x, props, npcs) next.
 2. one room rendered w/ the world shader + fog, screenshot-diffed against `port/`.
 3. map gen + rooms + doors + player controller/collision: walkable facility (= port/'s state).
 4. hud, menus, text, audio, options.
