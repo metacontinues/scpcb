@@ -74,6 +74,7 @@ float player_dark(const Player *p) {
 }
 
 void player_tick(Player *p, PlayerIn in) {
+  p->step = p->landed = 0;
   look(p, in.mouse);
   blink(p, in);
   p->stamina =
@@ -93,7 +94,10 @@ void player_tick(Player *p, PlayerIn in) {
       if (p->stamina <= 0)
         p->stamina = -20;
     }
+    float was = fmodf(p->shake, 360);
     p->shake = fmodf(p->shake + minf(sprint, 1.5f) * 7, 720);
+    if (was < 180 && fmodf(p->shake, 360) >= 180) // the head bob's low point
+      p->step = sprint != 1 ? 2 : 1;
   }
   // which way, relative to where you look: 0 ahead, 90 left, 180 back
   if (in.down)
@@ -113,8 +117,10 @@ void player_tick(Player *p, PlayerIn in) {
   if (!p->floor &&
       coll_ray(p->pos, Vector3Add(p->pos, (Vector3){0, -10, 0})).hit)
     p->drop = clampf(p->drop - .006f, -2, 0);
-  else
+  else {
+    p->landed = p->floor && p->drop < -.07f;
     p->drop = 0;
+  }
   v.y = p->drop;
   p->floor = 0;
   p->pos = coll_move(p->pos, v, RADII, p->pos.y - .25f, &p->floor);

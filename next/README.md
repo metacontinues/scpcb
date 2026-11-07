@@ -92,7 +92,12 @@ from the repo root:
    the meters only show when they matter: options.ini `hud mode = auto|always|off` (missing -> the original's
    `HUD enabled`, 1 = auto). auto: stamina once it's below full (+2 s), blink in the last third before a blink or
    while something's watching (173, once npcs exist).
-   left: menus, audio, options screens, the lamps' glow sprites, eye strain + breathing as diegetic cues.
+   audio done: every sound under SFX/ bakes to qoa (tools/bake/snd.c, ~30 s the first time, 247 MB), src/snd.c =
+   cache + 64-voice pool (raylib sound aliases) + the original's 3d (linear falloff to `range`, pan from the view
+   angle) + music crossfades (out over 250 ticks, in 10%/tick). src/sfx.c: footsteps by floor material
+   (Data/materials.ini stepsound, ray vs the room's meshes), landing, breathing when tired, the zone's ambience +
+   music. doors + buttons play theirs. options.ini [audio] volumes, keys from [binds] (or [options]).
+   left: menus, options screens, the lamps' glow sprites, eye strain before a blink.
 5. 173/106/guard/class-d, items + inventory, the events port/ already has.
 6. the rest of port/README's "left to port" list, written straight against this.
 

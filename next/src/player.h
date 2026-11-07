@@ -16,6 +16,8 @@ typedef struct {
   float speed, drop, stamina, shake, crouchstate, msx, msy;
   float blink, blinkfreq; // ticks until the next blink, < 0 while blinking
   int crouch, floor;
+  int step, landed;   // set by the tick: a footstep (1 walk, 2 run) / hit the
+                      // floor hard
   float sens, smooth; // options: mouse sensitivity, smoothing
   int invert;
 } Player;

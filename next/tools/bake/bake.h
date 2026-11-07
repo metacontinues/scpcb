@@ -67,3 +67,4 @@ const char *bake_tex(const char *path, int mode);
 int bake_room(const char *path);
 int bake_model(const char *path);
 int bake_ui(void); // ui.c: the 2d images + fonts, returns how many failed
+int bake_sounds(int *count); // snd.c: SFX/ -> qoa, returns how many failed

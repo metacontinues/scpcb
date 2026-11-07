@@ -14,6 +14,7 @@
 //   SCPCB_DEBUG=1          the debug line (f2 toggles it)
 //   SCPCB_SPRINT=1         sprint while SCPCB_WALK walks
 //   SCPCB_HUD=mode         auto|always|off, over options.ini's "hud mode"
+//   SCPCB_NOMUSIC=1        no music; SCPCB_SNDLOG=1 prints every sound played
 #define _POSIX_C_SOURCE 200809L // strcasecmp
 #include "coll.h"
 #include "door.h"
@@ -24,7 +25,9 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "rlgl.h"
+#include "sfx.h"
 #include "shd.h"
+#include "snd.h"
 #include "util.h"
 #include "world.h"
 #include <math.h>
@@ -66,6 +69,11 @@ static int hudmode(const Ini *o) {
   return !strcasecmp(m, "off")      ? HUD_OFF
          : !strcasecmp(m, "always") ? HUD_ALWAYS
                                     : HUD_AUTO;
+}
+
+// keys live in [binds] in newer options.ini files, [options] in older ones
+static int bind(const Ini *o, const char *k, int def) {
+  return ini_int(o, "binds", k, ini_int(o, "options", k, def));
 }
 
 static float envf(const char *k, float def) {
@@ -142,6 +150,11 @@ int main(void) {
   if (!shot)
     DisableCursor();
   shd_init();
+  snd_init(ini_float(&opt, "audio", "sound volume", 1),
+           getenv("SCPCB_NOMUSIC")
+               ? 0
+               : ini_float(&opt, "audio", "music volume", .5f));
+  sfx_init();
   float fogn = ini_float(&opt, "options", "camera fog near", .5f),
         fogf = ini_float(&opt, "options", "camera fog far", 6);
   if (getenv("SCPCB_NOFOG")) // dev: see past the fog
@@ -196,13 +209,13 @@ int main(void) {
     }
   }
   int click = (int)envf("SCPCB_CLICK", -1);
-  int kup = key_dik(ini_int(&opt, "options", "up key", 17)),
-      kdown = key_dik(ini_int(&opt, "options", "down key", 31)),
-      kleft = key_dik(ini_int(&opt, "options", "left key", 30)),
-      kright = key_dik(ini_int(&opt, "options", "right key", 32)),
-      ksprint = key_dik(ini_int(&opt, "options", "sprint key", 42)),
-      kblink = key_dik(ini_int(&opt, "options", "blink key", 57)),
-      kcrouch = key_dik(ini_int(&opt, "options", "crouch key", 29));
+  int kup = key_dik(bind(&opt, "up key", 17)),
+      kdown = key_dik(bind(&opt, "down key", 31)),
+      kleft = key_dik(bind(&opt, "left key", 30)),
+      kright = key_dik(bind(&opt, "right key", 32)),
+      ksprint = key_dik(bind(&opt, "sprint key", 42)),
+      kblink = key_dik(bind(&opt, "blink key", 57)),
+      kcrouch = key_dik(bind(&opt, "crouch key", 29));
   int hud = hudmode(&opt), sprintdev = getenv("SCPCB_SPRINT") != NULL;
   if (getenv("SCPCB_HUD")) { // dev: auto|always|off
     Ini o = {0};
@@ -244,6 +257,9 @@ int main(void) {
       door_coll(&w, p.pos, 4);
       player_tick(&p, in);
       door_tick(&w, player_eye(&p));
+      snd_listener(player_eye(&p), p.yaw);
+      sfx_tick(&w, &p, IsKeyDown(ksprint) || (fw && sprintdev));
+      snd_tick();
       hud_tick(&(HudIn){
           .stamina = p.stamina, .blink = p.blink, .blinkfreq = p.blinkfreq});
       acc -= 1 / TICK;
@@ -251,8 +267,11 @@ int main(void) {
     }
     btn = door_button(&w, player_eye(&p), p.pos, &btnat);
     HudIn hi = hudin(&p, btn, btnat);
-    if (btn >= 0 && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || f == click))
+    if (btn >= 0 && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || f == click)) {
+      snd_play3d("sfx/interact/button", btnat, 10, 1);
       door_use(&w, btn);
+    }
+    snd_frame();
 
     BeginDrawing();
     ClearBackground(BLACK);
@@ -278,6 +297,7 @@ int main(void) {
       break;
     }
   }
+  snd_close();
   prop_clear();
   world_free(&w);
   coll_reset();

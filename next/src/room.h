@@ -29,7 +29,8 @@ typedef struct {
 
 typedef struct {
   Model vis, col;
-  int *kind; // per vis material (MK_*)
+  int *kind;   // per vis material (MK_*)
+  char **diff; // per vis material: its texture id ("-" = none)
   RLight *lights;
   int nlights;
   RSound *sounds;

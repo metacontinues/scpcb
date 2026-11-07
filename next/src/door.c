@@ -5,8 +5,10 @@
 #include "props.h"
 #include "raylib.h"
 #include "raymath.h"
+#include "snd.h"
 #include "util.h"
 #include <math.h>
+#include <stdio.h>
 
 static Mdl *leaf, *frame, *heavy[2], *button;
 static Vector3 leafscale;
@@ -87,9 +89,20 @@ int door_button(World *w, Vector3 eye, Vector3 body, Vector3 *at) {
   return best;
 }
 
+// the original's open/close sounds: 3 of each, heavy doors have their own
+static void sound(const Door *d) {
+  char id[48];
+  snprintf(id, sizeof id, "sfx/door/door%s%s%d",
+           d->kind == DOOR_HEAVY ? "2" : "", d->open ? "open" : "close",
+           irnd(1, 3));
+  snd_play3d(id, d->pos, 10, 1);
+}
+
 void door_use(World *w, int i) {
-  if (i >= 0 && i < w->ndoors)
-    w->doors[i].open = !w->doors[i].open;
+  if (i < 0 || i >= w->ndoors)
+    return;
+  w->doors[i].open = !w->doors[i].open;
+  sound(&w->doors[i]);
 }
 
 void door_tick(World *w, Vector3 eye) {
@@ -100,6 +113,7 @@ void door_tick(World *w, Vector3 eye) {
         Vector3Distance(eye, d->pos) < 2.1f) {
       d->open = 0;
       d->autoclose = 0;
+      sound(d);
     }
   }
 }

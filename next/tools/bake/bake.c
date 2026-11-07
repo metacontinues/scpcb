@@ -123,7 +123,7 @@ int stale(const char *src, const char *out) {
   return stat(src, &a) || a.st_mtime > b.st_mtime;
 }
 
-static int nrooms, nmodels, nfail;
+static int nrooms, nmodels, nsounds, nfail;
 static int ends(const char *p, const char *e) {
   size_t l = strlen(p), k = strlen(e);
   return l >= k && !strcasecmp(p + l - k, e);
@@ -182,8 +182,9 @@ int main(int argc, char **argv) {
   else {
     walk("GFX");
     nfail += bake_ui();
+    nfail += bake_sounds(&nsounds);
   }
-  printf("bake: %d rooms, %d models, %d failed, %d warnings\n", nrooms, nmodels,
-         nfail, nwarn);
+  printf("bake: %d rooms, %d models, %d sounds, %d failed, %d warnings\n",
+         nrooms, nmodels, nsounds, nfail, nwarn);
   return nfail != 0;
 }
