@@ -10,14 +10,14 @@ static str ReadINILine(INIFile *f) {
 	while (o < f->size && (f->buf[o] == 13 || f->buf[o] == 10)) o++;
 	a = o;
 	while (o < f->size && f->buf[o] != 13 && f->buf[o] != 10) o++;
-	str r = bbMid(f->buf, a + 1, o - a);
+	str r = s_mid(f->buf, a + 1, o - a);
 	f->bankOffset = o < f->size ? o + 1 : o;
 	return r;
 }
 
 static INIFile *find(const char *name) {
-	str l = bbLower(name);
-	each(INIFile, k) if (bbSeq(k->name, l)) return k;
+	str l = s_lower(name);
+	each(INIFile, k) if (s_eq(k->name, l)) return k;
 	return NULL;
 }
 
@@ -25,114 +25,114 @@ void UpdateINIFile(const char *name) {
 	INIFile *f = find(name);
 	if (!f) return;
 	f->buf = ""; f->size = 0;
-	FILE *h = bbReadFile(f->name);
+	FILE *h = read_file(f->name);
 	if (!h) return;
-	int n = bbFileSize(f->name);
+	int n = file_size(f->name);
 	f->buf = GC_MALLOC_ATOMIC(n + 1);
 	f->size = fread(f->buf, 1, n, h);
 	f->buf[f->size] = 0;
-	bbCloseFile(h);
+	close_file(h);
 }
 
-static str val(const char *line) { return bbTrim(bbRight(line, bbLen(line) - bbInstr(line, "=", 1))); }
+static str val(const char *line) { return s_trim(s_right(line, s_len(line) - s_instr(line, "=", 1))); }
 static int iskey(const char *line, const char *par) {
-	return bbSeq(bbLower(bbTrim(bbLeft(line, Max(bbInstr(line, "=", 1) - 1, 0)))), bbLower(par));
+	return s_eq(s_lower(s_trim(s_left(line, Max(s_instr(line, "=", 1) - 1, 0)))), s_lower(par));
 }
 
 str GetINIString(const char *file, const char *section, const char *par, const char *def) {
 	INIFile *f = find(file);
-	if (!f) { f = bbNew(INIFile); f->name = bbLower(file); UpdateINIFile(f->name); }
+	if (!f) { f = lnew(INIFile); f->name = s_lower(file); UpdateINIFile(f->name); }
 	f->bankOffset = 0;
-	str sec = bbLower(section);
+	str sec = s_lower(section);
 	while (f->bankOffset < f->size) {
 		str s = ReadINILine(f);
-		if (!bbSeq(bbLeft(s, 1), "[")) continue;
-		s = bbLower(s);
-		if (!bbSeq(bbMid(s, 2, bbLen(s) - 2), sec)) continue;
+		if (!s_eq(s_left(s, 1), "[")) continue;
+		s = s_lower(s);
+		if (!s_eq(s_mid(s, 2, s_len(s) - 2), sec)) continue;
 		str t;
 		do {
 			t = ReadINILine(f);
 			if (iskey(t, par)) return val(t);
-		} while (!bbSeq(bbLeft(t, 1), "[") && f->bankOffset < f->size);
-		return bbSdup(def);
+		} while (!s_eq(s_left(t, 1), "[") && f->bankOffset < f->size);
+		return s_dup(def);
 	}
-	return bbSdup(def);
+	return s_dup(def);
 }
 static int toint(const char *t) {
-	str l = bbLower(t);
-	return bbSeq(l, "true") ? 1 : bbSeq(l, "false") ? 0 : bbInt(t);
+	str l = s_lower(t);
+	return s_eq(l, "true") ? 1 : s_eq(l, "false") ? 0 : iround(t);
 }
 int GetINIInt(const char *file, const char *section, const char *par, int def) {
-	return toint(GetINIString(file, section, par, bbStr(def)));
+	return toint(GetINIString(file, section, par, s_str(def)));
 }
 float GetINIFloat(const char *file, const char *section, const char *par, float def) {
-	return bbFloat(GetINIString(file, section, par, bbStr(def)));
+	return to_float(GetINIString(file, section, par, s_str(def)));
 }
 
 // the *2 ones read the file directly, by line number from GetINISectionLocation
 str GetINIString2(const char *file, int start, const char *par, const char *def) {
-	FILE *f = bbReadFile(file);
-	if (!f) return bbSdup(def);
-	for (int n = 1; !bbEof(f); n++) {
-		bbReadLine(f);
+	FILE *f = read_file(file);
+	if (!f) return s_dup(def);
+	for (int n = 1; !file_eof(f); n++) {
+		read_line(f);
 		if (n != start) continue;
 		str t;
 		do {
-			t = bbReadLine(f);
-			if (iskey(t, par)) { bbCloseFile(f); return val(t); }
-		} while (!bbSeq(bbLeft(t, 1), "[") && !bbEof(f));
+			t = read_line(f);
+			if (iskey(t, par)) { close_file(f); return val(t); }
+		} while (!s_eq(s_left(t, 1), "[") && !file_eof(f));
 		break;
 	}
-	bbCloseFile(f);
-	return bbSdup(def);
+	close_file(f);
+	return s_dup(def);
 }
 int GetINIInt2(const char *file, int start, const char *par, const char *def) { return toint(GetINIString2(file, start, par, def)); }
 
 int GetINISectionLocation(const char *file, const char *section) {
-	FILE *f = bbReadFile(file);
+	FILE *f = read_file(file);
 	if (!f) return 0;
-	str sec = bbLower(section);
-	for (int n = 1; !bbEof(f); n++) {
-		str s = bbReadLine(f);
-		if (!bbSeq(bbLeft(s, 1), "[")) continue;
-		s = bbLower(s);
-		int t = bbInstr(s, sec, 1);
-		if (t > 0 && (bbSeq(bbMid(s, t - 1, 1), "[") || bbSeq(bbMid(s, t - 1, 1), "|"))) { bbCloseFile(f); return n; }
+	str sec = s_lower(section);
+	for (int n = 1; !file_eof(f); n++) {
+		str s = read_line(f);
+		if (!s_eq(s_left(s, 1), "[")) continue;
+		s = s_lower(s);
+		int t = s_instr(s, sec, 1);
+		if (t > 0 && (s_eq(s_mid(s, t - 1, 1), "[") || s_eq(s_mid(s, t - 1, 1), "|"))) { close_file(f); return n; }
 	}
-	bbCloseFile(f);
+	close_file(f);
 	return 0;
 }
 
 // blitz built the file as a chr(0) separated string first; a line array does the same job
 int PutINIValue(const char *file, const char *section, const char *key, const char *value) {
-	str sec = cat("[", bbTrim(section), "]"), usec = bbUpper(sec), k = bbTrim(key), v = bbTrim(value);
+	str sec = cat("[", s_trim(section), "]"), usec = s_upper(sec), k = s_trim(key), v = s_trim(value);
 	int nl = 0, cl = 0; str *ls = NULL;
-	FILE *r = bbReadFile(file);
+	FILE *r = read_file(file);
 	if (r) {
-		while (!bbEof(r)) { if (nl >= cl) ls = GC_REALLOC(ls, sizeof *ls * (cl = cl ? cl * 2 : 64)); ls[nl++] = bbReadLine(r); }
-		bbCloseFile(r);
+		while (!file_eof(r)) { if (nl >= cl) ls = GC_REALLOC(ls, sizeof *ls * (cl = cl ? cl * 2 : 64)); ls[nl++] = read_line(r); }
+		close_file(r);
 	}
-	FILE *w = bbWriteFile(file);
+	FILE *w = write_file(file);
 	if (!w) return 0;
 	int wrote = 0, found = 0;
 	str cur = "";
-#define SECT(s) do { if (bbFilePos(w)) bbWriteLine(w, ""); bbWriteLine(w, s); } while (0)
-#define KEY() bbWriteLine(w, cat(k, " = ", v))
+#define SECT(s) do { if (file_pos(w)) write_line(w, ""); write_line(w, s); } while (0)
+#define KEY() write_line(w, cat(k, " = ", v))
 	for (int i = 0; i < nl; i++) {
 		str t = ls[i];
 		if (!*t) continue;
-		if (bbSeq(bbLeft(t, 1), "[") && bbSeq(bbRight(t, 1), "]")) {
-			if (bbSeq(cur, usec) && !wrote) { KEY(); wrote = 1; }
-			SECT(t); cur = bbUpper(t);
-			if (bbSeq(cur, usec)) found = 1;
-		} else if (bbSeq(bbLeft(t, 1), ":")) bbWriteLine(w, t);
-		else if (bbInstr(t, "=", 1)) {
-			int e = bbInstr(t, "=", 1);
-			if (bbSeq(cur, usec) && bbSeq(bbUpper(bbTrim(bbLeft(t, e - 1))), bbUpper(k))) { if (*v) KEY(); wrote = 1; }
-			else bbWriteLine(w, t);
+		if (s_eq(s_left(t, 1), "[") && s_eq(s_right(t, 1), "]")) {
+			if (s_eq(cur, usec) && !wrote) { KEY(); wrote = 1; }
+			SECT(t); cur = s_upper(t);
+			if (s_eq(cur, usec)) found = 1;
+		} else if (s_eq(s_left(t, 1), ":")) write_line(w, t);
+		else if (s_instr(t, "=", 1)) {
+			int e = s_instr(t, "=", 1);
+			if (s_eq(cur, usec) && s_eq(s_upper(s_trim(s_left(t, e - 1))), s_upper(k))) { if (*v) KEY(); wrote = 1; }
+			else write_line(w, t);
 		}
 	}
 	if (!wrote) { if (!found) SECT(sec); KEY(); }
-	bbCloseFile(w);
+	close_file(w);
 	return 1;
 }

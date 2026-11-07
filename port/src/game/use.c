@@ -3,18 +3,18 @@
 #include "g.h"
 
 #define SI SelectedItem
-static int is(const char *t) { return bbSeq(SI->itemtemplate->tempname, t); }
+static int is(const char *t) { return s_eq(SI->itemtemplate->tempname, t); }
 static void say(const char *m, int t) { Msg = (str)m; MsgTimer = t; }
-static void center(int img) { bbDrawImage(img, GraphicWidth / 2 - bbImageWidth(img) / 2, GraphicHeight / 2 - bbImageHeight(img) / 2, 0); }
+static void center(int img) { draw_image(img, GraphicWidth / 2 - image_width(img) / 2, GraphicHeight / 2 - image_height(img) / 2, 0); }
 static str quote(const char *s) { return cat("\"", s, "\""); }
-static void nostalgia(int lo, int hi) { PlaySound_Strict(LoadTempSound(sf("SFX\\SCP\\1162\\NostalgiaCancer%d.ogg", bbRand(lo, hi)))); }
+static void nostalgia(int lo, int hi) { PlaySound_Strict(LoadTempSound(sf("SFX\\SCP\\1162\\NostalgiaCancer%d.ogg", irand(lo, hi)))); }
 
 // the progress bar a kit/vest/suit shows while you put it on
 static void progress(float per) {
 	center(SI->itemtemplate->invimg);
 	int w = 300, h = 20, x = GraphicWidth / 2 - w / 2, y = GraphicHeight / 2 + 80;
-	bbRect(x, y, w + 4, h, 0);
-	for (int i = 1; i <= bbInt((w - 2) * (SI->state / 100) / 10); i++) bbDrawImage(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3, 0);
+	draw_rect(x, y, w + 4, h, 0);
+	for (int i = 1; i <= iround((w - 2) * (SI->state / 100) / 10); i++) draw_image(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3, 0);
 	SI->state = Min(SI->state + FPSfactor / per, 100);
 }
 
@@ -31,8 +31,8 @@ static void goggles(int kind) {
 
 static int touch1123(void) { // returns 1 for blitz's Return
 	if (Wearing714 == 1) return 0;
-	if (!bbSeq(PlayerRoom->RoomTemplate->Name, "room1123")) {
-		bbShowEntity(Light); LightFlash = 7;
+	if (!s_eq(PlayerRoom->RoomTemplate->Name, "room1123")) {
+		show_entity(Light); LightFlash = 7;
 		PlaySound_Strict(LoadTempSound("SFX\\SCP\\1123\\Touch.ogg"));
 		DeathMSG = "Subject D-9341 was shot dead after attempting to attack a member of Nine-Tailed Fox. Surveillance tapes show that the subject had been "
 			"wandering around the site approximately 9 minutes prior, shouting the phrase \"get rid of the four pests\""
@@ -43,7 +43,7 @@ static int touch1123(void) { // returns 1 for blitz's Return
 	}
 	Events *e = FindEvent("room1123");
 	if (e) {
-		if (e->EventState == 0) { bbShowEntity(Light); LightFlash = 3; PlaySound_Strict(LoadTempSound("SFX\\SCP\\1123\\Touch.ogg")); }
+		if (e->EventState == 0) { show_entity(Light); LightFlash = 3; PlaySound_Strict(LoadTempSound("SFX\\SCP\\1123\\Touch.ogg")); }
 		e->EventState = Max(1, e->EventState);
 	}
 	return 0;
@@ -61,20 +61,20 @@ static void scp500(void) {
 
 static void veryfinekit(void) {
 	if (!CanUseItem(0, 0, 1)) return;
-	switch (bbRand(5, 1)) {
+	switch (irand(5, 1)) {
 	case 1: Injuries = 3.5f; say("You started bleeding heavily.", 70 * 7); break;
 	case 2: Injuries = 0; Bloodloss = 0; say("Your wounds are healing up rapidly.", 70 * 7); break;
-	case 3: Injuries = Max(0, Injuries - bbRnd(.5f, 3.5f)); Bloodloss = Max(0, Bloodloss - bbRnd(10, 100)); say("You feel much better.", 70 * 7); break;
+	case 3: Injuries = Max(0, Injuries - frnd(.5f, 3.5f)); Bloodloss = Max(0, Bloodloss - frnd(10, 100)); say("You feel much better.", 70 * 7); break;
 	case 4: BlurTimer = 10000; Bloodloss = 0; say("You feel nauseated.", 70 * 7); break;
 	case 5: {
 		BlinkTimer = -10;
 		str rn = PlayerRoom->RoomTemplate->Name;
-		if (bbSeq(rn, "dimension1499") || bbSeq(rn, "gatea") || (bbSeq(rn, "exit1") && bbEntityY(Collider, 0) > 1040 * RoomScale)) {
+		if (s_eq(rn, "dimension1499") || s_eq(rn, "gatea") || (s_eq(rn, "exit1") && entity_y(Collider, 0) > 1040 * RoomScale)) {
 			Injuries = 2.5f; say("You started bleeding heavily.", 70 * 7);
 		} else {
-			each(Rooms, r) if (bbSeq(r->RoomTemplate->Name, "pocketdimension")) {
-				bbPositionEntity(Collider, bbEntityX(r->obj, 0), .8f, bbEntityZ(r->obj, 0), 0);
-				bbResetEntity(Collider);
+			each(Rooms, r) if (s_eq(r->RoomTemplate->Name, "pocketdimension")) {
+				position_entity(Collider, entity_x(r->obj, 0), .8f, entity_z(r->obj, 0), 0);
+				reset_entity(Collider);
 				UpdateDoors(); UpdateRooms();
 				PlaySound_Strict(Use914SFX);
 				DropSpeed = 0;
@@ -105,17 +105,17 @@ static void firstaid(void) {
 		RemoveItem(SI);
 		return;
 	}
-	Bloodloss = Max(0, Bloodloss - bbRand(10, 20));
-	if (Injuries >= 2.5f) { Msg = "The wounds were way too severe to staunch the bleeding completely."; Injuries = Max(2.5f, Injuries - bbRnd(.3f, .7f)); }
+	Bloodloss = Max(0, Bloodloss - irand(10, 20));
+	if (Injuries >= 2.5f) { Msg = "The wounds were way too severe to staunch the bleeding completely."; Injuries = Max(2.5f, Injuries - frnd(.3f, .7f)); }
 	else if (Injuries > 1) {
-		Injuries = Max(.5f, Injuries - bbRnd(.5f, 1));
+		Injuries = Max(.5f, Injuries - frnd(.5f, 1));
 		Msg = Injuries > 1 ? "You bandaged the wounds but were unable to staunch the bleeding completely." : "You managed to stop the bleeding.";
 	} else { Msg = Injuries > .5f ? "You took a painkiller, easing the pain slightly." : "You took a painkiller, but it still hurts to walk."; Injuries = .5f; }
-	if (is("firstaid2")) switch (bbRand(6, 1)) {
+	if (is("firstaid2")) switch (irand(6, 1)) {
 		case 1: SuperMan = 1; Msg = "You have becomed overwhelmedwithadrenalineholyshitWOOOOOO~!"; break;
 		case 2: InvertMouse = !InvertMouse; Msg = "You suddenly find it very difficult to turn your head."; break;
 		case 3: BlurTimer = 5000; Msg = "You feel nauseated."; break;
-		case 4: BlinkEffect = .6f; BlinkEffectTimer = bbRand(20, 30); break;
+		case 4: BlinkEffect = .6f; BlinkEffectTimer = irand(20, 30); break;
 		case 5: Bloodloss = 0; Injuries = 0; Msg = "You bandaged the wounds. The bleeding stopped completely and you feel fine."; break;
 		case 6: Msg = "You bandaged the wounds and blood started pouring heavily through the bandages."; Injuries = 3.5f; break;
 	}
@@ -125,29 +125,29 @@ static void firstaid(void) {
 
 static void eyedrops(float effect, int lo, int hi, float blood) {
 	if (!CanUseItem(0, 0, 0)) return;
-	if (Wearing714 != 1) { BlinkEffect = effect; BlinkEffectTimer = bbRand(lo, hi); Bloodloss = blood ? Max(Bloodloss - blood, 0) : Bloodloss; BlurTimer = 200; }
+	if (Wearing714 != 1) { BlinkEffect = effect; BlinkEffectTimer = irand(lo, hi); Bloodloss = blood ? Max(Bloodloss - blood, 0) : Bloodloss; BlurTimer = 200; }
 	RemoveItem(SI);
 }
 
 static void loaddoc(void) { // paper/ticket: build the readable image the first time
 	ItemTemplates *t = SI->itemtemplate;
 	str n = t->name;
-	if (bbSeq(n, "Burnt Note")) { // the 0x code written over it
+	if (s_eq(n, "Burnt Note")) { // the 0x code written over it
 		t->img = LoadImage_Strict("GFX\\items\\bn.it");
-		bbSetBuffer(bbImageBuffer(t->img, 0));
-		bbColor(0, 0, 0); AAText(277, 469, bbStr(AccessCode), 1, 1); bbColor(255, 255, 255);
-		bbSetBuffer(bbBackBuffer());
-	} else if (bbSeq(n, "Document SCP-372")) {
+		set_buffer(image_buffer(t->img, 0));
+		set_color(0, 0, 0); AAText(277, 469, s_str(AccessCode), 1, 1); set_color(255, 255, 255);
+		set_buffer(back_buffer());
+	} else if (s_eq(n, "Document SCP-372")) {
 		t->img = LoadImage_Strict(t->imgpath);
-		t->img = ResizeImage2(t->img, bbInt(bbImageWidth(t->img) * MenuScale), bbInt(bbImageHeight(t->img) * MenuScale));
-		bbSetBuffer(bbImageBuffer(t->img, 0));
-		bbColor(37, 45, 137); AASetFont(Font5);
+		t->img = ResizeImage2(t->img, iround(image_width(t->img) * MenuScale), iround(image_height(t->img) * MenuScale));
+		set_buffer(image_buffer(t->img, 0));
+		set_color(37, 45, 137); AASetFont(Font5);
 		int temp = AccessCode * 3 % 10000;
 		if (temp < 1000) temp += 1000;
-		AAText(bbInt(383 * MenuScale), bbInt(734 * MenuScale), bbStr(temp), 1, 1);
-		bbColor(255, 255, 255);
-		bbSetBuffer(bbBackBuffer());
-	} else if (bbSeq(n, "Movie Ticket")) { // not resized, it'd break the masking
+		AAText(iround(383 * MenuScale), iround(734 * MenuScale), s_str(temp), 1, 1);
+		set_color(255, 255, 255);
+		set_buffer(back_buffer());
+	} else if (s_eq(n, "Movie Ticket")) { // not resized, it'd break the masking
 		t->img = LoadImage_Strict(t->imgpath);
 		if (SI->state == 0) {
 			Msg = quote("Hey, I remember this movie!"); MsgTimer = 70 * 10;
@@ -156,16 +156,16 @@ static void loaddoc(void) { // paper/ticket: build the readable image the first 
 		}
 	} else {
 		t->img = LoadImage_Strict(t->imgpath);
-		t->img = ResizeImage2(t->img, bbInt(bbImageWidth(t->img) * MenuScale), bbInt(bbImageHeight(t->img) * MenuScale));
+		t->img = ResizeImage2(t->img, iround(image_width(t->img) * MenuScale), iround(image_height(t->img) * MenuScale));
 	}
-	bbMaskImage(t->img, 255, 0, 255);
+	mask_image(t->img, 255, 0, 255);
 }
 
 static void cigarette(void) {
 	if (!CanUseItem(0, 0, 1)) return;
 	if (SI->state == 0) {
 		int gone = 0;
-		switch (bbRand(6, 1)) {
+		switch (irand(6, 1)) {
 		case 1: Msg = quote("I don't have anything to light it with. Umm, what about that... Nevermind."); break;
 		case 2: Msg = "You are unable to get lit."; break;
 		case 3: Msg = quote("I quit that a long time ago."); gone = 1; break;
@@ -248,8 +248,8 @@ static void readable(int resize) { // badge/oldpaper: load + mask the image once
 	ItemTemplates *t = SI->itemtemplate;
 	if (!t->img) {
 		t->img = LoadImage_Strict(t->imgpath);
-		if (resize) t->img = ResizeImage2(t->img, bbInt(bbImageWidth(t->img) * MenuScale), bbInt(bbImageHeight(t->img) * MenuScale));
-		bbMaskImage(t->img, 255, 0, 255);
+		if (resize) t->img = ResizeImage2(t->img, iround(image_width(t->img) * MenuScale), iround(image_height(t->img) * MenuScale));
+		mask_image(t->img, 255, 0, 255);
 	}
 	center(t->img);
 }
@@ -258,10 +258,10 @@ static void syringe(int fine) {
 	if (!CanUseItem(0, 1, 1)) return;
 	if (fine == 0) { HealTimer = 30; StaminaEffect = .5f; StaminaEffectTimer = 20; Msg = "You injected yourself with the syringe and feel a slight adrenaline rush."; }
 	else if (fine == 1) {
-		HealTimer = bbRnd(20, 40); StaminaEffect = bbRnd(.5f, .8f); StaminaEffectTimer = bbRnd(20, 30);
+		HealTimer = frnd(20, 40); StaminaEffect = frnd(.5f, .8f); StaminaEffectTimer = frnd(20, 30);
 		Msg = "You injected yourself with the syringe and feel an adrenaline rush.";
-	} else switch (bbRand(3, 1)) {
-		case 1: HealTimer = bbRnd(40, 60); StaminaEffect = .1f; StaminaEffectTimer = 30; Msg = "You injected yourself with the syringe and feel a huge adrenaline rush."; break;
+	} else switch (irand(3, 1)) {
+		case 1: HealTimer = frnd(40, 60); StaminaEffect = .1f; StaminaEffectTimer = 30; Msg = "You injected yourself with the syringe and feel a huge adrenaline rush."; break;
 		case 2: SuperMan = 1; Msg = "You injected yourself with the syringe and feel a humongous adrenaline rush."; break;
 		case 3: VomitTimer = 30; Msg = "You injected yourself with the syringe and feel a pain in your stomach."; break;
 	}
@@ -282,7 +282,7 @@ static void select_(void) { // the per-item Select. SelectedItem is non-NULL her
 		|| is("hand") || is("hand2") || is("25ct")) center(SI->itemtemplate->invimg);
 	else if (is("scp513")) {
 		PlaySound_Strict(LoadTempSound("SFX\\SCP\\513\\Bell1.ogg"));
-		if (!bbLive(Curr5131)) Curr5131 = CreateNPC(NPCtype5131, 0, 0, 0);
+		if (!llive(Curr5131)) Curr5131 = CreateNPC(NPCtype5131, 0, 0, 0);
 		SI = NULL;
 	} else if (is("scp500")) scp500();
 	else if (is("veryfinefirstaid")) veryfinekit();
@@ -313,7 +313,7 @@ static void select_(void) { // the per-item Select. SelectedItem is non-NULL her
 		readable(0);
 		if (SI->state == 0) {
 			nostalgia(6, 10);
-			if (bbSeq(SI->itemtemplate->name, "Old Badge")) { Msg = quote("Huh? This guy looks just like me!"); MsgTimer = 70 * 10; }
+			if (s_eq(SI->itemtemplate->name, "Old Badge")) { Msg = quote("Huh? This guy looks just like me!"); MsgTimer = 70 * 10; }
 			SI->state = 1;
 		}
 	} else if (is("key")) {
@@ -321,7 +321,7 @@ static void select_(void) { // the per-item Select. SelectedItem is non-NULL her
 		SI->state = 1; SI = NULL;
 	} else if (is("oldpaper")) {
 		readable(1);
-		if (SI->state == 0 && bbSeq(SI->itemtemplate->name, "Disciplinary Hearing DH-S-4137-17092")) {
+		if (SI->state == 0 && s_eq(SI->itemtemplate->name, "Disciplinary Hearing DH-S-4137-17092")) {
 			BlurTimer = 1000;
 			Msg = quote("Why does this seem so familiar?"); MsgTimer = 70 * 10;
 			nostalgia(6, 10);
@@ -349,17 +349,17 @@ static void select_(void) { // the per-item Select. SelectedItem is non-NULL her
 	// and Default: items w/ invSlots open the clipboard/wallet screen (OtherOpen)
 }
 
-static int isdoc(Items *it) { str t = it->itemtemplate->tempname; return bbSeq(t, "paper") || bbSeq(t, "badge") || bbSeq(t, "oldpaper") || bbSeq(t, "ticket"); }
+static int isdoc(Items *it) { str t = it->itemtemplate->tempname; return s_eq(t, "paper") || s_eq(t, "badge") || s_eq(t, "oldpaper") || s_eq(t, "ticket"); }
 
 // returns 1 for blitz's Return out of DrawGUI
 int UseItem(void) {
 	if (is("1123")) { if (touch1123()) return 1; }
 	else select_();
 	if (SI && SI->itemtemplate->img && isdoc(SI)) // only one document image stays loaded
-		each(Items, a) if (a != SI && isdoc(a) && a->itemtemplate->img && a->itemtemplate->img != SI->itemtemplate->img) { bbFreeImage(a->itemtemplate->img); a->itemtemplate->img = 0; }
+		each(Items, a) if (a != SI && isdoc(a) && a->itemtemplate->img && a->itemtemplate->img != SI->itemtemplate->img) { free_image(a->itemtemplate->img); a->itemtemplate->img = 0; }
 	if (!SI || !MouseHit2) return 0;
-	bbEntityAlpha(Dark, 0); // right click puts it away
-	if (is("scp1025")) { if (SI->itemtemplate->img) bbFreeImage(SI->itemtemplate->img); SI->itemtemplate->img = 0; }
+	entity_alpha(Dark, 0); // right click puts it away
+	if (is("scp1025")) { if (SI->itemtemplate->img) free_image(SI->itemtemplate->img); SI->itemtemplate->img = 0; }
 	else if (is("firstaid") || is("finefirstaid") || is("firstaid2")) SI->state = 0;
 	else if (is("vest") || is("finevest")) { SI->state = 0; if (!WearingVest) DropItem(SI, 0); }
 	else if (is("hazmatsuit") || is("hazmatsuit2") || is("hazmatsuit3")) { SI->state = 0; if (!WearingHazmat) DropItem(SI, 0); }

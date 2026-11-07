@@ -13,13 +13,13 @@ void InitMusic(void) {
 
 void UpdateMusic(void) {
 	if (ConsoleFlush) {
-		if (!bbChannelPlaying(ConsoleMusPlay)) ConsoleMusPlay = bbPlaySound(ConsoleMusFlush);
+		if (!channel_playing(ConsoleMusPlay)) ConsoleMusPlay = play_sound(ConsoleMusFlush);
 		return;
 	}
 	if (PlayCustomMusic) {
 		if (FPSfactor > 0 || OptionsMenu == 2) {
-			if (!bbChannelPlaying(MusicCHN)) MusicCHN = PlaySound_Strict(CustomMusic);
-			bbChannelVolume(MusicCHN, MusicVolume);
+			if (!channel_playing(MusicCHN)) MusicCHN = PlaySound_Strict(CustomMusic);
+			channel_volume(MusicCHN, MusicVolume);
 		}
 		return;
 	}

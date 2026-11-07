@@ -14,5 +14,5 @@ void InitKeyName(void) {
 		[184] = "Right Alt", [200] = "Up", [203] = "Left", [205] = "Right", [208] = "Down",
 	};
 	for (int i = 0; i < 212; i++) KeyName[i] = (str)(t[i] ? t[i] : "");
-	for (int i = 2; i <= 10; i++) KeyName[i] = bbStr(i - 1);
+	for (int i = 2; i <= 10; i++) KeyName[i] = s_str(i - 1);
 }

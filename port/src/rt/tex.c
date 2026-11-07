@@ -7,7 +7,7 @@
 static tex *ts;
 static int nts, cts;
 
-tex *bb_t(htex t) {
+tex *rt_t(htex t) {
 	if (!t) return NULL;
 	if (t < 0 || t >= nts || !ts[t].used) die("bad texture handle %d", t);
 	return &ts[t];
@@ -36,9 +36,9 @@ static htex upload(Image im, int flags, const char *name) {
 }
 
 static Image texload(const char *p, int flags) {
-	const char *r = bbPath(p);
+	const char *r = res_path(p);
 	if (!r || DirectoryExists(r)) return (Image){0};
-	Image im = bb_loadimg(r);
+	Image im = rt_loadimg(r);
 	if (!im.data) return im;
 	int hasa = im.format == PIXELFORMAT_UNCOMPRESSED_R8G8B8A8 || im.format == PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA;
 	ImageFormat(&im, PIXELFORMAT_UNCOMPRESSED_R8G8B8A8);
@@ -50,12 +50,12 @@ static Image texload(const char *p, int flags) {
 	}
 	return im;
 }
-htex bbLoadTexture(const char *p, int flags) {
+htex load_texture(const char *p, int flags) {
 	Image im = texload(p, flags);
 	return im.data ? upload(im, (flags ? flags : TF_COLOR) | TF_MIP, p) : 0; // always mip, looks like blitz
 }
 // frames are fw x fh cells, left to right then down, like blitz. each frame is its own gl texture
-htex bbLoadAnimTexture(const char *p, int flags, int fw, int fh, int first, int count) {
+htex load_anim_texture(const char *p, int flags, int fw, int fh, int first, int count) {
 	Image im = texload(p, flags);
 	if (!im.data || fw <= 0 || fh <= 0 || count < 1) { UnloadImage(im); return 0; }
 	int per = im.width / fw, f = flags ? flags : TF_COLOR;
@@ -66,37 +66,37 @@ htex bbLoadAnimTexture(const char *p, int flags, int fw, int fh, int first, int 
 		h[i] = upload(ImageFromImage(im, (Rectangle){k % per * fw, k / per * fh, fw, fh}), f | TF_MIP, p);
 	}
 	UnloadImage(im);
-	tex *t = bb_t(h[0]);
+	tex *t = rt_t(h[0]);
 	t->nf = count - 1;
 	t->fr = malloc(sizeof(htex) * count);
 	memcpy(t->fr, h + 1, sizeof(htex) * (count - 1));
 	return h[0];
 }
-htex bb_texframe(htex h, int f) {
+htex rt_texframe(htex h, int f) {
 	if (!h || f <= 0) return h;
-	tex *t = bb_t(h);
+	tex *t = rt_t(h);
 	return f <= t->nf ? t->fr[f - 1] : h;
 }
 
-htex bbCreateTexture(int w, int h, int flags, int frames) {
+htex create_texture(int w, int h, int flags, int frames) {
 	(void)frames;
 	return upload(GenImageColor(w, h, BLACK), flags, "");
 }
 
-void bbTextureFill(htex h, int r, int g, int b, int a) {
-	tex *t = bb_t(h);
+void texture_fill(htex h, int r, int g, int b, int a) {
+	tex *t = rt_t(h);
 	int n = t->t.width * t->t.height;
 	unsigned char *px = malloc(n * 4);
 	for (int i = 0; i < n; i++) px[i*4] = r, px[i*4+1] = g, px[i*4+2] = b, px[i*4+3] = a;
 	UpdateTexture(t->t, px);
 	free(px);
-	bb_g2dtouch();
+	rt_g2dtouch();
 }
 
-void tex_ref(htex h) { if (h) bb_t(h)->rc++; }
+void tex_ref(htex h) { if (h) rt_t(h)->rc++; }
 void tex_unref(htex h) {
 	if (!h) return;
-	tex *t = bb_t(h);
+	tex *t = rt_t(h);
 	if (--t->rc > 0) return;
 	if (t->hasrt) UnloadRenderTexture(t->rt); else UnloadTexture(t->t);
 	t->used = 0;
@@ -105,19 +105,19 @@ void tex_unref(htex h) {
 	free(fr);
 }
 // handle drop; brushes may still hold it.
-void bbFreeTexture(htex h) { tex_unref(h); }
+void free_texture(htex h) { tex_unref(h); }
 
-void bbTextureBlend(htex h, int b) { if (h) bb_t(h)->blend = b; }
-void bbTextureCoords(htex h, int s) { if (h) bb_t(h)->coords = s; }
-void bbScaleTexture(htex h, float u, float v) { tex *t = bb_t(h); t->su = u; t->sv = v; }
-void bbPositionTexture(htex h, float u, float v) { tex *t = bb_t(h); t->u0 = u; t->v0 = v; }
-int bbTextureWidth(htex h) { return bb_t(h)->w; }
-int bbTextureHeight(htex h) { return bb_t(h)->h; }
-const char *bbTextureName(htex h) { return h ? bb_t(h)->name : ""; }
-void bbTextureLodBias(float b) { (void)b; }
+void texture_blend(htex h, int b) { if (h) rt_t(h)->blend = b; }
+void texture_coords(htex h, int s) { if (h) rt_t(h)->coords = s; }
+void scale_texture(htex h, float u, float v) { tex *t = rt_t(h); t->su = u; t->sv = v; }
+void position_texture(htex h, float u, float v) { tex *t = rt_t(h); t->u0 = u; t->v0 = v; }
+int texture_width(htex h) { return rt_t(h)->w; }
+int texture_height(htex h) { return rt_t(h)->h; }
+const char *texture_name(htex h) { return h ? rt_t(h)->name : ""; }
+void texture_lod_bias(float b) { (void)b; }
 
 // images come from assetconv's qoi copies (it decodes png/jpg/bmp/dds, incl. the jpgs the game hides as .dc/.pt)
-Image bb_loadimg(const char *path) {
-	const char *q = bb_media(path, "qoi");
+Image rt_loadimg(const char *path) {
+	const char *q = rt_media(path, "qoi");
 	return q ? LoadImage(q) : (Image){0};
 }

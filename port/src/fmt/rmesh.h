@@ -1,7 +1,7 @@
 // rmesh.h: scpcb room meshes. mirrors LoadRMesh in MapSystem.bb, minus the
 // game-side bits (lights/waypoints/etc come back as plain records).
 #pragma once
-#include "../bb/bb.h"
+#include "../rt/rt.h"
 
 enum { RP_SCREEN, RP_WAYPOINT, RP_LIGHT, RP_SPOT, RP_SOUND, RP_START, RP_MODEL };
 

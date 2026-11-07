@@ -2,7 +2,7 @@
 // 6.2's config.h #ifndef-guards every flag and the modules test `#if SUPPORT_X`, so this only lists what differs:
 // the formats the game loads (qoi, qoa, ttf) stay on. assets are converted by tools/assetconv.c (which has its own
 // decoders), so no png/jpg/bmp/dds/gif/ogg/mp3/wav decoders end up in the game. stb_image_write still comes in
-// w/ SUPPORT_IMAGE_EXPORT, bb/sys.c uses it for BB_SHOT. don't define CONFIG_H here, config.h has to run after this.
+// w/ SUPPORT_IMAGE_EXPORT, bb/sys.c uses it for SCPCB_SHOT. don't define CONFIG_H here, config.h has to run after this.
 #pragma once
 
 // rcore: no cameras/gestures/f12 captures/clipboard/automation, the runtime does its own input + screenshots

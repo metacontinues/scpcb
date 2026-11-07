@@ -1,14 +1,14 @@
 // in.h: runtime internals, shared by src/bb and src/fmt. not for game code.
 #pragma once
-#include "bb.h"
+#include "rt.h"
 #include "raylib.h"
 
 #define die(...) (fprintf(stderr, "bb: " __VA_ARGS__), fputc('\n', stderr), exit(1))
 #define grow(p, n, cap) do { if ((n) >= (cap)) { (cap) = (cap) ? (cap)*2 : 16; \
 	(p) = realloc((p), sizeof *(p) * (cap)); } } while (0)
 
-Image bb_loadimg(const char *path); // tex.c: loads the converted .qoi of a real asset path
-const char *bb_media(const char *real, const char *ext); // fs.c: real asset path -> its converted copy, NULL if missing
+Image rt_loadimg(const char *path); // tex.c: loads the converted .qoi of a real asset path
+const char *rt_media(const char *real, const char *ext); // fs.c: real asset path -> its converted copy, NULL if missing
 
 typedef struct {
 	float r, g, b, a, shine;
@@ -78,20 +78,20 @@ typedef struct {
 	struct ctri *ct; int nct; tf ctf; unsigned cver; v3 clo, chi; // world tri cache + aabb
 } E;
 
-extern E *bb_ents;
-extern int bb_nents;
-extern float bb_amb[3];
+extern E *rt_ents;
+extern int rt_nents;
+extern float rt_amb[3];
 
-E *bb_e(ent e); // checked lookup, dies on bad handle
-ent bb_new(int kind, ent par);
-tf bb_wt(ent e);
-void bb_dirty(ent e);
+E *rt_e(ent e); // checked lookup, dies on bad handle
+ent rt_new(int kind, ent par);
+tf rt_wt(ent e);
+void rt_dirty(ent e);
 
-brush bb_brdef(void);
+brush rt_brdef(void);
 void br_ref(brush *b);   // tex refcounts: brushes keep textures alive
 void br_unref(brush *b); // like blitz, FreeTexture on an in-use tex is fine
-brush *bb_brp(hbrush b);
-mdat *bb_md(ent e); // dies if not mesh
+brush *rt_brp(hbrush b);
+mdat *rt_md(ent e); // dies if not mesh
 mdat *md_new(void);
 surf *md_addsurf(mdat *m, brush br);
 mdat *md_copy(mdat *m);
@@ -107,9 +107,9 @@ typedef struct {
 	htex *fr; int nf; // LoadAnimTexture: frames 1.. (frame 0 is this texture)
 	char name[256];
 } tex;
-htex bb_texframe(htex t, int f);
-void bb_g2dtouch(void); // g2d.c: pixels of some buffer changed
-tex *bb_t(htex t); // NULL for 0
+htex rt_texframe(htex t, int f);
+void rt_g2dtouch(void); // g2d.c: pixels of some buffer changed
+tex *rt_t(htex t); // NULL for 0
 void tex_ref(htex t);
 void tex_unref(htex t);
 // format loaders (src/fmt): return the root node tree
@@ -119,8 +119,8 @@ void coll_free(E *x);
 m3 qmat(float w, float x, float y, float z); // blitz Quat::getMatrix
 void anim_pose(ent e, float t);
 void anim_step(float k);
-ent bb_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly);
-void bb_frame(void); // BeginDrawing once per frame
+ent rt_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly);
+void rt_frame(void); // BeginDrawing once per frame
 void g2d_end(void); // leave any texture/image target, back to the screen
 void input_update(void);
 void snd_update(void);

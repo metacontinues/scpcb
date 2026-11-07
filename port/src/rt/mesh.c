@@ -9,7 +9,7 @@
 // ---- brushes
 static brush *bs; static char *bused; static int nbs, cbs;
 
-brush bb_brdef(void) { return (brush){.r = 1, .g = 1, .b = 1, .a = 1}; }
+brush rt_brdef(void) { return (brush){.r = 1, .g = 1, .b = 1, .a = 1}; }
 void br_ref(brush *b) { for (int i = 0; i < BB_NTEX; i++) tex_ref(b->tex[i]); }
 void br_unref(brush *b) { for (int i = 0; i < BB_NTEX; i++) tex_unref(b->tex[i]); }
 static void br_settex(brush *b, htex t, int i) {
@@ -18,7 +18,7 @@ static void br_settex(brush *b, htex t, int i) {
 }
 static void br_assign(brush *d, brush s) { br_ref(&s); br_unref(d); *d = s; }
 
-brush *bb_brp(hbrush h) {
+brush *rt_brp(hbrush h) {
 	if (h <= 0 || h >= nbs || !bused[h]) die("bad brush handle %d", h);
 	return &bs[h];
 }
@@ -31,34 +31,34 @@ static hbrush br_new(brush b) {
 	bs[h] = b; bused[h] = 1;
 	return h;
 }
-hbrush bbCreateBrush(float r, float g, float b) {
-	brush x = bb_brdef();
+hbrush create_brush(float r, float g, float b) {
+	brush x = rt_brdef();
 	x.r = r/255; x.g = g/255; x.b = b/255;
 	return br_new(x);
 }
-void bbFreeBrush(hbrush h) { if (!h) return; br_unref(bb_brp(h)); bused[h] = 0; }
-void bbBrushColor(hbrush h, float r, float g, float b) { brush *x = bb_brp(h); x->r = r/255; x->g = g/255; x->b = b/255; }
-void bbBrushAlpha(hbrush h, float a) { bb_brp(h)->a = a; }
-void bbBrushFX(hbrush h, int fx) { bb_brp(h)->fx = fx; }
-void bbBrushBlend(hbrush h, int bl) { bb_brp(h)->blend = bl; }
-void bbBrushTexture(hbrush h, htex t, int fr, int i) { br_settex(bb_brp(h), bb_texframe(t, fr), i); }
+void free_brush(hbrush h) { if (!h) return; br_unref(rt_brp(h)); bused[h] = 0; }
+void brush_color(hbrush h, float r, float g, float b) { brush *x = rt_brp(h); x->r = r/255; x->g = g/255; x->b = b/255; }
+void brush_alpha(hbrush h, float a) { rt_brp(h)->a = a; }
+void brush_fx(hbrush h, int fx) { rt_brp(h)->fx = fx; }
+void brush_blend(hbrush h, int bl) { rt_brp(h)->blend = bl; }
+void brush_texture(hbrush h, htex t, int fr, int i) { br_settex(rt_brp(h), rt_texframe(t, fr), i); }
 // like blitz, the caller gets its own reference and is expected to FreeTexture it
-htex bbGetBrushTexture(hbrush h, int i) { htex t = i >= 0 && i < BB_NTEX ? bb_brp(h)->tex[i] : 0; tex_ref(t); return t; }
-hbrush bbGetSurfaceBrush(surf *s) { return br_new(s->br); }
-hbrush bbGetEntityBrush(ent e) { return br_new(bb_e(e)->br); }
+htex get_brush_texture(hbrush h, int i) { htex t = i >= 0 && i < BB_NTEX ? rt_brp(h)->tex[i] : 0; tex_ref(t); return t; }
+hbrush get_surface_brush(surf *s) { return br_new(s->br); }
+hbrush get_entity_brush(ent e) { return br_new(rt_e(e)->br); }
 
-void bbEntityColor(ent e, float r, float g, float b) { E *x = bb_e(e); x->br.r = r/255; x->br.g = g/255; x->br.b = b/255; }
-void bbEntityAlpha(ent e, float a) { bb_e(e)->br.a = a; }
-void bbEntityShininess(ent e, float s) { bb_e(e)->br.shine = s; }
-void bbEntityFX(ent e, int fx) { bb_e(e)->br.fx = fx; }
-void bbEntityBlend(ent e, int bl) { bb_e(e)->br.blend = bl; }
-void bbEntityTexture(ent e, htex t, int fr, int i) { E *x = bb_e(e); br_settex(&x->br, bb_texframe(t, fr), i); x->hasbr = 1; }
-void bbEntityOrder(ent e, int o) { bb_e(e)->order = o; }
-void bbPaintEntity(ent e, hbrush h) { E *x = bb_e(e); br_assign(&x->br, *bb_brp(h)); x->hasbr = 1; }
+void entity_color(ent e, float r, float g, float b) { E *x = rt_e(e); x->br.r = r/255; x->br.g = g/255; x->br.b = b/255; }
+void entity_alpha(ent e, float a) { rt_e(e)->br.a = a; }
+void entity_shininess(ent e, float s) { rt_e(e)->br.shine = s; }
+void entity_fx(ent e, int fx) { rt_e(e)->br.fx = fx; }
+void entity_blend(ent e, int bl) { rt_e(e)->br.blend = bl; }
+void entity_texture(ent e, htex t, int fr, int i) { E *x = rt_e(e); br_settex(&x->br, rt_texframe(t, fr), i); x->hasbr = 1; }
+void entity_order(ent e, int o) { rt_e(e)->order = o; }
+void paint_entity(ent e, hbrush h) { E *x = rt_e(e); br_assign(&x->br, *rt_brp(h)); x->hasbr = 1; }
 
 // ---- mesh data
 mdat *md_new(void) { mdat *m = calloc(1, sizeof *m); m->rc = 1; m->bdirty = 1; return m; }
-mdat *bb_md(ent e) { E *x = bb_e(e); if (!x->md) die("entity %d is not a mesh", e); return x->md; }
+mdat *rt_md(ent e) { E *x = rt_e(e); if (!x->md) die("entity %d is not a mesh", e); return x->md; }
 
 surf *md_addsurf(mdat *m, brush br) {
 	surf *s = calloc(1, sizeof *s);
@@ -140,22 +140,22 @@ void surf_upload(surf *s) {
 }
 
 // ---- entity-level mesh api
-ent bbCreateMesh(ent par) { ent e = bb_new(EK_MESH, par); bb_e(e)->md = md_new(); return e; }
-ent bbCopyMesh(ent e, ent par) {
-	ent n = bbCreateMesh(par);
-	md_unref(bb_e(n)->md);
-	bb_e(n)->md = md_copy(bb_md(e));
+ent create_mesh(ent par) { ent e = rt_new(EK_MESH, par); rt_e(e)->md = md_new(); return e; }
+ent copy_mesh(ent e, ent par) {
+	ent n = create_mesh(par);
+	md_unref(rt_e(n)->md);
+	rt_e(n)->md = md_copy(rt_md(e));
 	return n;
 }
-int bbCountSurfaces(ent e) { return bb_md(e)->ns; }
-surf *bbGetSurface(ent e, int n) { mdat *m = bb_md(e); return n >= 1 && n <= m->ns ? m->s[n-1] : NULL; }
-surf *bbCreateSurface(ent e, hbrush b) {
-	mdat *m = bb_md(e);
+int count_surfaces(ent e) { return rt_md(e)->ns; }
+surf *get_surface(ent e, int n) { mdat *m = rt_md(e); return n >= 1 && n <= m->ns ? m->s[n-1] : NULL; }
+surf *create_surface(ent e, hbrush b) {
+	mdat *m = rt_md(e);
 	m->bdirty = 1;
-	return md_addsurf(m, b ? *bb_brp(b) : bb_brdef());
+	return md_addsurf(m, b ? *rt_brp(b) : rt_brdef());
 }
-void bbPaintSurface(surf *s, hbrush b) { br_assign(&s->br, *bb_brp(b)); }
-void bbPaintMesh(ent e, hbrush b) { mdat *m = bb_md(e); for (int i = 0; i < m->ns; i++) bbPaintSurface(m->s[i], b); }
+void paint_surface(surf *s, hbrush b) { br_assign(&s->br, *rt_brp(b)); }
+void paint_mesh(ent e, hbrush b) { mdat *m = rt_md(e); for (int i = 0; i < m->ns; i++) paint_surface(m->s[i], b); }
 
 // blitz merges into a dst surface with an equal brush
 static int breq(brush *a, brush *b) { return !memcmp(a, b, sizeof *a); }
@@ -163,15 +163,15 @@ static void surf_append(surf *d, surf *s) {
 	int base = d->nv;
 	for (int i = 0; i < s->nv; i++) {
 		float *p = s->pos + i*3;
-		int v = bbAddVertex(d, p[0], p[1], p[2], 0, 0, 0);
+		int v = add_vertex(d, p[0], p[1], p[2], 0, 0, 0);
 		memcpy(d->nrm + v*3, s->nrm + i*3, 12); memcpy(d->uv0 + v*2, s->uv0 + i*2, 8);
 		memcpy(d->uv1 + v*2, s->uv1 + i*2, 8); memcpy(d->col + v*4, s->col + i*4, 4);
 	}
 	for (int i = 0; i < s->nt; i++)
-		bbAddTriangle(d, base + s->idx[i*3], base + s->idx[i*3+1], base + s->idx[i*3+2]);
+		add_triangle(d, base + s->idx[i*3], base + s->idx[i*3+1], base + s->idx[i*3+2]);
 }
-void bbAddMesh(ent se, ent de) {
-	mdat *s = bb_md(se), *d = bb_md(de);
+void add_mesh(ent se, ent de) {
+	mdat *s = rt_md(se), *d = rt_md(de);
 	for (int i = 0; i < s->ns; i++) {
 		surf *t = NULL;
 		for (int j = 0; j < d->ns && !t; j++) if (breq(&d->s[j]->br, &s->s[i]->br)) t = d->s[j];
@@ -180,8 +180,8 @@ void bbAddMesh(ent se, ent de) {
 	}
 	d->bdirty = 1;
 }
-void bbFlipMesh(ent e) {
-	mdat *m = bb_md(e);
+void flip_mesh(ent e) {
+	mdat *m = rt_md(e);
 	for (int i = 0; i < m->ns; i++) {
 		surf *s = m->s[i];
 		for (int t = 0; t < s->nt; t++) { unsigned short x = s->idx[t*3+1]; s->idx[t*3+1] = s->idx[t*3+2]; s->idx[t*3+2] = x; }
@@ -190,7 +190,7 @@ void bbFlipMesh(ent e) {
 	touch(m);
 }
 static void xform(ent e, tf t) {
-	mdat *m = bb_md(e);
+	mdat *m = rt_md(e);
 	m3 nm = m3t(m3inv(t.m));
 	for (int i = 0; i < m->ns; i++) for (int v = 0; v < m->s[i]->nv; v++) {
 		float *p = m->s[i]->pos + v*3, *n = m->s[i]->nrm + v*3;
@@ -199,11 +199,11 @@ static void xform(ent e, tf t) {
 	}
 	touch(m);
 }
-void bbScaleMesh(ent e, float x, float y, float z) { xform(e, (tf){m3scale(v3n(x, y, z)), {0,0,0}}); }
-void bbPositionMesh(ent e, float x, float y, float z) { xform(e, (tf){m3id(), {x, y, z}}); }
-void bbRotateMesh(ent e, float p, float y, float r) { xform(e, (tf){m3rot(p*DTOR, y*DTOR, r*DTOR), {0,0,0}}); }
-void bbFitMesh(ent e, float x, float y, float z, float w, float h, float d, int uni) {
-	mdat *m = bb_md(e); md_bounds(m);
+void scale_mesh(ent e, float x, float y, float z) { xform(e, (tf){m3scale(v3n(x, y, z)), {0,0,0}}); }
+void position_mesh(ent e, float x, float y, float z) { xform(e, (tf){m3id(), {x, y, z}}); }
+void rotate_mesh(ent e, float p, float y, float r) { xform(e, (tf){m3rot(p*DTOR, y*DTOR, r*DTOR), {0,0,0}}); }
+void fit_mesh(ent e, float x, float y, float z, float w, float h, float d, int uni) {
+	mdat *m = rt_md(e); md_bounds(m);
 	v3 sz = v3sub(m->hi, m->lo);
 	float sx = sz.x ? w/sz.x : 1, sy = sz.y ? h/sz.y : 1, sz2 = sz.z ? d/sz.z : 1;
 	if (uni) sx = sy = sz2 = fminf(sx, fminf(sy, sz2));
@@ -211,8 +211,8 @@ void bbFitMesh(ent e, float x, float y, float z, float w, float h, float d, int 
 	t.v = v3sub(v3n(x, y, z), m3v(t.m, m->lo));
 	xform(e, t);
 }
-void bbUpdateNormals(ent e) {
-	mdat *m = bb_md(e);
+void update_normals(ent e) {
+	mdat *m = rt_md(e);
 	for (int i = 0; i < m->ns; i++) {
 		surf *s = m->s[i];
 		memset(s->nrm, 0, s->nv * 12);
@@ -230,16 +230,16 @@ void bbUpdateNormals(ent e) {
 	touch(m);
 }
 static float ext(ent e, int ax) {
-	mdat *m = bb_md(e); md_bounds(m);
+	mdat *m = rt_md(e); md_bounds(m);
 	return ax == 0 ? m->hi.x - m->lo.x : ax == 1 ? m->hi.y - m->lo.y : m->hi.z - m->lo.z;
 }
-float bbMeshWidth(ent e) { return ext(e, 0); }
-float bbMeshHeight(ent e) { return ext(e, 1); }
-float bbMeshDepth(ent e) { return ext(e, 2); }
+float mesh_width(ent e) { return ext(e, 0); }
+float mesh_height(ent e) { return ext(e, 1); }
+float mesh_depth(ent e) { return ext(e, 2); }
 
 // ---- surface api
-void bbClearSurface(surf *s, int v, int t) { if (v) s->nv = 0; if (t) s->nt = 0; s->dirty = 1, s->ver++; }
-int bbAddVertex(surf *s, float x, float y, float z, float u, float v, float w) {
+void clear_surface(surf *s, int v, int t) { if (v) s->nv = 0; if (t) s->nt = 0; s->dirty = 1, s->ver++; }
+int add_vertex(surf *s, float x, float y, float z, float u, float v, float w) {
 	(void)w;
 	if (s->nv >= s->cv) {
 		s->cv = s->cv ? s->cv * 2 : 64;
@@ -255,27 +255,27 @@ int bbAddVertex(surf *s, float x, float y, float z, float u, float v, float w) {
 	s->dirty = 1, s->ver++;
 	return i;
 }
-int bbAddTriangle(surf *s, int a, int b, int c) {
+int add_triangle(surf *s, int a, int b, int c) {
 	if (s->nt >= s->ct) { s->ct = s->ct ? s->ct * 2 : 64; s->idx = realloc(s->idx, s->ct * 6); }
 	unsigned short *ix = s->idx + s->nt*3;
 	ix[0] = a; ix[1] = b; ix[2] = c;
 	s->dirty = 1, s->ver++;
 	return s->nt++;
 }
-void bbVertexCoords(surf *s, int i, float x, float y, float z) { float *p = s->pos + i*3; p[0] = x; p[1] = y; p[2] = z; s->dirty = 1, s->ver++; }
-void bbVertexNormal(surf *s, int i, float x, float y, float z) { float *p = s->nrm + i*3; p[0] = x; p[1] = y; p[2] = z; s->dirty = 1, s->ver++; }
-void bbVertexColor(surf *s, int i, float r, float g, float b, float a) {
+void vertex_coords(surf *s, int i, float x, float y, float z) { float *p = s->pos + i*3; p[0] = x; p[1] = y; p[2] = z; s->dirty = 1, s->ver++; }
+void vertex_normal(surf *s, int i, float x, float y, float z) { float *p = s->nrm + i*3; p[0] = x; p[1] = y; p[2] = z; s->dirty = 1, s->ver++; }
+void vertex_color(surf *s, int i, float r, float g, float b, float a) {
 	unsigned char *c = s->col + i*4;
 	c[0] = r; c[1] = g; c[2] = b; c[3] = a * 255; s->dirty = 1, s->ver++;
 }
-void bbVertexTexCoords(surf *s, int i, float u, float v, float w, int set) {
+void vertex_tex_coords(surf *s, int i, float u, float v, float w, int set) {
 	(void)w;
 	float *t = (set ? s->uv1 : s->uv0) + i*2;
 	t[0] = u; t[1] = v; s->dirty = 1, s->ver++;
 }
-int bbCountVertices(surf *s) { return s->nv; }
-int bbCountTriangles(surf *s) { return s->nt; }
-float bbVertexX(surf *s, int i) { return s->pos[i*3]; }
-float bbVertexY(surf *s, int i) { return s->pos[i*3+1]; }
-float bbVertexZ(surf *s, int i) { return s->pos[i*3+2]; }
-int bbTriangleVertex(surf *s, int t, int c) { return s->idx[t*3+c]; }
+int count_vertices(surf *s) { return s->nv; }
+int count_triangles(surf *s) { return s->nt; }
+float vertex_x(surf *s, int i) { return s->pos[i*3]; }
+float vertex_y(surf *s, int i) { return s->pos[i*3+1]; }
+float vertex_z(surf *s, int i) { return s->pos[i*3+2]; }
+int triangle_vertex(surf *s, int t, int c) { return s->idx[t*3+c]; }

@@ -2,7 +2,7 @@
 
 c rewrite of scpcb on raylib, rendering through gles2 so it runs on [ANGLE](https://chromium.googlesource.com/angle/angle).
 
-plan: write a blitz3d-alike runtime first (`src/bb`), then port the game `.bb` files on top of it
+plan: write a blitz3d-alike runtime first (`src/rt`), then port the game `.bb` files on top of it
 almost line by line. runtime fns are named after the blitz commands with a `bb` prefix (that's what
 blitz3d's own runtime calls them): `PositionEntity e,x,y,z` -> `bbPositionEntity(e, x, y, z, 0)`.
 handles are ints and 0 is null, same as blitz, so game code that stores entities in fields keeps working.
@@ -18,8 +18,8 @@ port/
   vendor/bdwgc     submodule, boehm gc v8.2.12 (for blitz strings + Type objects)
   vendor/mimalloc  submodule, v3.5.4, overrides malloc for the whole process (-Dmimalloc=false to skip)
   setup.sh         configures port/build w/ the llvm toolchain (clang, llvm-ar, lld)
-  src/bb/          blitz runtime
-    bb.h           public api, the only header game code should include
+  src/rt/          blitz runtime
+    rt.h           public api, the only header game code should include
     in.h           internals shared w/ src/fmt
     m3.h           lh math (blitz conventions: yaw*pitch*roll, +z fwd)
     ent.c          entity pool, hierarchy, transforms, TForm*
@@ -102,9 +102,9 @@ LD_LIBRARY_PATH=/path/to/angle/out port/build/rmview ...
 glfw dlopens `libEGL.so.1`, so if the angle build only has `libEGL.so` symlink it.
 x11 only for now (works under xwayland). native wayland needs glfw's generated protocol headers.
 
-dev hooks: `BB_SHOT=out.png BB_SHOT_FRAME=n` saves the nth Flip to a png and exits. `BB_INPUT="11:c13,14:m250x225,15:l"`
+dev hooks: `SCPCB_SHOT=out.png SCPCB_SHOT_FRAME=n` saves the nth Flip to a png and exits. `SCPCB_INPUT="11:c13,14:m250x225,15:l"`
 plays input at given flips: `m<x>x<y>` virtual mouse move, `l` left click, `d` left button held this flip (drags), `k<scancode>` key hit, `c<ascii>` typed char.
-eg `BB_INPUT="11:c13,14:m250x365,15:l" BB_SHOT=o.png BB_SHOT_FRAME=22` gets past the loading screen and opens options at 720p. to try the game w/o
+eg `SCPCB_INPUT="11:c13,14:m250x365,15:l" SCPCB_SHOT=o.png SCPCB_SHOT_FRAME=22` gets past the loading screen and opens options at 720p. to try the game w/o
 touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data, Loadingscreens and has its own options.ini
 (the launcher rewrites options.ini on LAUNCH, like the original).
 
@@ -124,7 +124,7 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
 - **assets**: the game only reads qoi (images) and qoa (sound), so raylib is built w/o its png/jpg/bmp/ogg decoders.
   tools/assetconv.c converts every asset once into `port/data/<path>.qoi|qoa` (full name kept, so foo.png and
   foo.jpg can't collide; files are recognised by content, the game hides jpgs as .dc/.pt/.it/.s and an ogg as
-  .cwm). the runtime maps every image/sound load there (`bb_media`, BB_DATA overrides the dir). originals stay as
+  .cwm). the runtime maps every image/sound load there (`bb_media`, SCPCB_DATA overrides the dir). originals stay as
   they are. qoi is lossless; the rgb/rgba channel count is kept since texture alpha depends on it. qoa is lossy
   (~3.2 bits/sample, transcoded from vorbis). dxt dds are decoded in the converter. sizes: ~207MB of originals
   -> ~508MB in port/data (qoa ~2x the oggs, qoi of jpgs is most of the rest).

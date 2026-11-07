@@ -65,12 +65,12 @@ if angle != ''
 endif
 
 # blitz runtime + file formats. c_args carry rldefs so rlgl.h/config.h match the lib
-bblib = static_library('bb',
-	files('src/bb/ent.c', 'src/bb/mesh.c', 'src/bb/tex.c', 'src/bb/rend.c', 'src/bb/fs.c', 'src/bb/sys.c',
-		'src/bb/coll.c', 'src/bb/anim.c', 'src/bb/snd.c', 'src/bb/g2d.c', 'src/bb/input.c', 'src/bb/misc.c',
-		'src/bb/str.c', 'src/bb/tl.c', 'src/fmt/b3d.c', 'src/fmt/x.c', 'src/fmt/rmesh.c'),
+rtlib = static_library('rt',
+	files('src/rt/ent.c', 'src/rt/mesh.c', 'src/rt/tex.c', 'src/rt/rend.c', 'src/rt/fs.c', 'src/rt/sys.c',
+		'src/rt/coll.c', 'src/rt/anim.c', 'src/rt/snd.c', 'src/rt/g2d.c', 'src/rt/input.c', 'src/rt/misc.c',
+		'src/rt/str.c', 'src/rt/tl.c', 'src/fmt/b3d.c', 'src/fmt/x.c', 'src/fmt/rmesh.c'),
 	c_args: rldefs, include_directories: [rl, 'vendor/bdwgc/include'])
-bb = declare_dependency(link_with: [bblib, raylib, gc], link_whole: mi, dependencies: sys, compile_args: rldefs,
+rt = declare_dependency(link_with: [rtlib, raylib, gc], link_whole: mi, dependencies: sys, compile_args: rldefs,
 	include_directories: include_directories(rl, 'vendor/bdwgc/include'), link_args: link)
 
 executable('scpcb', files(
@@ -81,13 +81,13 @@ executable('scpcb', files(
 	'src/game/menu.c', 'src/game/music.c', 'src/game/newgame.c', 'src/game/options.c', 'src/game/player.c', 'src/game/npcs.c', 'src/game/npc173.c', 'src/game/npcguard.c', 'src/game/waypoints.c', 'src/game/events.c', 'src/game/evlib.c', 'src/game/ev173.c', 'src/game/ev1.c', 'src/game/ev2.c', 'src/game/evpd.c', 'src/game/ev3.c', 'src/game/ev4.c', 'src/game/inv.c', 'src/game/use.c',
 	'src/game/rooms.c', 'src/game/save.c', 'src/game/sliders.c', 'src/game/sounds.c', 'src/game/strict.c',
 	'src/game/tooltip.c', 'src/game/widgets.c'),
-	dependencies: bb)
+	dependencies: rt)
 
 # assets -> qoi/qoa (port/data). has its own decoders (stb_image, stb_vorbis), the game doesn't
 executable('assetconv', 'tools/assetconv.c', c_args: ['-w'], include_directories: rl, dependencies: cc.find_library('m'))
 
 foreach t : ['rmview', 'colltest', 'sndtest', 'g2dtest', 'misctest', 'strtest']
-	exe = executable(t, 'tools' / t + '.c', dependencies: bb)
+	exe = executable(t, 'tools' / t + '.c', dependencies: rt)
 	if t in ['colltest', 'misctest', 'strtest']
 		test(t, exe)
 	elif t == 'sndtest'

@@ -5,12 +5,12 @@
 #define T(x, y) (*MT(x, y))
 static int m1(int v) { return v < 1 ? v : 1; } // Min(MapTemp(..), 1)
 
-int GetZone(int y) { return bbInt(Min(floorf((float)(MapWidth - y) / MapWidth * ZONEAMOUNT), ZONEAMOUNT - 1)); }
+int GetZone(int y) { return iround(Min(floorf((float)(MapWidth - y) / MapWidth * ZONEAMOUNT), ZONEAMOUNT - 1)); }
 
 int SetRoom(const char *name, int type, int pos, int min_pos, int max_pos) {
 	if (max_pos < min_pos) return 0;
 	int looped = 0;
-	while (bbLen(*MR(type, pos))) {
+	while (s_len(*MR(type, pos))) {
 		pos++;
 		if (pos > max_pos) {
 			if (looped) return 0;
@@ -25,26 +25,26 @@ static void hallways(void) {
 	int x = (int)floorf(MapWidth / 2), y = MapHeight - 2, temp = 0, tempheight = 0;
 	for (int i = y; i <= MapHeight - 1; i++) T(x, i) = 1;
 	do {
-		int width = bbRand(10, 15);
+		int width = irand(10, 15);
 		if (x > MapWidth * .6f) width = -width;
 		else if (x > MapWidth * .4f) x = x - width / 2;
 		if (x + width > MapWidth - 3) width = MapWidth - 3 - x;
 		else if (x + width < 2) width = -x + 2;
-		x = bbInt(Min(x, x + width));
+		x = iround(Min(x, x + width));
 		width = abs(width);
-		for (int i = x; i <= x + width; i++) T(bbInt(Min(i, MapWidth)), y) = 1;
-		int height = bbRand(3, 4);
+		for (int i = x; i <= x + width; i++) T(iround(Min(i, MapWidth)), y) = 1;
+		int height = irand(3, 4);
 		if (y - height < 1) height = y - 1;
-		int yhallways = bbRand(4, 5);
+		int yhallways = irand(4, 5);
 		if (GetZone(y - height) != GetZone(y - height + 1)) height--;
 		for (int i = 1; i <= yhallways; i++) {
-			int x2 = bbInt(Max(Min(bbRand(x, x + width - 1), MapWidth - 2), 2));
+			int x2 = iround(Max(Min(irand(x, x + width - 1), MapWidth - 2), 2));
 			while (T(x2, y - 1) || T(x2 - 1, y - 1) || T(x2 + 1, y - 1)) x2++;
 			if (x2 >= x + width) continue;
 			if (i == 1) {
 				tempheight = height;
-				x2 = bbRand(1, 2) == 1 ? x : x + width;
-			} else tempheight = bbRand(1, height);
+				x2 = irand(1, 2) == 1 ? x : x + width;
+			} else tempheight = irand(1, height);
 			for (int y2 = y - tempheight; y2 <= y; y2++) T(x2, y2) = GetZone(y2) != GetZone(y2 + 1) ? 255 : 1;
 			if (tempheight == height) temp = x2;
 		}
@@ -81,7 +81,7 @@ static void morerooms1(void) {
 	for (int i = 0; i <= 2; i++) {
 		int temp = -R1[i] + 5;
 		if (temp <= 0) continue;
-		int y0 = (MapHeight / zoneamount) * (2 - i) + 1, y1 = bbInt((MapHeight / zoneamount) * ((2 - i) + 1.0f) - 2);
+		int y0 = (MapHeight / zoneamount) * (2 - i) + 1, y1 = iround((MapHeight / zoneamount) * ((2 - i) + 1.0f) - 2);
 		for (int y = y0; y <= y1; y++) {
 			for (int x = 2; x <= MapWidth - 2; x++) {
 				if (T(x, y) == 0 && m1(T(x + 1, y)) + m1(T(x - 1, y)) + m1(T(x, y + 1)) + m1(T(x, y - 1)) == 1) {
@@ -123,8 +123,8 @@ static void morerooms4and2c(void) {
 	int zone = 0, temp2 = 0;
 	for (int i = 0; i <= 2; i++) {
 		if (i == 2) { zone = 2; temp2 = MapHeight / 3; }
-		else if (i == 1) { zone = MapHeight / 3 + 1; temp2 = bbInt(MapHeight * (2.0f / 3.0f) - 1); }
-		else { zone = bbInt(MapHeight * (2.0f / 3.0f) + 1); temp2 = MapHeight - 2; }
+		else if (i == 1) { zone = MapHeight / 3 + 1; temp2 = iround(MapHeight * (2.0f / 3.0f) - 1); }
+		else { zone = iround(MapHeight * (2.0f / 3.0f) + 1); temp2 = MapHeight - 2; }
 
 		if (R4[i] < 1) { // at least 1 ROOM4
 			int temp = 0;
@@ -181,7 +181,7 @@ static void assignrooms(void) {
 		{"room2testroom2", .1f}, {"room2scps", .2f}, {"room2storage", .3f}, {"room2gw_b", .4f}, {"room2sl", .5f},
 		{"room012", .55f}, {"room2scps2", .6f}, {"room1123", .7f}, {"room2elevator", .85f}};
 	for (int i = 0; i < 9; i++) SetRoom(z1[i].n, ROOM2, F(z1[i].k, R2[0]), lo, hi);
-	*MR(ROOM3, (int)floorf(bbRnd(.2f, .8f) * (float)R3[0])) = "room3storage";
+	*MR(ROOM3, (int)floorf(frnd(.2f, .8f) * (float)R3[0])) = "room3storage";
 	*MR(ROOM2C, F(.5f, R2C[0])) = "room1162";
 	*MR(ROOM4, F(.3f, R4[0])) = "room4info";
 
@@ -216,10 +216,10 @@ static void assignrooms(void) {
 
 // MapName(x, y) gets the next planned room of that shape, if any
 static str nextname(int x, int y, int shape) {
-	if (MapRoomID[shape] < MaxRooms_ && !bbLen(*MN(x, y)) && bbLen(*MR(shape, MapRoomID[shape]))) *MN(x, y) = *MR(shape, MapRoomID[shape]);
+	if (MapRoomID[shape] < MaxRooms_ && !s_len(*MN(x, y)) && s_len(*MR(shape, MapRoomID[shape]))) *MN(x, y) = *MR(shape, MapRoomID[shape]);
 	return *MN(x, y);
 }
-static void turn(Rooms *r, int a) { r->angle = a; bbTurnEntity(r->obj, 0, a, 0, 0); }
+static void turn(Rooms *r, int a) { r->angle = a; turn_entity(r->obj, 0, a, 0, 0); }
 
 static void createrooms(void) {
 	for (int y = MapHeight - 1; y >= 1; y--) {
@@ -242,11 +242,11 @@ static void createrooms(void) {
 			case 2:
 				if (T(x - 1, y) > 0 && T(x + 1, y) > 0) {
 					r = CreateRoom(zone, ROOM2, X, 0, Z, nextname(x, y, ROOM2));
-					turn(r, bbRand(1, 2) == 1 ? 90 : 270);
+					turn(r, irand(1, 2) == 1 ? 90 : 270);
 					MapRoomID[ROOM2]++;
 				} else if (T(x, y - 1) > 0 && T(x, y + 1) > 0) {
 					r = CreateRoom(zone, ROOM2, X, 0, Z, nextname(x, y, ROOM2));
-					turn(r, bbRand(1, 2) == 1 ? 180 : 0);
+					turn(r, irand(1, 2) == 1 ? 180 : 0);
 					MapRoomID[ROOM2]++;
 				} else {
 					str n = nextname(x, y, ROOM2C);
@@ -261,7 +261,7 @@ static void createrooms(void) {
 				r = CreateRoom(zone, ROOM3, X, 0, Z, nextname(x, y, ROOM3));
 				if (!T(x, y - 1)) turn(r, 180);
 				else if (!T(x - 1, y)) turn(r, 90);
-				else if (!T(x + 1, y)) { bbTurnEntity(r->obj, 0, -90, 0, 0); r->angle = 270; }
+				else if (!T(x + 1, y)) { turn_entity(r->obj, 0, -90, 0, 0); r->angle = 270; }
 				MapRoomID[ROOM3]++;
 				break;
 			case 4:
@@ -308,12 +308,12 @@ static void createdoors(void) {
 			if (T(x, y) <= 0) continue;
 			int big = zone == 2 ? 2 : 0;
 			each(Rooms, r) {
-				r->angle = bbInt(WrapAngle(r->angle));
-				if (bbInt(r->x / 8.0f) != x || bbInt(r->z / 8.0f) != y) continue;
+				r->angle = iround(WrapAngle(r->angle));
+				if (iround(r->x / 8.0f) != x || iround(r->z / 8.0f) != y) continue;
 				if (doorx(r) && x + 1 < MapWidth + 1 && T(x + 1, y) > 0)
-					r->AdjDoor[0] = CreateDoor(r->zone, x * sp + sp / 2, 0, y * sp, 90, r, bbInt(Max(bbRand(-3, 1), 0)), big, 0, "", 0);
+					r->AdjDoor[0] = CreateDoor(r->zone, x * sp + sp / 2, 0, y * sp, 90, r, iround(Max(irand(-3, 1), 0)), big, 0, "", 0);
 				if (doorz(r) && y + 1 < MapHeight + 1 && T(x, y + 1) > 0)
-					r->AdjDoor[3] = CreateDoor(r->zone, x * sp, 0, y * sp + sp / 2, 0, r, bbInt(Max(bbRand(-3, 1), 0)), big, 0, "", 0);
+					r->AdjDoor[3] = CreateDoor(r->zone, x * sp, 0, y * sp + sp / 2, 0, r, iround(Max(irand(-3, 1), 0)), big, 0, "", 0);
 				break;
 			}
 		}
@@ -322,7 +322,7 @@ static void createdoors(void) {
 
 static void adjacency(void) {
 	each(Rooms, r) {
-		r->angle = bbInt(WrapAngle(r->angle));
+		r->angle = iround(WrapAngle(r->angle));
 		for (int k = 0; k < 4; k++) r->Adjacent[k] = NULL;
 		each(Rooms, r2) {
 			if (r != r2) {
@@ -342,7 +342,7 @@ static void adjacency(void) {
 void CreateMap(void) {
 	I_Zone->Transition[0] = 13; I_Zone->Transition[1] = 7;
 	I_Zone->HasCustomForest = I_Zone->HasCustomMT = 0;
-	bbSeedRnd(GenerateSeedNumber(RandomSeed));
+	seed_rnd(GenerateSeedNumber(RandomSeed));
 	MapName = GC_MALLOC(sizeof(str) * (MapWidth + 1) * (MapHeight + 1));
 	memset(MapRoomID, 0, sizeof MapRoomID);
 	hallways();

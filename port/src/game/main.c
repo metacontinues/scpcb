@@ -6,12 +6,12 @@
 TLIST(ConsoleMsg);
 
 _Noreturn void RuntimeError(const char *msg) { fprintf(stderr, "runtime error: %s\n", msg); exit(1); }
-int MilliSecs2(void) { int r = bbMilliSecs(); return r < 0 ? r + 2147483647 + 1 : r; }
+int MilliSecs2(void) { int r = milli_secs(); return r < 0 ? r + 2147483647 + 1 : r; }
 
 void CreateConsoleMsg(const char *txt, int r, int g, int b, int isCommand) {
-	ConsoleMsg *c = bbNew(ConsoleMsg);
-	bbInsertBefore(c, bbFirst(ConsoleMsg));
-	c->txt = bbSdup(txt); c->isCommand = isCommand;
+	ConsoleMsg *c = lnew(ConsoleMsg);
+	linsert_before(c, lfirst(ConsoleMsg));
+	c->txt = s_dup(txt); c->isCommand = isCommand;
 	c->r = r < 0 ? ConsoleR : r; c->g = g < 0 ? ConsoleG : g; c->b = b < 0 ? ConsoleB : b;
 }
 
@@ -20,27 +20,27 @@ int MouseOn(int x, int y, int w, int h) {
 	return mx > x && mx < x + w && my > y && my < y + h;
 }
 int ScaledMouseX(void) {
-	return bbInt((bbMouseX() - RealGraphicWidth * .5f * (1 - AspectRatioRatio)) * (float)GraphicWidth / (RealGraphicWidth * AspectRatioRatio));
+	return iround((mouse_x() - RealGraphicWidth * .5f * (1 - AspectRatioRatio)) * (float)GraphicWidth / (RealGraphicWidth * AspectRatioRatio));
 }
-int ScaledMouseY(void) { return bbInt(bbMouseY() * (float)GraphicHeight / RealGraphicHeight); }
+int ScaledMouseY(void) { return iround(mouse_y() * (float)GraphicHeight / RealGraphicHeight); }
 
 // TODO InitFastResize: the fresize_* camera/sprite are only for borderless upscaling + gamma
 void Graphics3DExt(int w, int h, int depth, int mode) {
-	bbGraphics3D(w, h, depth, mode);
-	bbAntiAlias(GetINIInt(OptionFile, "options", "antialias", 0));
+	graphics3_d(w, h, depth, mode);
+	anti_alias(GetINIInt(OptionFile, "options", "antialias", 0));
 }
 // blitz version rendered the image scaled through a camera and grabbed it back
-int ResizeImage2(int img, int w, int h) { bbResizeImage(img, w, h); return img; }
+int ResizeImage2(int img, int w, int h) { resize_image(img, w, h); return img; }
 
 // the gfx mode list w/o duplicates, shared by the no-launcher path and UpdateLauncher
 void CollectGfxModes(void) {
 	for (int i = 1; i <= TotalGFXModes; i++) {
 		int same = 0;
-		for (int n = 0; n < TotalGFXModes; n++) if (GfxModeWidths[n] == bbGfxModeWidth(i) && GfxModeHeights[n] == bbGfxModeHeight(i)) { same = 1; break; }
+		for (int n = 0; n < TotalGFXModes; n++) if (GfxModeWidths[n] == gfx_mode_width(i) && GfxModeHeights[n] == gfx_mode_height(i)) { same = 1; break; }
 		if (same) continue;
-		if (GraphicWidth == bbGfxModeWidth(i) && GraphicHeight == bbGfxModeHeight(i)) SelectedGFXMode = GFXModes;
-		GfxModeWidths[GFXModes] = bbGfxModeWidth(i);
-		GfxModeHeights[GFXModes] = bbGfxModeHeight(i);
+		if (GraphicWidth == gfx_mode_width(i) && GraphicHeight == gfx_mode_height(i)) SelectedGFXMode = GFXModes;
+		GfxModeWidths[GFXModes] = gfx_mode_width(i);
+		GfxModeHeights[GFXModes] = gfx_mode_height(i);
 		GFXModes++;
 	}
 }
@@ -67,7 +67,7 @@ static void InitOptions(void) {
 	Depth = 0; Fullscreen = GetINIInt(OptionFile, "options", "fullscreen", 0);
 	SelectedGFXDriver = Max(GetINIInt(OptionFile, "options", "gfx driver", 0), 1);
 	ShowFPS = GetINIInt(OptionFile, "options", "show FPS", 0);
-	TotalGFXModes = bbCountGfxModes3D();
+	TotalGFXModes = count_gfx_modes3_d();
 	GfxModeWidths = calloc(TotalGFXModes + 1, sizeof(int));
 	GfxModeHeights = calloc(TotalGFXModes + 1, sizeof(int));
 	BorderlessWindowed = GetINIInt(OptionFile, "options", "borderless windowed", 0);
@@ -84,8 +84,8 @@ static void InitOptions(void) {
 static void InitPlayerGlobals(void) {
 	viewport_center_x = GraphicWidth / 2; viewport_center_y = GraphicHeight / 2;
 	mouselook_x_inc = mouselook_y_inc = .3f;
-	mouse_left_limit = 250; mouse_right_limit = bbGraphicsWidth() - 250;
-	mouse_top_limit = 150; mouse_bottom_limit = bbGraphicsHeight() - 150;
+	mouse_left_limit = 250; mouse_right_limit = graphics_width() - 250;
+	mouse_top_limit = 150; mouse_bottom_limit = graphics_height() - 150;
 	KEY_RIGHT = GetINIInt(OptionFile, "binds", "Right key", 0);
 	KEY_LEFT = GetINIInt(OptionFile, "binds", "Left key", 0);
 	KEY_UP = GetINIInt(OptionFile, "binds", "Up key", 0);
@@ -110,8 +110,8 @@ int main(void) {
 	UpdateCheckEnabled = GetINIInt(OptionFile, "options", "check for updates", 0); // Update.bb
 	ErrorFile = "error_log_";
 	int ei = 0;
-	while (bbFileType(cat(ErrorFile, bbStr(ei), ".txt"))) ei++;
-	ErrorFile = cat(ErrorFile, bbStr(ei), ".txt");
+	while (file_type(cat(ErrorFile, s_str(ei), ".txt"))) ei++;
+	ErrorFile = cat(ErrorFile, s_str(ei), ".txt");
 	InitOptions();
 
 	if (LauncherEnabled) UpdateLauncher();
@@ -123,15 +123,15 @@ int main(void) {
 	OpenGame();
 
 	MenuScale = GraphicHeight / 1024.0f;
-	bbSetBuffer(bbBackBuffer());
+	set_buffer(back_buffer());
 	Framelimit = GetINIInt(OptionFile, "options", "framelimit", 0);
 	Vsync = GetINIInt(OptionFile, "options", "vsync", 0);
 	Opt_AntiAlias = GetINIInt(OptionFile, "options", "antialias", 0);
 	CurrFrameLimit = (Framelimit - 19) / 100.0f;
 	ScreenGamma = GetINIFloat(OptionFile, "options", "screengamma", 0);
-	bbSeedRnd(bbMilliSecs());
+	seed_rnd(milli_secs());
 	CanSave = 1;
-	bbAppTitle(cat("SCP - Containment Breach v", VersionNumber));
+	app_title(cat("SCP - Containment Breach v", VersionNumber));
 	// TODO PlayStartupVideos: needs a video decoder (BlitzMovie)
 
 	CursorIMG = LoadImage_Strict("GFX\\cursor.png");
@@ -139,12 +139,12 @@ int main(void) {
 	InitLoadingScreens("Loadingscreens\\loadingscreens.ini");
 	InitAAFont();
 	float k = GraphicHeight / 1024.0f;
-	Font1 = AALoadFont("GFX\\font\\cour\\Courier New.ttf", bbInt(19 * k), 0, 0, 0);
-	Font2 = AALoadFont("GFX\\font\\courbd\\Courier New.ttf", bbInt(58 * k), 0, 0, 0);
-	Font3 = AALoadFont("GFX\\font\\DS-DIGI\\DS-Digital.ttf", bbInt(22 * k), 0, 0, 0);
-	Font4 = AALoadFont("GFX\\font\\DS-DIGI\\DS-Digital.ttf", bbInt(60 * k), 0, 0, 0);
-	Font5 = AALoadFont("GFX\\font\\Journal\\Journal.ttf", bbInt(58 * k), 0, 0, 0);
-	ConsoleFont = AALoadFont("Blitz", bbInt(20 * k), 0, 0, 0);
+	Font1 = AALoadFont("GFX\\font\\cour\\Courier New.ttf", iround(19 * k), 0, 0, 0);
+	Font2 = AALoadFont("GFX\\font\\courbd\\Courier New.ttf", iround(58 * k), 0, 0, 0);
+	Font3 = AALoadFont("GFX\\font\\DS-DIGI\\DS-Digital.ttf", iround(22 * k), 0, 0, 0);
+	Font4 = AALoadFont("GFX\\font\\DS-DIGI\\DS-Digital.ttf", iround(60 * k), 0, 0, 0);
+	Font5 = AALoadFont("GFX\\font\\Journal\\Journal.ttf", iround(58 * k), 0, 0, 0);
+	ConsoleFont = AALoadFont("Blitz", iround(20 * k), 0, 0, 0);
 	AASetFont(Font2);
 	BlinkMeterIMG = LoadImage_Strict("GFX\\blinkmeter.jpg");
 	DrawLoading(0, 1);
@@ -159,12 +159,12 @@ int main(void) {
 
 int GenerateSeedNumber(const char *seed) {
 	int t = 0, sh = 0;
-	for (int i = 1; i <= bbLen(seed); i++) { t ^= (unsigned)bbAsc(bbMid(seed, i, 1)) << sh; sh = (sh + 1) % 24; }
+	for (int i = 1; i <= s_len(seed); i++) { t ^= (unsigned)s_asc(s_mid(seed, i, 1)) << sh; sh = (sh + 1) % 24; }
 	return t;
 }
 
 void SaveOptionsINI(void) {
-#define P(sec, k, v) PutINIValue(OptionFile, sec, k, bbStr(v))
+#define P(sec, k, v) PutINIValue(OptionFile, sec, k, s_str(v))
 	P("options", "mouse sensitivity", MouseSens); P("options", "invert mouse y", InvertMouse);
 	P("options", "bump mapping enabled", BumpEnabled); P("options", "HUD enabled", HUDenabled);
 	P("options", "screengamma", ScreenGamma); P("options", "antialias", Opt_AntiAlias);
@@ -186,10 +186,10 @@ void SaveOptionsINI(void) {
 
 // Main.bb 1525-2809: what runs between the first loading screen and the main loop
 void InitLateGlobals(void) {
-	I_427 = bbNew(SCP427); // Main.bb 2794
+	I_427 = lnew(SCP427); // Main.bb 2794
 	BumpEnabled = GetINIInt("options.ini", "options", "bump mapping enabled", 0);
 	HUDenabled = GetINIInt("options.ini", "options", "HUD enabled", 0);
-	Brightness = bbInt(GetINIFloat("options.ini", "options", "brightness", 0));
+	Brightness = iround(GetINIFloat("options.ini", "options", "brightness", 0));
 	CameraFogNear = GetINIFloat("options.ini", "options", "camera fog near", 0);
 	CameraFogFar = GetINIFloat("options.ini", "options", "camera fog far", 0);
 	StoredCameraFogFar = CameraFogFar;
@@ -201,8 +201,8 @@ void InitLateGlobals(void) {
 	DrawLoading(20, 1);
 	DrawLoading(25, 1);
 	DrawLoading(30, 1);
-	NVGImages = bbLoadAnimImage("GFX\\battery.png", 64, 64, 0, 2);
-	bbMaskImage(NVGImages, 255, 0, 255);
+	NVGImages = load_anim_image("GFX\\battery.png", 64, 64, 0, 2);
+	mask_image(NVGImages, 255, 0, 255);
 	EnableUserTracks = GetINIInt(OptionFile, "audio", "enable user tracks", 0);
 	UserTrackMode = GetINIInt(OptionFile, "audio", "user track setting", 0);
 	InFacility = 1;
@@ -211,37 +211,37 @@ void InitLateGlobals(void) {
 	CurrMenu_TestIMG = "";
 	ParticleAmount = GetINIInt(OptionFile, "options", "particle amount", 0);
 	for (int i = 0; i < 4; i++) {
-		NavImages[i] = LoadImage_Strict(cat("GFX\\navigator\\roomborder", bbStr(i), ".png"));
-		bbMaskImage(NavImages[i], 255, 0, 255);
+		NavImages[i] = LoadImage_Strict(cat("GFX\\navigator\\roomborder", s_str(i), ".png"));
+		mask_image(NavImages[i], 255, 0, 255);
 	}
 	NavImages[4] = LoadImage_Strict("GFX\\navigator\\batterymeter.png");
-	NavBG = bbCreateImage(GraphicWidth, GraphicHeight, 1);
+	NavBG = create_image(GraphicWidth, GraphicHeight, 1);
 	DrawLoading(35, 1);
 	HissSFX = LoadSound_Strict("SFX\\General\\Hiss.ogg"); // Particles.bb
 	// TODO MapSystem.bb (LoadRoomTemplates), NPCs.bb, UpdateEvents.bb
 	DrawLoading(40, 1);
 	InitMapGlobals(); // MapSystem.bb's top level
 	DrawLoading(80, 1);
-	bbCollisions(HIT_PLAYER, HIT_MAP, 2, 2);
-	bbCollisions(HIT_PLAYER, HIT_PLAYER, 1, 3);
-	bbCollisions(HIT_ITEM, HIT_MAP, 2, 2);
-	bbCollisions(HIT_APACHE, HIT_APACHE, 1, 2);
-	bbCollisions(HIT_178, HIT_MAP, 2, 2);
-	bbCollisions(HIT_178, HIT_178, 1, 3);
-	bbCollisions(HIT_DEAD, HIT_MAP, 2, 2);
+	coll_rule(HIT_PLAYER, HIT_MAP, 2, 2);
+	coll_rule(HIT_PLAYER, HIT_PLAYER, 1, 3);
+	coll_rule(HIT_ITEM, HIT_MAP, 2, 2);
+	coll_rule(HIT_APACHE, HIT_APACHE, 1, 2);
+	coll_rule(HIT_178, HIT_MAP, 2, 2);
+	coll_rule(HIT_178, HIT_178, 1, 3);
+	coll_rule(HIT_DEAD, HIT_MAP, 2, 2);
 	DrawLoading(90, 1);
 	ShouldEntitiesFall = 1; PlayerFallingPickDistance = 10;
 	Save_MSG = "";
 	InitMenu();
 	MainMenuOpen = 1;
-	bbFlushKeys(); bbFlushMouse();
+	flush_keys(); flush_mouse();
 	DrawLoading(100, 1);
-	LoopDelay = bbMilliSecs();
+	LoopDelay = milli_secs();
 }
 
 // Menu.bb's START button: LoadEntities, LoadAllSounds, InitNewGame. TODO LoadGame/InitLoadGame
 int StartGame(const char *how) {
-	if (!bbSeq(how, "new")) { fprintf(stderr, "scpcb: loading saves isn't ported yet\n"); return 0; }
+	if (!s_eq(how, "new")) { fprintf(stderr, "scpcb: loading saves isn't ported yet\n"); return 0; }
 	if (getenv("SCPCB_SEED")) RandomSeed = getenv("SCPCB_SEED"); // dev: fixed map
 	LoadEntities();
 	LoadAllSounds();

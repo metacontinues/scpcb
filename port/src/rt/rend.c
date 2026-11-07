@@ -7,7 +7,7 @@
 #include "raymath.h"
 #include "shd.h"
 
-float bb_amb[3] = {0.5f, 0.5f, 0.5f};
+float rt_amb[3] = {0.5f, 0.5f, 0.5f};
 static Shader sh;
 static Material mat;
 static int U_bcol, U_fx, U_fxf, U_amb, U_nl, U_lpos, U_ldir, U_lcol, U_tm[4], U_tc, U_nt, U_tb, U_tmask, U_fogc, U_fogr;
@@ -33,57 +33,57 @@ void rend_init(void) {
 	mat = LoadMaterialDefault();
 	mat.shader = sh;
 	quad = md_new();
-	surf *s = md_addsurf(quad, bb_brdef());
-	bbAddVertex(s, -1, 1, 0, 0, 0, 0); bbAddVertex(s, 1, 1, 0, 1, 0, 0);
-	bbAddVertex(s, 1, -1, 0, 1, 1, 0); bbAddVertex(s, -1, -1, 0, 0, 1, 0);
-	bbAddTriangle(s, 0, 1, 2); bbAddTriangle(s, 0, 2, 3);
+	surf *s = md_addsurf(quad, rt_brdef());
+	add_vertex(s, -1, 1, 0, 0, 0, 0); add_vertex(s, 1, 1, 0, 1, 0, 0);
+	add_vertex(s, 1, -1, 0, 1, 1, 0); add_vertex(s, -1, -1, 0, 0, 1, 0);
+	add_triangle(s, 0, 1, 2); add_triangle(s, 0, 2, 3);
 }
 void rend_quit(void) { UnloadShader(sh); }
 
 // ---- cameras
-ent bbCreateCamera(ent par) {
-	ent e = bb_new(EK_CAM, par);
+ent create_camera(ent par) {
+	ent e = rt_new(EK_CAM, par);
 	cam *c = calloc(1, sizeof *c);
 	*c = (cam){.n = 1, .f = 1000, .zoom = 1, .clsc = 1, .clsz = 1, .proj = 1, .cls = {0,0,0,255}, .fog = {0,0,0,255}, .fogf = 1000};
-	bb_e(e)->cam = c;
+	rt_e(e)->cam = c;
 	return e;
 }
-static cam *bb_c(ent e) { E *x = bb_e(e); if (!x->cam) die("entity %d is not a camera", e); return x->cam; }
-void bbCameraRange(ent e, float n, float f) { cam *c = bb_c(e); c->n = n; c->f = f; }
-void bbCameraZoom(ent e, float z) { bb_c(e)->zoom = z; }
-void bbCameraViewport(ent e, int x, int y, int w, int h) { cam *c = bb_c(e); c->vx = x; c->vy = y; c->vw = w; c->vh = h; }
-void bbCameraClsColor(ent e, int r, int g, int b) { bb_c(e)->cls = (Color){r, g, b, 255}; }
-void bbCameraClsMode(ent e, int col, int z) { cam *c = bb_c(e); c->clsc = col; c->clsz = z; }
-void bbCameraProjMode(ent e, int m) { bb_c(e)->proj = m; }
-void bbCameraFogMode(ent e, int m) { bb_c(e)->fogm = m; }
-void bbCameraFogRange(ent e, float n, float f) { cam *c = bb_c(e); c->fogn = n; c->fogf = f; }
-void bbCameraFogColor(ent e, int r, int g, int b) { bb_c(e)->fog = (Color){r, g, b, 255}; }
+static cam *rt_c(ent e) { E *x = rt_e(e); if (!x->cam) die("entity %d is not a camera", e); return x->cam; }
+void camera_range(ent e, float n, float f) { cam *c = rt_c(e); c->n = n; c->f = f; }
+void camera_zoom(ent e, float z) { rt_c(e)->zoom = z; }
+void camera_viewport(ent e, int x, int y, int w, int h) { cam *c = rt_c(e); c->vx = x; c->vy = y; c->vw = w; c->vh = h; }
+void camera_cls_color(ent e, int r, int g, int b) { rt_c(e)->cls = (Color){r, g, b, 255}; }
+void camera_cls_mode(ent e, int col, int z) { cam *c = rt_c(e); c->clsc = col; c->clsz = z; }
+void camera_proj_mode(ent e, int m) { rt_c(e)->proj = m; }
+void camera_fog_mode(ent e, int m) { rt_c(e)->fogm = m; }
+void camera_fog_range(ent e, float n, float f) { cam *c = rt_c(e); c->fogn = n; c->fogf = f; }
+void camera_fog_color(ent e, int r, int g, int b) { rt_c(e)->fog = (Color){r, g, b, 255}; }
 
 static void vp(cam *c, int *x, int *y, int *w, int *h) {
 	*x = c->vx; *y = c->vy; *w = c->vw; *h = c->vh;
 	if (!*w || !*h) { *x = *y = 0; *w = GetScreenWidth(); *h = GetScreenHeight(); }
 }
-static tf viewtf(ent e) { tf w = bb_wt(e); return tfinv((tf){m3ortho(w.m), w.v}); }
+static tf viewtf(ent e) { tf w = rt_wt(e); return tfinv((tf){m3ortho(w.m), w.v}); }
 
-void bbCameraProject(ent e, float x, float y, float z) {
-	cam *c = bb_c(e);
+void camera_project(ent e, float x, float y, float z) {
+	cam *c = rt_c(e);
 	int vx, vy, vw, vh; vp(c, &vx, &vy, &vw, &vh);
 	v3 p = tfp(viewtf(e), v3n(x, y, z));
 	if (p.z <= c->n) { proj = v3n(0, 0, 0); return; }
 	float a = (float)vw / vh;
 	proj = v3n(vx + vw * (0.5f + 0.5f * p.x * c->zoom / p.z), vy + vh * (0.5f - 0.5f * p.y * c->zoom * a / p.z), p.z);
 }
-ent bbCameraPick(ent e, float sx, float sy) {
-	cam *c = bb_c(e);
+ent camera_pick(ent e, float sx, float sy) {
+	cam *c = rt_c(e);
 	int vx, vy, vw, vh; vp(c, &vx, &vy, &vw, &vh);
 	float a = (float)vw / vh, nx = (sx - vx) / vw * 2 - 1, ny = 1 - (sy - vy) / vh * 2;
-	tf w = bb_wt(e);
+	tf w = rt_wt(e);
 	v3 d = m3v(m3ortho(w.m), v3mul(v3n(nx / c->zoom, ny / (c->zoom * a), 1), c->f));
-	return bb_pick(w.v, d, 0, 0, 0, 0);
+	return rt_pick(w.v, d, 0, 0, 0, 0);
 }
-float bbProjectedX(void) { return proj.x; }
-float bbProjectedY(void) { return proj.y; }
-float bbProjectedZ(void) { return proj.z; }
+float projected_x(void) { return proj.x; }
+float projected_y(void) { return proj.y; }
+float projected_z(void) { return proj.z; }
 
 // view-space sphere vs frustum
 static int vis(cam *c, float a, tf v, v3 ctr, float r) {
@@ -96,55 +96,55 @@ static int vis(cam *c, float a, tf v, v3 ctr, float r) {
 	return 1;
 }
 static int bsphere(ent e, v3 *ctr, float *r) {
-	E *x = bb_e(e);
-	if (x->kind == EK_SPRITE) { tf w = bb_wt(e); *ctr = w.v; *r = fmaxf(x->sx, x->sy) * 1.5f * fmaxf(v3len(w.m.i), v3len(w.m.j)); return 1; }
+	E *x = rt_e(e);
+	if (x->kind == EK_SPRITE) { tf w = rt_wt(e); *ctr = w.v; *r = fmaxf(x->sx, x->sy) * 1.5f * fmaxf(v3len(w.m.i), v3len(w.m.j)); return 1; }
 	if (!x->md) return 0;
 	md_bounds(x->md);
-	tf w = bb_wt(e);
+	tf w = rt_wt(e);
 	*ctr = tfp(w, v3mul(v3add(x->md->lo, x->md->hi), 0.5f));
 	*r = v3len(v3sub(x->md->hi, x->md->lo)) * 0.5f * fmaxf(v3len(w.m.i), fmaxf(v3len(w.m.j), v3len(w.m.k)));
 	return 1;
 }
-int bbEntityInView(ent e, ent c) {
+int entity_in_view(ent e, ent c) {
 	v3 ct; float r;
 	if (!bsphere(e, &ct, &r)) return 0;
-	int x, y, w, h; vp(bb_c(c), &x, &y, &w, &h);
-	return vis(bb_c(c), (float)w / h, viewtf(c), ct, r);
+	int x, y, w, h; vp(rt_c(c), &x, &y, &w, &h);
+	return vis(rt_c(c), (float)w / h, viewtf(c), ct, r);
 }
 
 // ---- lights
-ent bbCreateLight(int t, ent par) {
-	ent e = bb_new(EK_LIGHT, par);
-	E *x = bb_e(e);
+ent create_light(int t, ent par) {
+	ent e = rt_new(EK_LIGHT, par);
+	E *x = rt_e(e);
 	x->ltype = t ? t : 1; x->lr = x->lg = x->lb = 1; x->lrange = 1000; x->lin = 0; x->lout = 90;
 	return e;
 }
-void bbLightColor(ent e, float r, float g, float b) { E *x = bb_e(e); x->lr = r/255; x->lg = g/255; x->lb = b/255; }
-void bbLightRange(ent e, float r) { bb_e(e)->lrange = r; }
-void bbLightConeAngles(ent e, float i, float o) { E *x = bb_e(e); x->lin = i; x->lout = o; }
-void bbAmbientLight(float r, float g, float b) { bb_amb[0] = r/255; bb_amb[1] = g/255; bb_amb[2] = b/255; }
+void light_color(ent e, float r, float g, float b) { E *x = rt_e(e); x->lr = r/255; x->lg = g/255; x->lb = b/255; }
+void light_range(ent e, float r) { rt_e(e)->lrange = r; }
+void light_cone_angles(ent e, float i, float o) { E *x = rt_e(e); x->lin = i; x->lout = o; }
+void ambient_light(float r, float g, float b) { rt_amb[0] = r/255; rt_amb[1] = g/255; rt_amb[2] = b/255; }
 
 // ---- sprites
-ent bbCreateSprite(ent par) {
-	ent e = bb_new(EK_SPRITE, par);
-	E *x = bb_e(e);
+ent create_sprite(ent par) {
+	ent e = rt_new(EK_SPRITE, par);
+	E *x = rt_e(e);
 	x->sx = x->sy = 1; x->view = 1;
 	x->br.fx = FX_FULLBRIGHT; x->br.blend = BL_ALPHA;
 	return e;
 }
-ent bbLoadSprite(const char *p, int flags, ent par) {
-	ent e = bbCreateSprite(par);
-	htex t = bbLoadTexture(p, flags ? flags : TF_COLOR);
-	if (t) { bbEntityTexture(e, t, 0, 0); bbFreeTexture(t); }
+ent load_sprite(const char *p, int flags, ent par) {
+	ent e = create_sprite(par);
+	htex t = load_texture(p, flags ? flags : TF_COLOR);
+	if (t) { entity_texture(e, t, 0, 0); free_texture(t); }
 	return e;
 }
-void bbScaleSprite(ent e, float x, float y) { E *s = bb_e(e); s->sx = x; s->sy = y; }
-void bbHandleSprite(ent e, float x, float y) { E *s = bb_e(e); s->hx = x; s->hy = y; }
-void bbRotateSprite(ent e, float a) { bb_e(e)->sang = a; }
-void bbSpriteViewMode(ent e, int m) { bb_e(e)->view = m; }
+void scale_sprite(ent e, float x, float y) { E *s = rt_e(e); s->sx = x; s->sy = y; }
+void handle_sprite(ent e, float x, float y) { E *s = rt_e(e); s->hx = x; s->hy = y; }
+void rotate_sprite(ent e, float a) { rt_e(e)->sang = a; }
+void sprite_view_mode(ent e, int m) { rt_e(e)->view = m; }
 
 static tf spritetf(E *x, ent e, m3 crot) {
-	tf w = bb_wt(e);
+	tf w = rt_wt(e);
 	m3 r = crot;
 	if (x->view == 2) r = m3ortho(w.m);
 	else if (x->view >= 3) { // upright: yaw toward cam only
@@ -177,7 +177,7 @@ static brush combine(brush s, brush e) {
 }
 static int isalpha_br(brush b) {
 	if (b.a < 1 || b.blend == BL_MUL || b.blend == BL_ADD || b.fx & FX_VALPHA) return 1;
-	for (int i = 0; i < BB_NTEX; i++) if (b.tex[i] && bb_t(b.tex[i])->flags & TF_ALPHA) return 1;
+	for (int i = 0; i < BB_NTEX; i++) if (b.tex[i] && rt_t(b.tex[i])->flags & TF_ALPHA) return 1;
 	return 0;
 }
 
@@ -197,7 +197,7 @@ static void drawsurf(surf *s, brush b, tf t, cam *c) {
 	int nt = 0;
 	for (int i = 0; i < BB_NTEX; i++) mat.maps[i].texture = (Texture2D){0};
 	for (int i = 0; i < BB_NTEX; i++) {
-		tex *x = bb_t(b.tex[i]);
+		tex *x = rt_t(b.tex[i]);
 		if (!x) continue;
 		mat.maps[nt].texture = x->t;
 		tc[nt] = x->coords; tb[nt] = x->blend; tm[nt] = x->flags & TF_MASK ? 1 : 0;
@@ -220,7 +220,7 @@ static void drawsurf(surf *s, brush b, tf t, cam *c) {
 
 // one queue item per surface (si = -1: sprite), so mixed meshes sort like blitz
 static void drawit(ent e, int si, cam *c, m3 crot) {
-	E *x = bb_e(e);
+	E *x = rt_e(e);
 	if (si < 0) {
 		brush b = x->br;
 		b.fx |= FX_2SIDED;
@@ -230,7 +230,7 @@ static void drawit(ent e, int si, cam *c, m3 crot) {
 	}
 	brush b = combine(x->md->s[si]->br, x->br);
 	setblend(b.blend);
-	drawsurf(x->md->s[si], b, bb_wt(e), c);
+	drawsurf(x->md->s[si], b, rt_wt(e), c);
 }
 
 static int itcmp(const void *a, const void *b) {
@@ -244,10 +244,10 @@ static int itcmp(const void *a, const void *b) {
 static void lights(void) {
 	float lp[32] = {0}, ld[32] = {0}, lc[32] = {0};
 	int n = 0;
-	for (int e = 1; e < bb_nents && n < 8; e++) {
-		E *x = &bb_ents[e];
-		if (!x->used || x->kind != EK_LIGHT || bbEntityHidden(e)) continue;
-		tf w = bb_wt(e); v3 k = v3norm(w.m.k);
+	for (int e = 1; e < rt_nents && n < 8; e++) {
+		E *x = &rt_ents[e];
+		if (!x->used || x->kind != EK_LIGHT || entity_hidden(e)) continue;
+		tf w = rt_wt(e); v3 k = v3norm(w.m.k);
 		lp[n*4] = w.v.x; lp[n*4+1] = w.v.y; lp[n*4+2] = w.v.z; lp[n*4+3] = x->ltype;
 		ld[n*4] = k.x; ld[n*4+1] = k.y; ld[n*4+2] = k.z; ld[n*4+3] = x->lrange;
 		lc[n*4] = x->lr; lc[n*4+1] = x->lg; lc[n*4+2] = x->lb; lc[n*4+3] = cosf(x->lout * 0.5f * DTOR);
@@ -257,12 +257,12 @@ static void lights(void) {
 	SetShaderValueV(sh, U_lpos, lp, SHADER_UNIFORM_VEC4, 8);
 	SetShaderValueV(sh, U_ldir, ld, SHADER_UNIFORM_VEC4, 8);
 	SetShaderValueV(sh, U_lcol, lc, SHADER_UNIFORM_VEC4, 8);
-	SetShaderValue(sh, U_amb, bb_amb, SHADER_UNIFORM_VEC3);
+	SetShaderValue(sh, U_amb, rt_amb, SHADER_UNIFORM_VEC3);
 }
 
 
 static void rendcam(ent ce) {
-	cam *c = bb_c(ce);
+	cam *c = rt_c(ce);
 	if (!c->proj) return;
 	int x, y, w, h; vp(c, &x, &y, &w, &h);
 	float a = (float)w / h, n = c->n, f = c->f;
@@ -286,15 +286,15 @@ static void rendcam(ent ce) {
 	SetShaderValue(sh, U_fogc, fc, SHADER_UNIFORM_VEC4);
 	SetShaderValue(sh, U_fogr, fr, SHADER_UNIFORM_VEC3);
 	lights();
-	m3 crot = m3ortho(bb_wt(ce).m);
+	m3 crot = m3ortho(rt_wt(ce).m);
 	nits = 0;
-	for (int e = 1; e < bb_nents; e++) {
-		E *p = &bb_ents[e];
+	for (int e = 1; e < rt_nents; e++) {
+		E *p = &rt_ents[e];
 		if (!p->used || (p->kind != EK_MESH && p->kind != EK_SPRITE)) continue;
-		if (bbEntityHidden(e)) continue;
+		if (entity_hidden(e)) continue;
 		v3 ct; float r;
 		if (!bsphere(e, &ct, &r) || !vis(c, a, v, ct, r)) continue;
-		p = &bb_ents[e];
+		p = &rt_ents[e];
 		float d = tfp(v, ct).z;
 		if (p->kind == EK_SPRITE) { grow(its, nits, cits); its[nits++] = (item){e, -1, d, p->order, 1}; continue; }
 		for (int i = 0; i < p->md->ns; i++) {
@@ -316,17 +316,17 @@ static void rendcam(ent ce) {
 	rlDisableScissorTest();
 }
 
-void bbRenderWorld(float tween) {
+void render_world(float tween) {
 	(void)tween;
-	bb_frame();
+	rt_frame();
 	g2d_end(); // TODO: blitz renders into the current buffer; scpcb only uses the backbuffer
 	rlDrawRenderBatchActive();
 	ntris = 0;
-	for (int e = 1; e < bb_nents; e++)
-		if (bb_ents[e].used && bb_ents[e].kind == EK_CAM && !bbEntityHidden(e)) rendcam(e);
+	for (int e = 1; e < rt_nents; e++)
+		if (rt_ents[e].used && rt_ents[e].kind == EK_CAM && !entity_hidden(e)) rendcam(e);
 	int W = GetScreenWidth(), H = GetScreenHeight();
 	rlViewport(0, 0, GetRenderWidth(), GetRenderHeight());
 	rlSetMatrixProjection(MatrixOrtho(0, W, H, 0, 0, 1));
 	rlSetMatrixModelview(MatrixIdentity());
 }
-int bbTrisRendered(void) { return ntris; }
+int tris_rendered(void) { return ntris; }

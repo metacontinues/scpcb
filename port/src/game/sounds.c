@@ -84,8 +84,8 @@ void LoadAllSounds(void) {
 
 // ---- the game's own "3d" sound: volume by distance, pan by DeltaYaw
 static int audible(ent cam, ent e, float range, float *dist, float *pan) {
-	*dist = bbEntityDistance(cam, e) / range;
-	*pan = sinf(-bbDeltaYaw(cam, e) * DTOR);
+	*dist = entity_distance(cam, e) / range;
+	*pan = sinf(-delta_yaw(cam, e) * DTOR);
 	return 1 - *dist > 0 && 1 - *dist < 1;
 }
 
@@ -94,47 +94,47 @@ int PlaySound2(int snd, ent cam, ent e, float range, float volume) {
 	float dist, pan;
 	if (volume <= 0 || !audible(cam, e, range, &dist, &pan)) return 0;
 	int ch = PlaySound_Strict(snd);
-	bbChannelVolume(ch, volume * (1 - dist) * SFXVolume);
-	bbChannelPan(ch, pan);
+	channel_volume(ch, volume * (1 - dist) * SFXVolume);
+	channel_pan(ch, pan);
 	return ch;
 }
 
 int LoopSound2(int snd, int chn, ent cam, ent e, float range, float volume) {
 	range = Max(range, 1);
-	if (volume <= 0) { if (chn) bbChannelVolume(chn, 0); return chn; }
+	if (volume <= 0) { if (chn) channel_volume(chn, 0); return chn; }
 	float dist, pan;
 	audible(cam, e, range, &dist, &pan); // blitz commented the range check out here
-	if (!chn || !bbChannelPlaying(chn)) chn = PlaySound_Strict(snd);
-	bbChannelVolume(chn, volume * (1 - dist) * SFXVolume);
-	bbChannelPan(chn, pan);
+	if (!chn || !channel_playing(chn)) chn = PlaySound_Strict(snd);
+	channel_volume(chn, volume * (1 - dist) * SFXVolume);
+	channel_pan(chn, pan);
 	return chn;
 }
 
 static void origin(int chn, ent cam, ent e, float range, float volume, float mul) {
 	range = Max(range, 1);
-	if (volume <= 0) { if (chn) bbChannelVolume(chn, 0); return; }
+	if (volume <= 0) { if (chn) channel_volume(chn, 0); return; }
 	float dist, pan;
 	if (!audible(cam, e, range, &dist, &pan)) return;
-	bbChannelVolume(chn, volume * (1 - dist) * mul);
-	bbChannelPan(chn, pan);
+	channel_volume(chn, volume * (1 - dist) * mul);
+	channel_pan(chn, pan);
 }
 void UpdateSoundOrigin(int chn, ent cam, ent e, float range, float volume) { origin(chn, cam, e, range, volume, SFXVolume); }
 void UpdateSoundOrigin2(int chn, ent cam, ent e, float range, float volume) { origin(chn, cam, e, range, volume, 1); }
 
 // floor material under e -> step sound set (Data/materials.ini "stepsound"), checks texture layers 3, 2, 1
 int GetStepSound(ent e) {
-	ent pk = bbLinePick(bbEntityX(e, 0), bbEntityY(e, 0), bbEntityZ(e, 0), 0, -1, 0, 0);
-	if (!pk || bbGetEntityType(pk) != HIT_MAP) return 0;
-	hbrush b = bbGetSurfaceBrush(bbGetSurface(pk, bbCountSurfaces(pk)));
+	ent pk = line_pick(entity_x(e, 0), entity_y(e, 0), entity_z(e, 0), 0, -1, 0, 0);
+	if (!pk || get_entity_type(pk) != HIT_MAP) return 0;
+	hbrush b = get_surface_brush(get_surface(pk, count_surfaces(pk)));
 	if (!b) return 0;
 	for (int l = 3; l >= 1; l--) {
-		htex t = bbGetBrushTexture(b, l);
+		htex t = get_brush_texture(b, l);
 		if (!t) continue;
-		str name = StripPath(bbTextureName(t));
-		if (bbLen(name)) bbFreeTexture(t);
-		if (l == 1) bbFreeBrush(b);
-		each(Materials, m) if (bbSeq(m->name, name)) {
-			if (m->StepSound > 0) { if (l != 1) bbFreeBrush(b); return m->StepSound - 1; }
+		str name = StripPath(texture_name(t));
+		if (s_len(name)) free_texture(t);
+		if (l == 1) free_brush(b);
+		each(Materials, m) if (s_eq(m->name, name)) {
+			if (m->StepSound > 0) { if (l != 1) free_brush(b); return m->StepSound - 1; }
 			break;
 		}
 		if (l == 1) return 0;

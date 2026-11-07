@@ -31,7 +31,7 @@ static void around(E *x, int ch, float f, int *a, int *b) {
 	}
 }
 static void posenode(ent e, float f) {
-	E *x = bb_e(e);
+	E *x = rt_e(e);
 	if (!x->nk) return;
 	for (int ch = 1; ch <= 4; ch <<= 1) {
 		int a, b;
@@ -45,32 +45,32 @@ static void posenode(ent e, float f) {
 		else if (ch == 2) x->scl = v3add(p->s, v3mul(v3sub(q->s, p->s), t));
 		else { float o[4]; slerp(p->q, q->q, t, o); x->rot = m3ortho(qmat(o[0], o[1], o[2], o[3])); }
 	}
-	bb_dirty(e);
+	rt_dirty(e);
 }
 static void posetree(ent e, float f) {
 	posenode(e, f);
-	for (ent c = bb_e(e)->first; c; c = bb_e(c)->next) posetree(c, f);
+	for (ent c = rt_e(e)->first; c; c = rt_e(c)->next) posetree(c, f);
 }
 
 static ent animroot(ent e) {
-	for (ent p = e; p; p = bb_e(p)->par) if (bb_e(p)->anim) return p;
+	for (ent p = e; p; p = rt_e(p)->par) if (rt_e(p)->anim) return p;
 	ent r = e;
-	while (bb_e(r)->par) r = bb_e(r)->par;
+	while (rt_e(r)->par) r = rt_e(r)->par;
 	return r;
 }
 static void skinmesh(ent e) {
-	E *x = bb_e(e);
+	E *x = rt_e(e);
 	skin *k = x->md->sk;
 	if (!x->bones || x->nbones != k->nb) {
 		free(x->bones);
 		ent r = animroot(e);
 		ent *bs = malloc(sizeof(ent) * k->nb);
-		for (int i = 0; i < k->nb; i++) bs[i] = bbFindChild(r, k->name[i]);
-		x = bb_e(e); x->bones = bs; x->nbones = k->nb;
+		for (int i = 0; i < k->nb; i++) bs[i] = find_child(r, k->name[i]);
+		x = rt_e(e); x->bones = bs; x->nbones = k->nb;
 	}
-	tf mi = tfinv(bb_wt(e)), *M = malloc(sizeof(tf) * k->nb);
+	tf mi = tfinv(rt_wt(e)), *M = malloc(sizeof(tf) * k->nb);
 	for (int i = 0; i < k->nb; i++)
-		M[i] = x->bones[i] && bbEntityExists(x->bones[i]) ? tfmul(tfmul(mi, bb_wt(x->bones[i])), k->binv[i]) : tfid();
+		M[i] = x->bones[i] && entity_exists(x->bones[i]) ? tfmul(tfmul(mi, rt_wt(x->bones[i])), k->binv[i]) : tfid();
 	mdat *m = x->md;
 	for (int si = 0; si < m->ns; si++) {
 		surf *s = m->s[si];
@@ -93,9 +93,9 @@ static void skinmesh(ent e) {
 	free(M);
 }
 static void skintree(ent e) {
-	E *x = bb_e(e);
+	E *x = rt_e(e);
 	if (x->md && x->md->sk) skinmesh(e);
-	for (ent c = bb_e(e)->first; c; c = bb_e(c)->next) skintree(c);
+	for (ent c = rt_e(e)->first; c; c = rt_e(c)->next) skintree(c);
 }
 
 void anim_pose(ent e, float f) { posetree(e, f); skintree(e); }
@@ -103,25 +103,25 @@ void anim_pose(ent e, float f) { posetree(e, f); skintree(e); }
 static float seqa(E *x) { return x->nseq && x->aseq < x->nseq ? x->seqs[x->aseq].a : 0; }
 static float seqlen(E *x) { return x->nseq && x->aseq < x->nseq ? x->seqs[x->aseq].b - x->seqs[x->aseq].a : 0; }
 
-void bbSetAnimTime(ent e, float t, int seq) {
-	E *x = bb_e(e);
+void set_anim_time(ent e, float t, int seq) {
+	E *x = rt_e(e);
 	x->atime = t;
 	if (seq >= 0 && seq < x->nseq) x->aseq = seq;
 	anim_pose(e, seqa(x) + t);
 }
-float bbAnimTime(ent e) { return bb_e(e)->atime; }
-int bbAnimSeq(ent e) { return bb_e(e)->aseq; }
-int bbAnimLength(ent e) { return seqlen(bb_e(e)); }
-int bbAnimating(ent e) { return bb_e(e)->amode != 0; }
-void bbAnimate(ent e, int mode, float speed, int seq, float trans) {
+float anim_time(ent e) { return rt_e(e)->atime; }
+int anim_seq(ent e) { return rt_e(e)->aseq; }
+int anim_length(ent e) { return seqlen(rt_e(e)); }
+int animating(ent e) { return rt_e(e)->amode != 0; }
+void animate(ent e, int mode, float speed, int seq, float trans) {
 	(void)trans; // TODO: transition blending
-	E *x = bb_e(e);
+	E *x = rt_e(e);
 	x->amode = mode; x->aspeed = speed;
 	if (seq >= 0 && seq < x->nseq && seq != x->aseq) { x->aseq = seq; x->atime = 0; }
 	if (mode) anim_pose(e, seqa(x) + x->atime);
 }
-int bbExtractAnimSeq(ent e, int first, int last, int seq) {
-	E *x = bb_e(e);
+int extract_anim_seq(ent e, int first, int last, int seq) {
+	E *x = rt_e(e);
 	int base = seq >= 0 && seq < x->nseq ? x->seqs[seq].a : 0;
 	x->seqs = realloc(x->seqs, sizeof *x->seqs * (x->nseq + 1));
 	x->seqs[x->nseq].a = base + first; x->seqs[x->nseq].b = base + last;
@@ -129,8 +129,8 @@ int bbExtractAnimSeq(ent e, int first, int last, int seq) {
 }
 
 void anim_step(float k) {
-	for (ent e = 1; e < bb_nents; e++) {
-		E *x = &bb_ents[e];
+	for (ent e = 1; e < rt_nents; e++) {
+		E *x = &rt_ents[e];
 		if (!x->used || !x->amode || !k) continue;
 		float len = seqlen(x), t = x->atime + x->aspeed * k;
 		if (len <= 0) continue;
@@ -144,7 +144,7 @@ void anim_step(float k) {
 	}
 }
 
-const char *bbEntityClass(ent e) {
+const char *entity_class(ent e) {
 	static const char *n[] = {"Pivot", "Mesh", "Camera", "Light", "Sprite"};
-	return n[bb_e(e)->kind];
+	return n[rt_e(e)->kind];
 }

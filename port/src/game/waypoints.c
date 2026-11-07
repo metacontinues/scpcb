@@ -3,50 +3,50 @@
 
 void InitWayPoints(int loadingstart) {
 	each(Doors, d) {
-		if (d->obj) bbHideEntity(d->obj);
-		if (d->obj2) bbHideEntity(d->obj2);
-		if (d->frameobj) bbHideEntity(d->frameobj);
+		if (d->obj) hide_entity(d->obj);
+		if (d->obj2) hide_entity(d->obj2);
+		if (d->frameobj) hide_entity(d->frameobj);
 		Rooms *cr = d->room;
 		if (!cr) {
 			float dist = 30;
 			each(Rooms, r) {
-				float x = fabsf(bbEntityX(r->obj, 1) - bbEntityX(d->frameobj, 1));
+				float x = fabsf(entity_x(r->obj, 1) - entity_x(d->frameobj, 1));
 				if (x >= 20) continue;
-				float z = fabsf(bbEntityZ(r->obj, 1) - bbEntityZ(d->frameobj, 1));
+				float z = fabsf(entity_z(r->obj, 1) - entity_z(d->frameobj, 1));
 				if (z >= 20) continue;
 				float d2 = x * x + z * z;
 				if (d2 < dist) { cr = r; dist = d2; }
 			}
 		}
-		if (!d->DisableWaypoint) CreateWaypoint(bbEntityX(d->frameobj, 1), bbEntityY(d->frameobj, 1) + .18f, bbEntityZ(d->frameobj, 1), d, cr);
+		if (!d->DisableWaypoint) CreateWaypoint(entity_x(d->frameobj, 1), entity_y(d->frameobj, 1) + .18f, entity_z(d->frameobj, 1), d, cr);
 	}
 	float amount = 0;
-	each(WayPoints, w) { bbEntityPickMode(w->obj, 1, 1); bbEntityRadius(w->obj, .2f, .2f); amount++; }
+	each(WayPoints, w) { entity_pick_mode(w->obj, 1, 1); entity_radius(w->obj, .2f, .2f); amount++; }
 	int number = 0, iter = 0;
 	each(WayPoints, w) {
 		number++; iter++;
 		if (iter == 20) { DrawLoading(loadingstart + (int)floorf(35.0f / amount * number), 0); iter = 0; }
-		for (WayPoints *w2 = bbAfter(w); w2; w2 = bbAfter(w2)) {
+		for (WayPoints *w2 = lafter(w); w2; w2 = lafter(w2)) {
 			if (!(w->room == w2->room || w->door || w2->door)) continue;
-			float dist = bbEntityDistance(w->obj, w2->obj);
-			int can = w->room->MaxWayPointY == 0 || w2->room->MaxWayPointY == 0 || fabsf(bbEntityY(w->obj, 0) - bbEntityY(w2->obj, 0)) <= w->room->MaxWayPointY;
-			if (dist < 7 && can && bbEntityVisible(w->obj, w2->obj)) {
+			float dist = entity_distance(w->obj, w2->obj);
+			int can = w->room->MaxWayPointY == 0 || w2->room->MaxWayPointY == 0 || fabsf(entity_y(w->obj, 0) - entity_y(w2->obj, 0)) <= w->room->MaxWayPointY;
+			if (dist < 7 && can && entity_visible(w->obj, w2->obj)) {
 				for (int i = 0; i <= 4; i++) if (!w->connected[i]) { w->connected[i] = w2; w->dist[i] = dist; break; }
 				for (int i = 0; i <= 4; i++) if (!w2->connected[i]) { w2->connected[i] = w; w2->dist[i] = dist; break; }
 			}
 		}
 	}
 	each(Doors, d) {
-		if (d->obj) bbShowEntity(d->obj);
-		if (d->obj2) bbShowEntity(d->obj2);
-		if (d->frameobj) bbShowEntity(d->frameobj);
+		if (d->obj) show_entity(d->obj);
+		if (d->obj2) show_entity(d->obj2);
+		if (d->frameobj) show_entity(d->frameobj);
 	}
 	// blitz also hangs a CreateLine debug mesh per connection off each waypoint: 2-vertex degenerate
 	// triangles, never visible, so they're skipped
-	each(WayPoints, w) { bbEntityPickMode(w->obj, 0, 0); bbEntityRadius(w->obj, 0, 0); }
+	each(WayPoints, w) { entity_pick_mode(w->obj, 0, 0); entity_radius(w->obj, 0, 0); }
 }
 
-void RemoveWaypoint(WayPoints *w) { bbFreeEntity(w->obj); bbDelete(w); }
+void RemoveWaypoint(WayPoints *w) { free_entity(w->obj); ldel(w); }
 
 // 0: not searched / already there, 1: found (n->Path), 2: unreachable
 int FindPath(NPCs *n, float x, float y, float z) {
@@ -54,29 +54,29 @@ int FindPath(NPCs *n, float x, float y, float z) {
 	n->PathStatus = 0; n->PathLocation = 0;
 	for (int i = 0; i <= 19; i++) n->Path[i] = NULL;
 
-	int pvt = bbCreatePivot(0);
-	bbPositionEntity(pvt, x, y, z, 1);
-	int tmp = bbCreatePivot(0);
-	bbPositionEntity(tmp, bbEntityX(n->Collider, 1), bbEntityY(n->Collider, 1) + .15f, bbEntityZ(n->Collider, 1), 0);
+	int pvt = create_pivot(0);
+	position_entity(pvt, x, y, z, 1);
+	int tmp = create_pivot(0);
+	position_entity(tmp, entity_x(n->Collider, 1), entity_y(n->Collider, 1) + .15f, entity_z(n->Collider, 1), 0);
 	WayPoints *sp = NULL, *ep = NULL;
 	float dist = 350;
 	each(WayPoints, w) {
-		float xt = bbEntityX(w->obj, 1) - bbEntityX(tmp, 1), zt = bbEntityZ(w->obj, 1) - bbEntityZ(tmp, 1), yt = bbEntityY(w->obj, 1) - bbEntityY(tmp, 1);
+		float xt = entity_x(w->obj, 1) - entity_x(tmp, 1), zt = entity_z(w->obj, 1) - entity_z(tmp, 1), yt = entity_y(w->obj, 1) - entity_y(tmp, 1);
 		float d2 = xt * xt + yt * yt + zt * zt;
 		if (d2 >= dist) continue;
-		if (!bbEntityVisible(w->obj, tmp)) d2 *= 3; // prefer visible ones
+		if (!entity_visible(w->obj, tmp)) d2 *= 3; // prefer visible ones
 		if (d2 < dist) { dist = d2; sp = w; }
 	}
-	bbFreeEntity(tmp);
-	if (!sp) { bbFreeEntity(pvt); return 2; } // blitz leaks the pivot here
+	free_entity(tmp);
+	if (!sp) { free_entity(pvt); return 2; } // blitz leaks the pivot here
 	sp->state = 1;
 	dist = 400;
 	each(WayPoints, w) {
-		float xt = bbEntityX(pvt, 1) - bbEntityX(w->obj, 1), zt = bbEntityZ(pvt, 1) - bbEntityZ(w->obj, 1), yt = bbEntityY(pvt, 1) - bbEntityY(w->obj, 1);
+		float xt = entity_x(pvt, 1) - entity_x(w->obj, 1), zt = entity_z(pvt, 1) - entity_z(w->obj, 1), yt = entity_y(pvt, 1) - entity_y(w->obj, 1);
 		float d2 = xt * xt + yt * yt + zt * zt;
 		if (d2 < dist) { dist = d2; ep = w; }
 	}
-	bbFreeEntity(pvt);
+	free_entity(pvt);
 	if (ep == sp) {
 		if (dist < .4f) return 0;
 		n->Path[0] = ep;
@@ -94,14 +94,14 @@ int FindPath(NPCs *n, float x, float y, float z) {
 			WayPoints *w = sm;
 			w->state = 2;
 			for (int i = 0; i <= 4; i++) {
-				WayPoints *c = bbLive(w->connected[i]); // links to deleted waypoints (the intro's) don't count
+				WayPoints *c = llive(w->connected[i]); // links to deleted waypoints (the intro's) don't count
 				if (!c || c->state >= 2) continue;
 				float g = w->Gcost + w->dist[i];
 				if (n->NPCtype == NPCtypeMTF && !c->door) g += .5f;
 				if (c->state == 1) {
 					if (g < c->Gcost) { c->Gcost = g; c->Fcost = c->Gcost + c->Hcost; c->parent = w; }
 				} else {
-					c->Hcost = fabsf(bbEntityX(c->obj, 1) - bbEntityX(ep->obj, 1)) + fabsf(bbEntityZ(c->obj, 1) - bbEntityZ(ep->obj, 1));
+					c->Hcost = fabsf(entity_x(c->obj, 1) - entity_x(ep->obj, 1)) + fabsf(entity_z(c->obj, 1) - entity_z(ep->obj, 1));
 					c->Gcost = g;
 					c->Fcost = c->Gcost + c->Hcost;
 					c->parent = w;
@@ -121,7 +121,7 @@ int FindPath(NPCs *n, float x, float y, float z) {
 		if (len > 20) tw = tw->parent;
 	} while (cur);
 	while (tw) {
-		len = bbInt(Min(len - 1, 19));
+		len = iround(Min(len - 1, 19));
 		tw = tw->parent;
 		if (len >= 0) n->Path[len] = tw;
 	}
