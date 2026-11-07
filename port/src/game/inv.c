@@ -3,7 +3,7 @@
 #include "g.h"
 
 static int is(Items *it, const char *t) { return s_eq(it->itemtemplate->tempname, t); }
-static void say(const char *m) { Msg = (str)m; MsgTimer = 70 * 5; }
+static void say(const char *m) { sset(&Msg, (str)m); MsgTimer = 70 * 5; }
 
 // ---- sounds that stop while a menu's open
 
@@ -90,15 +90,15 @@ static void tocase(Items *c) { // paper & co dropped on a clipboard or wallet
 	if (is(c, "clipboard")) {
 		if (!((!s_eq(b, "misc") && !s_eq(b, "25ct") && !s_eq(b, "coin") && !s_eq(b, "key") && !s_eq(b, "scp860") && !s_eq(b, "scp714")) || card)) { say("You cannot combine these two items."); return; }
 		Items *a = intocase(c, 0);
-		if (!a) Msg = "The paperclip is not strong enough to hold any more items.";
-		else if (is(a, "paper") || is(a, "oldpaper")) Msg = "This document was added to the clipboard.";
-		else if (is(a, "badge")) Msg = cat(a->itemtemplate->name, " was added to the clipboard.");
-		else Msg = cat("The ", a->itemtemplate->name, " was added to the clipboard.");
+		if (!a) sset(&Msg, "The paperclip is not strong enough to hold any more items.");
+		else if (is(a, "paper") || is(a, "oldpaper")) sset(&Msg, "This document was added to the clipboard.");
+		else if (is(a, "badge")) sset(&Msg, cat(a->itemtemplate->name, " was added to the clipboard."));
+		else sset(&Msg, cat("The ", a->itemtemplate->name, " was added to the clipboard."));
 		MsgTimer = 70 * 5;
 	} else if (is(c, "wallet")) {
 		if (!((!s_eq(b, "misc") && !s_eq(b, "paper") && !s_eq(b, "oldpaper")) || card)) { say("You cannot combine these two items."); return; }
 		Items *a = intocase(c, 1);
-		Msg = a ? cat("You put ", a->itemtemplate->name, " into the wallet.") : "The wallet is full.";
+		sset(&Msg, a ? cat("You put ", a->itemtemplate->name, " into the wallet.") : "The wallet is full.");
 		MsgTimer = 70 * 5;
 	} else say("You cannot combine these two items.");
 }
@@ -180,7 +180,7 @@ static int screen(void) {
 					SelectedItem = it;
 					MouseHit1 = 0;
 					if (DoubleClick) { // use it
-						if (WearingHazmat > 0 && !s_instr(SelectedItem->itemtemplate->tempname, "hazmatsuit", 1)) {
+						if (WearingHazmat > 0 && !s_has(SelectedItem->itemtemplate->tempname, "hazmatsuit")) {
 							say("You cannot use any items while wearing a hazmat suit.");
 							SelectedItem = NULL;
 							return 1;
@@ -218,7 +218,7 @@ static void esc(void) {
 	MenuOpen = !MenuOpen;
 	AchievementsMenu = OptionsMenu = QuitMSG = 0;
 	SelectedDoor = NULL; SelectedScreen = NULL; SelectedMonitor = NULL;
-	if (SelectedItem && (s_instr(SelectedItem->itemtemplate->tempname, "vest", 1) || s_instr(SelectedItem->itemtemplate->tempname, "hazmatsuit", 1))) {
+	if (SelectedItem && (s_has(SelectedItem->itemtemplate->tempname, "vest") || s_has(SelectedItem->itemtemplate->tempname, "hazmatsuit"))) {
 		if (!WearingVest && !WearingHazmat) DropItem(SelectedItem, 1);
 		SelectedItem = NULL;
 	}

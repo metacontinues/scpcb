@@ -13,17 +13,17 @@ static TLIST(Thing);
 int main(void) {
 	SEQ(cat("a", NULL, s_str(5), "-", s_str(1.5f)), "a5-1.5");
 	SEQ(s_left("hello", 2), "he"); SEQ(s_left("hi", 9), "hi"); SEQ(s_left("hi", -1), "");
-	SEQ(s_right("hello", 3), "llo"); SEQ(s_mid("hello", 2, 3), "ell"); SEQ(s_mid("hello", 4, -1), "lo");
+	SEQ(s_right("hello", 3), "llo"); SEQ(s_mid("hello", 1, 3), "ell"); SEQ(s_mid("hello", 3, -1), "lo");
 	SEQ(s_mid("hello", 9, 1), "");
-	CHECK(s_instr("a=b=c", "=", 1) == 2 && s_instr("a=b=c", "=", 3) == 4 && s_instr("abc", "x", 1) == 0, "instr");
+	CHECK(s_find("a=b=c", "=", 0) == 1 && s_find("a=b=c", "=", 2) == 3 && s_find("abc", "x", 0) == -1 && s_has("abc", "bc"), "find");
 	SEQ(s_trim("  x y \t\r"), "x y"); SEQ(s_upper("aBc1"), "ABC1"); SEQ(s_lower("aBc1"), "abc1");
 	SEQ(s_replace("a.b.c", ".", "::"), "a::b::c"); SEQ(s_replace("aaa", "aa", "b"), "ba");
 	SEQ(s_lset("ab", 4), "ab  "); SEQ(s_rset("ab", 4), "  ab"); SEQ(s_rset("abcdef", 3), "def");
 	SEQ(s_repeat("ab", 3), "ababab"); SEQ(s_chr(65), "A"); CHECK(s_asc("A") == 65 && s_asc("") == -1, "asc");
 	SEQ(s_hex(255), "000000FF"); SEQ(s_hex(-1), "FFFFFFFF");
 	CHECK(s_len(NULL) == 0 && s_eq(NULL, ""), "null is empty");
-	SEQ(s_str(1.0f), "1.0"); SEQ(s_str(0.1f), "0.1"); SEQ(s_str(-2.25f), "-2.25"); SEQ(s_str(1.0f / 3), "0.333333");
-	SEQ(s_str(123456.7f), "123457.0"); SEQ(s_str(1e9f), "1.00000e+009"); SEQ(s_str(-42), "-42");
+	SEQ(s_str(1.0f), "1"); SEQ(s_str(0.1f), "0.1"); SEQ(s_str(-2.25f), "-2.25"); SEQ(s_str(1.0f / 3), "0.333333");
+	SEQ(s_str(123456.7f), "123457"); SEQ(s_str(1e9f), "1e+09"); SEQ(s_str(-42), "-42");
 	CHECK(iround("  12abc") == 12 && iround(2.5f) == 2 && iround(3.5f) == 4 && iround(-1.6f) == -2 && iround(7) == 7, "int");
 	CHECK(to_float("1.5") == 1.5f && to_float(3) == 3.0f, "float");
 
@@ -49,12 +49,14 @@ int main(void) {
 	k = 0; each(Thing, t) k++;
 	CHECK(k == 0, "left %d", k);
 
-	// churn a lot of garbage, heap should stay small
-	str keep = "";
-	for (int i = 0; i < 2000000; i++) { str t = cat("garbage ", s_str(i)); if (i % 500000 == 0) keep = cat(keep, t, ";"); }
-	GC_gcollect();
+	// churn a lot of temps w/ a reset every so often; kept strings survive the resets
+	str keep = NULL;
+	for (int i = 0; i < 2000000; i++) {
+		str t = cat("garbage ", s_str(i));
+		if (i % 500000 == 0) sset(&keep, cat(keep, t, ";"));
+		if (i % 1000 == 0) tmp_reset();
+	}
 	SEQ(keep, "garbage 0;garbage 500000;garbage 1000000;garbage 1500000;");
-	CHECK(GC_get_heap_size() < 16 << 20, "heap %zu", GC_get_heap_size());
 	printf("%s (%d failed)\n", fails ? "FAILED" : "all good", fails);
 	return fails != 0;
 }

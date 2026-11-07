@@ -41,16 +41,16 @@ static void composition(Events *e) {
 #define AT(t) (s > (t) * 70 && p <= (t) * 70)
 		if (AT(1)) PlaySound_Strict(LoadTempSound("SFX\\SCP\\012\\Speech1.ogg"));
 		else if (AT(13)) {
-			Msg = "You start pushing your nails into your wrist, drawing blood."; MsgTimer = 7 * 70;
+			sset(&Msg, "You start pushing your nails into your wrist, drawing blood."); MsgTimer = 7 * 70;
 			Injuries += .5f;
 			PlaySound_Strict(LoadTempSound("SFX\\SCP\\012\\Speech2.ogg"));
 		} else if (AT(31)) {
 			retex(R->Objects[4], "GFX\\map\\scp-012_1.jpg");
-			Msg = "You tear open your left wrist and start writing on the composition with your blood."; MsgTimer = 7 * 70;
+			sset(&Msg, "You tear open your left wrist and start writing on the composition with your blood."); MsgTimer = 7 * 70;
 			Injuries = Max(Injuries, 1.5f);
 			PlaySound_Strict(LoadTempSound(sf("SFX\\SCP\\012\\Speech%d.ogg", irand(3, 4))));
 		} else if (AT(49)) {
-			Msg = "You push your fingers deeper into the wound."; MsgTimer = 8 * 70;
+			sset(&Msg, "You push your fingers deeper into the wound."); MsgTimer = 8 * 70;
 			Injuries += .3f;
 			PlaySound_Strict(LoadTempSound("SFX\\SCP\\012\\Speech5.ogg"));
 		} else if (AT(63)) {
@@ -59,15 +59,15 @@ static void composition(Events *e) {
 			PlaySound_Strict(LoadTempSound("SFX\\SCP\\012\\Speech6.ogg"));
 		} else if (AT(74)) {
 			retex(R->Objects[4], "GFX\\map\\scp-012_3.jpg");
-			Msg = "You rip the wound wide open. Grabbing scoops of blood pouring out."; MsgTimer = 7 * 70;
+			sset(&Msg, "You rip the wound wide open. Grabbing scoops of blood pouring out."); MsgTimer = 7 * 70;
 			Injuries += .8f;
 			PlaySound_Strict(LoadTempSound("SFX\\SCP\\012\\Speech7.ogg"));
 			Crouch = 1;
 			Decals *de = CreateDecal(17, X(Collider), -768 * RS + .01f, Z(Collider), 90, frnd(0, 360), 0);
 			if (de) { de->Size = .1f; de->MaxSize = .45f; de->SizeChange = .0002f; UpdateDecals(); }
 		} else if (AT(85)) {
-			DeathMSG = "Subject D-9341 found in a pool of blood next to SCP-012. Subject seems to have ripped open his wrists and written three extra "
-				"lines to the composition before dying of blood loss.";
+			sset(&DeathMSG, "Subject D-9341 found in a pool of blood next to SCP-012. Subject seems to have ripped open his wrists and written three extra "
+				"lines to the composition before dying of blood loss.");
 			Kill();
 		}
 #undef AT
@@ -197,10 +197,10 @@ static void nv895(Events *e) { // looking at 895 through nv goggles
 	BlurTimer = sind(MilliSecs2() / 10) * fabsf(Sanity);
 	if (VomitTimer < 0) { RestoreSanity = 0; Sanity = -1010; }
 	if (Sanity < -1000) {
-		DeathMSG = WearingNightVision > 1
+		sset(&DeathMSG, WearingNightVision > 1
 			? "\"Class D viewed SCP-895 through a pair of digital night vision goggles, presumably enhanced by SCP-914. It might be possible that the subject "
 			  "was able to resist the memetic effects partially through these goggles. The goggles have been stored for further study.\""
-			: "\"Class D viewed SCP-895 through a pair of digital night vision goggles, killing him.\"";
+			: "\"Class D viewed SCP-895 through a pair of digital night vision goggles, killing him.\"");
 		entity_texture(NVOverlay, NVTexture, 0, 0);
 		if (VomitTimer < -10) Kill();
 	} else if (Sanity < -800) {

@@ -27,7 +27,7 @@ static void aimshoot(NPCs *n, float dist, float acc, int insta, const char *msg)
 	if (n->Reload == 0) {
 		entity_pick(pvt, dist);
 		if (picked_entity() == Collider || n->State3 == 1) {
-			if (msg) DeathMSG = (str)msg;
+			if (msg) sset(&DeathMSG, (str)msg);
 			PlaySound2(GunshotSFX, Camera, n->Collider, 35, 1);
 			rotate_entity(pvt, entity_pitch(n->Collider, 0), entity_yaw(n->Collider, 0), 0, 1);
 			position_entity(pvt, entity_x(n->obj, 0), entity_y(n->obj, 0), entity_z(n->obj, 0), 0);
@@ -73,7 +73,7 @@ static void walksteps(NPCs *n, float pf) {
 
 void UpdateGuard(NPCs *n) {
 	float pf = n->Frame, dist;
-	n->BoneToManipulate = ""; n->ManipulateBone = 0; n->ManipulationType = 0; n->NPCNameInSection = "Guard";
+	sset(&n->BoneToManipulate, ""); n->ManipulateBone = 0; n->ManipulationType = 0; sset(&n->NPCNameInSection, "Guard");
 	switch (st(n->State)) {
 	case 1: // aims and shoots at the player
 		aimframes(n);
@@ -95,7 +95,7 @@ void UpdateGuard(NPCs *n) {
 				aimshoot(n, dist, acc, insta, msg);
 			} else AnimateNPC(n, 302, 344, .35f, 1);
 			n->ManipulateBone = 1;
-			n->BoneToManipulate = "Chest";
+			sset(&n->BoneToManipulate, "Chest");
 			n->ManipulationType = n->State2 == 10 ? 3 : 0;
 		}
 		break;
@@ -135,7 +135,7 @@ void UpdateGuard(NPCs *n) {
 	case 8: break;
 	case 9:
 		AnimateNPC(n, 77, 201, .2f, 1);
-		n->BoneToManipulate = "head"; n->ManipulateBone = 1; n->ManipulationType = 0;
+		sset(&n->BoneToManipulate, "head"); n->ManipulateBone = 1; n->ManipulationType = 0;
 		n->Angle = entity_yaw(n->Collider, 0);
 		break;
 	case 10:
@@ -177,7 +177,7 @@ void UpdateGuard(NPCs *n) {
 		rotate_entity(pvt, Min(entity_pitch(pvt, 0), 20), entity_yaw(pvt, 0), 0, 0);
 		rotate_entity(n->Collider, CurveAngle(entity_pitch(pvt, 0), entity_pitch(n->Collider, 0), 10), CurveAngle(entity_yaw(pvt, 0), entity_yaw(n->Collider, 0), 10), 0, 1);
 		position_entity(pvt, entity_x(n->Collider, 0), entity_y(n->Collider, 0) + .8f, entity_z(n->Collider, 0), 0);
-		if (n->State2 == 1) { point_entity(pvt, Collider, 0); n->ManipulateBone = 1; n->BoneToManipulate = "Chest"; n->ManipulationType = 0; }
+		if (n->State2 == 1) { point_entity(pvt, Collider, 0); n->ManipulateBone = 1; sset(&n->BoneToManipulate, "Chest"); n->ManipulationType = 0; }
 		else rotate_entity(pvt, 0, n->Angle, 0, 0);
 		rotate_entity(pvt, Min(entity_pitch(pvt, 0), 40), entity_yaw(n->Collider, 0), 0, 0);
 		free_entity(pvt);
@@ -273,7 +273,7 @@ void Shoot(float x, float y, float z, float hitProb, int particles, int instaKil
 			case 6: hit(&m, "A bullet hit your right shoulder.", 2.5f, 4); break;
 			}
 		}
-		if (MsgTimer < 64 * 4) { Msg = (str)m; MsgTimer = 70 * 6; } // only if the last one's 2s old
+		if (MsgTimer < 64 * 4) { sset(&Msg, (str)m); MsgTimer = 70 * 6; } // only if the last one's 2s old
 		Injuries = Min(Injuries, 4);
 		PlaySound_Strict(BullethitSFX);
 	} else if (particles && ParticleAmount > 0) { // missed: dust + a bullet hole behind you

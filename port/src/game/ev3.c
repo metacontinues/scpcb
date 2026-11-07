@@ -99,7 +99,7 @@ static int scp008(Events *e) {
 					if (!WearingHazmat) {
 						Injuries += .1f;
 						if (Infect == 0) Infect = 1;
-						Msg = "The window shattered and a piece of glass cut your arm."; MsgTimer = 70 * 8;
+						sset(&Msg, "The window shattered and a piece of glass cut your arm."); MsgTimer = 70 * 8;
 					}
 					PlaySound2(LoadTempSound("SFX\\General\\GlassBreak.ogg"), Camera, o0, 10, 1);
 					e->EventState2 = 1;
@@ -213,13 +213,13 @@ static void idle(Events *e) { // EventState 0: humming, waiting for someone to s
 			break;
 		}
 		int first = 1; // only one tesla gate gets the clerk
-		each(Events, e2) if (s_eq(e2->EventName, e->EventName) && e2 != e && s_len(e2->EventStr)) { first = 0; e->EventStr = "done"; break; }
+		each(Events, e2) if (s_eq(e2->EventName, e->EventName) && e2 != e && s_len(e2->EventStr)) { first = 0; sset(&e->EventStr, "done"); break; }
 		if (first && !s_len(e->EventStr) && IN) {
 			int o = entity_distance(R->Objects[5], Collider) < entity_distance(R->Objects[6], Collider) ? R->Objects[6] : R->Objects[5];
 			NPCs *n = R->NPC[0] = CreateNPC(NPCtypeClerk, XG(o), .5f, ZG(o));
 			point_entity(n->Collider, R->Objects[2], 0);
 			n->State = 2;
-			e->EventStr = "step1";
+			sset(&e->EventStr, "step1");
 			e->EventState = e->EventState2 = e->EventState3 = 0;
 		}
 	} else hide_entity(R->Objects[4]);
@@ -266,7 +266,7 @@ static void shock(Events *e) { // EventState counting up: charge, zap, power bac
 	if (KillTimer >= 0) for (int i = 0; i <= 2; i++) if (flat(Collider, R->Objects[i]) < 250 * RS) {
 		show_entity(Light); LightFlash = .4f; CameraShake = 1;
 		Kill();
-		DeathMSG = "Subject D-9341 killed by the Tesla gate at [REDACTED].";
+		sset(&DeathMSG, "Subject D-9341 killed by the Tesla gate at [REDACTED].");
 	}
 	if (s_eq(e->EventStr, "step1")) R->NPC[0]->State = 3;
 	if (Curr106->State < -10) {
@@ -293,10 +293,10 @@ static void clerk(Events *e) { // the clerk who runs into the gate
 	} else if (s_eq(s, "step1") && n->State == 3) {
 		n->CurrSpeed = 0;
 		AnimateNPC(n, 41, 60, .5f, 0);
-		if (n->Frame == 60) { n->IsDead = 1; e->EventStr = "step2"; SetNPCFrame(n, 57); }
+		if (n->Frame == 60) { n->IsDead = 1; sset(&e->EventStr, "step2"); SetNPCFrame(n, 57); }
 	} else if (s_eq(s, "step2")) {
 		AnimateNPC(n, 57, 60, .5f, 0);
-		if (n->Frame == 60) { e->EventStr = "smoke"; e->EventVal = 0; }
+		if (n->Frame == 60) { sset(&e->EventStr, "smoke"); e->EventVal = 0; }
 	} else if (s_len(s) && !s_eq(s, "step1") && !s_eq(s, "done")) { // the body smokes for 10s
 		if (e->EventVal < 70 * 10) {
 			if (ParticleAmount > 0 && irand(1, 20 - 10 * (ParticleAmount - 1)) == 1) {
@@ -309,7 +309,7 @@ static void clerk(Events *e) { // the clerk who runs into the gate
 				p->Achange = -.02f;
 			}
 			e->EventVal += FPSfactor;
-		} else e->EventStr = "done";
+		} else sset(&e->EventStr, "done");
 	}
 }
 

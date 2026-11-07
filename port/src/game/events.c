@@ -14,9 +14,9 @@ Events *CreateEvent(const char *eventname, const char *roomname, int id, float p
 		int t = taken(r);
 		if (prob == 0) {
 			i++;
-			if (i >= id && !t) { Events *e = lnew(Events); e->EventName = s_dup(eventname); e->room = r; return e; }
+			if (i >= id && !t) { Events *e = lnew(Events); sset(&e->EventName, s_dup(eventname)); e->room = r; return e; }
 		} else if (!t && frnd(0, 1) < prob) {
-			Events *e = lnew(Events); e->EventName = s_dup(eventname); e->room = r;
+			Events *e = lnew(Events); sset(&e->EventName, s_dup(eventname)); e->room = r;
 		}
 	}
 	return NULL;

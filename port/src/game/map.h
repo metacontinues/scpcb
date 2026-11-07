@@ -151,7 +151,6 @@ void FreeTextureCache(void);
 int LoadRMesh(const char *file, RoomTemplates *rt);
 str StripPath(const char *file);
 str StripFilename(const char *file);
-str Piece(const char *s, int entry, const char *ch);
 RoomTemplates *CreateRoomTemplate(const char *meshpath);
 void LoadRoomTemplates(const char *file);
 void LoadRoomMesh(RoomTemplates *rt);

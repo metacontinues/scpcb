@@ -7,16 +7,16 @@ ItemTemplates *CreateItemTemplate(const char *name, const char *tempname, const 
 	const char *imgpath, float scale, const char *texturepath, const char *invimgpath2, int anim, int texflags) {
 	ItemTemplates *it = lnew(ItemTemplates);
 	// items sharing a model copy it
-	each(ItemTemplates, it2) if (s_eq(it2->objpath, objpath) && it2->obj) { it->obj = copy_entity(it2->obj, 0); it->parentobjpath = it2->objpath; break; }
+	each(ItemTemplates, it2) if (s_eq(it2->objpath, objpath) && it2->obj) { it->obj = copy_entity(it2->obj, 0); sset(&it->parentobjpath, it2->objpath); break; }
 	if (!it->obj) {
 		it->isAnim = anim != 0;
 		it->obj = anim ? LoadAnimMesh_Strict(objpath, 0) : LoadMesh_Strict(objpath, 0);
 	}
-	it->objpath = s_dup(objpath);
+	sset(&it->objpath, s_dup(objpath));
 	if (s_len(texturepath)) {
 		int tex = 0;
 		each(ItemTemplates, it2) if (s_eq(it2->texpath, texturepath) && it2->tex) { tex = it2->tex; break; }
-		if (!tex) { tex = LoadTexture_Strict(texturepath, texflags); it->texpath = s_dup(texturepath); }
+		if (!tex) { tex = LoadTexture_Strict(texturepath, texflags); sset(&it->texpath, s_dup(texturepath)); }
 		entity_texture(it->obj, tex, 0, 0);
 		it->tex = tex;
 	}
@@ -29,15 +29,15 @@ ItemTemplates *CreateItemTemplate(const char *name, const char *tempname, const 
 	}
 	if (!it->invimg) {
 		it->invimg = LoadImage_Strict(invimgpath);
-		it->invimgpath = s_dup(invimgpath);
+		sset(&it->invimgpath, s_dup(invimgpath));
 		mask_image(it->invimg, 255, 0, 255);
 	}
 	if (s_len(invimgpath2)) {
 		if (!it->invimg2) { it->invimg2 = LoadImage_Strict(invimgpath2); mask_image(it->invimg2, 255, 0, 255); }
 	} else it->invimg2 = 0;
-	it->imgpath = s_dup(imgpath);
-	it->tempname = s_dup(tempname);
-	it->name = s_dup(name);
+	sset(&it->imgpath, s_dup(imgpath));
+	sset(&it->tempname, s_dup(tempname));
+	sset(&it->name, s_dup(name));
 	it->sound = 1;
 	hide_entity(it->obj);
 	return it;
@@ -195,7 +195,7 @@ Items *CreateItem(const char *name, const char *tempname, float x, float y, floa
 		entity_radius(i->collider, .01f, .01f);
 		entity_pick_mode(i->collider, 1, 0);
 		i->model = copy_entity(it->obj, i->collider);
-		i->name = it->name;
+		sset(&i->name, it->name);
 		show_entity(i->collider);
 		show_entity(i->model);
 	}
@@ -298,8 +298,8 @@ static int wearclash(int (*same)(Items *), int (*other)(Items *)) {
 void PickItem(Items *item) {
 	int full = 1;
 	for (int n = 0; n < MaxItemAmount; n++) if (!Inventory[n]) { full = 0; break; }
-	if (WearingHazmat > 0) { Msg = "You cannot pick up any items while wearing a hazmat suit."; MsgTimer = 70 * 5; return; }
-	if (full) { Msg = "You cannot carry any more items."; MsgTimer = 70 * 5; return; }
+	if (WearingHazmat > 0) { sset(&Msg, "You cannot pick up any items while wearing a hazmat suit."); MsgTimer = 70 * 5; return; }
+	if (full) { sset(&Msg, "You cannot carry any more items."); MsgTimer = 70 * 5; return; }
 	int n = 0;
 	while (Inventory[n]) n++;
 	str t = item->itemtemplate->tempname;
@@ -308,10 +308,10 @@ void PickItem(Items *item) {
 		if (!s_eq(PlayerRoom->RoomTemplate->Name, "room1123")) {
 			show_entity(Light); LightFlash = 7;
 			PlaySound_Strict(LoadTempSound("SFX\\SCP\\1123\\Touch.ogg"));
-			DeathMSG = "Subject D-9341 was shot dead after attempting to attack a member of Nine-Tailed Fox. Surveillance tapes show that the subject had been "
+			sset(&DeathMSG, "Subject D-9341 was shot dead after attempting to attack a member of Nine-Tailed Fox. Surveillance tapes show that the subject had been "
 				"wandering around the site approximately 9 minutes prior, shouting the phrase \"get rid of the four pests\""
 				" in chinese. SCP-1123 was found in [REDACTED] nearby, suggesting the subject had come into physical contact with it. How "
-				"exactly SCP-1123 was removed from its containment chamber is still unknown.";
+				"exactly SCP-1123 was removed from its containment chamber is still unknown.");
 			Kill();
 		}
 		Events *e = FindEvent("room1123");
@@ -323,25 +323,25 @@ void PickItem(Items *item) {
 	} else if (s_eq(t, "killbat")) {
 		show_entity(Light); LightFlash = 1;
 		PlaySound_Strict(IntroSFX[11]);
-		DeathMSG = "Subject D-9341 found dead inside SCP-914's output booth next to what appears to be an ordinary nine-volt battery. The subject is covered in severe "
-			"electrical burns, and assumed to be killed via an electrical shock caused by the battery. The battery has been stored for further study.";
+		sset(&DeathMSG, "Subject D-9341 found dead inside SCP-914's output booth next to what appears to be an ordinary nine-volt battery. The subject is covered in severe "
+			"electrical burns, and assumed to be killed via an electrical shock caused by the battery. The battery has been stored for further study.");
 		Kill();
 	} else if (s_eq(t, "scp148")) GiveAchievement(Achv148, 1);
 	else if (s_eq(t, "scp513")) GiveAchievement(Achv513, 1);
 	else if (s_eq(t, "scp860")) GiveAchievement(Achv860, 1);
 	else if (s_eq(t, "key6")) GiveAchievement(AchvOmni, 1);
-	else if (s_eq(t, "veryfinevest")) { Msg = "The vest is too heavy to pick up."; MsgTimer = 70 * 6; return; }
+	else if (s_eq(t, "veryfinevest")) { sset(&Msg, "The vest is too heavy to pick up."); MsgTimer = 70 * 6; return; }
 	else if (s_eq(t, "firstaid") || s_eq(t, "finefirstaid") || s_eq(t, "veryfinefirstaid") || s_eq(t, "firstaid2")) item->state = 0;
 	else if (s_eq(t, "navigator") || s_eq(t, "nav")) { if (s_eq(item->itemtemplate->name, "S-NAV Navigator Ultimate")) GiveAchievement(AchvSNAV, 1); }
 	else if (ishazmat(item)) {
 		int c = wearclash(ishazmat, isvest);
-		if (c == 1) { Msg = "You are not able to wear two hazmat suits at the same time."; MsgTimer = 70 * 5; return; }
-		if (c == 2) { Msg = "You are not able to wear a vest and a hazmat suit at the same time."; MsgTimer = 70 * 5; return; }
+		if (c == 1) { sset(&Msg, "You are not able to wear two hazmat suits at the same time."); MsgTimer = 70 * 5; return; }
+		if (c == 2) { sset(&Msg, "You are not able to wear a vest and a hazmat suit at the same time."); MsgTimer = 70 * 5; return; }
 		SelectedItem = item;
 	} else if (isvest(item)) {
 		int c = wearclash(isvest, ishazmat);
-		if (c == 1) { Msg = "You are not able to wear two vests at the same time."; MsgTimer = 70 * 5; return; }
-		if (c == 2) { Msg = "You are not able to wear a vest and a hazmat suit at the same time."; MsgTimer = 70 * 5; return; }
+		if (c == 1) { sset(&Msg, "You are not able to wear two vests at the same time."); MsgTimer = 70 * 5; return; }
+		if (c == 2) { sset(&Msg, "You are not able to wear a vest and a hazmat suit at the same time."); MsgTimer = 70 * 5; return; }
 		SelectedItem = item;
 	}
 	if (item->itemtemplate->sound != 66) PlaySound_Strict(PickSFX[item->itemtemplate->sound]);
@@ -353,7 +353,7 @@ void PickItem(Items *item) {
 }
 
 void DropItem(Items *item, int playdropsound) {
-	if (WearingHazmat > 0) { Msg = "You cannot drop any items while wearing a hazmat suit."; MsgTimer = 70 * 5; return; }
+	if (WearingHazmat > 0) { sset(&Msg, "You cannot drop any items while wearing a hazmat suit."); MsgTimer = 70 * 5; return; }
 	if (playdropsound && item->itemtemplate->sound != 66) PlaySound_Strict(PickSFX[item->itemtemplate->sound]);
 	item->Dropped = 1;
 	show_entity(item->collider);

@@ -1,5 +1,4 @@
-// ini.c: Main.bb's INI-functions. files are cached by lowercased name like the bank version,
-// so PutINIValue doesn't show up in GetINI* until UpdateINIFile (same as blitz)
+// ini.c: ini files. files are cached by lowercased name, so PutINIValue doesn't show up in GetINI* until UpdateINIFile
 #include "g.h"
 
 typedef struct INIFile { lnode n; str name, buf; int bankOffset, size; } INIFile;
@@ -10,7 +9,7 @@ static str ReadINILine(INIFile *f) {
 	while (o < f->size && (f->buf[o] == 13 || f->buf[o] == 10)) o++;
 	a = o;
 	while (o < f->size && f->buf[o] != 13 && f->buf[o] != 10) o++;
-	str r = s_mid(f->buf, a + 1, o - a);
+	str r = s_mid(f->buf, a, o - a);
 	f->bankOffset = o < f->size ? o + 1 : o;
 	return r;
 }
@@ -24,31 +23,31 @@ static INIFile *find(const char *name) {
 void UpdateINIFile(const char *name) {
 	INIFile *f = find(name);
 	if (!f) return;
-	f->buf = ""; f->size = 0;
+	free(f->buf); f->buf = NULL; f->size = 0;
 	FILE *h = read_file(f->name);
 	if (!h) return;
 	int n = file_size(f->name);
-	f->buf = GC_MALLOC_ATOMIC(n + 1);
+	f->buf = malloc(n + 1);
 	f->size = fread(f->buf, 1, n, h);
 	f->buf[f->size] = 0;
 	close_file(h);
 }
 
-static str val(const char *line) { return s_trim(s_right(line, s_len(line) - s_instr(line, "=", 1))); }
+static str val(const char *line) { return s_trim(s_right(line, s_len(line) - (s_find(line, "=", 0) + 1))); }
 static int iskey(const char *line, const char *par) {
-	return s_eq(s_lower(s_trim(s_left(line, Max(s_instr(line, "=", 1) - 1, 0)))), s_lower(par));
+	return s_eq(s_lower(s_trim(s_left(line, Max(s_find(line, "=", 0), 0)))), s_lower(par));
 }
 
 str GetINIString(const char *file, const char *section, const char *par, const char *def) {
 	INIFile *f = find(file);
-	if (!f) { f = lnew(INIFile); f->name = s_lower(file); UpdateINIFile(f->name); }
+	if (!f) { f = lnew(INIFile); sset(&f->name, s_lower(file)); UpdateINIFile(f->name); }
 	f->bankOffset = 0;
 	str sec = s_lower(section);
 	while (f->bankOffset < f->size) {
 		str s = ReadINILine(f);
 		if (!s_eq(s_left(s, 1), "[")) continue;
 		s = s_lower(s);
-		if (!s_eq(s_mid(s, 2, s_len(s) - 2), sec)) continue;
+		if (!s_eq(s_mid(s, 1, s_len(s) - 2), sec)) continue;
 		str t;
 		do {
 			t = ReadINILine(f);
@@ -96,20 +95,19 @@ int GetINISectionLocation(const char *file, const char *section) {
 		str s = read_line(f);
 		if (!s_eq(s_left(s, 1), "[")) continue;
 		s = s_lower(s);
-		int t = s_instr(s, sec, 1);
-		if (t > 0 && (s_eq(s_mid(s, t - 1, 1), "[") || s_eq(s_mid(s, t - 1, 1), "|"))) { close_file(f); return n; }
+		int t = s_find(s, sec, 0);
+		if (t > 0 && (s[t - 1] == '[' || s[t - 1] == '|')) { close_file(f); return n; }
 	}
 	close_file(f);
 	return 0;
 }
 
-// blitz built the file as a chr(0) separated string first; a line array does the same job
 int PutINIValue(const char *file, const char *section, const char *key, const char *value) {
 	str sec = cat("[", s_trim(section), "]"), usec = s_upper(sec), k = s_trim(key), v = s_trim(value);
 	int nl = 0, cl = 0; str *ls = NULL;
 	FILE *r = read_file(file);
 	if (r) {
-		while (!file_eof(r)) { if (nl >= cl) ls = GC_REALLOC(ls, sizeof *ls * (cl = cl ? cl * 2 : 64)); ls[nl++] = read_line(r); }
+		while (!file_eof(r)) { if (nl >= cl) ls = realloc(ls, sizeof *ls * (cl = cl ? cl * 2 : 64)); ls[nl++] = read_line(r); }
 		close_file(r);
 	}
 	FILE *w = write_file(file);
@@ -126,13 +124,14 @@ int PutINIValue(const char *file, const char *section, const char *key, const ch
 			SECT(t); cur = s_upper(t);
 			if (s_eq(cur, usec)) found = 1;
 		} else if (s_eq(s_left(t, 1), ":")) write_line(w, t);
-		else if (s_instr(t, "=", 1)) {
-			int e = s_instr(t, "=", 1);
-			if (s_eq(cur, usec) && s_eq(s_upper(s_trim(s_left(t, e - 1))), s_upper(k))) { if (*v) KEY(); wrote = 1; }
+		else if (s_has(t, "=")) {
+			int e = s_find(t, "=", 0);
+			if (s_eq(cur, usec) && s_eq(s_upper(s_trim(s_left(t, e))), s_upper(k))) { if (*v) KEY(); wrote = 1; }
 			else write_line(w, t);
 		}
 	}
 	if (!wrote) { if (!found) SECT(sec); KEY(); }
+	free(ls);
 	close_file(w);
 	return 1;
 }

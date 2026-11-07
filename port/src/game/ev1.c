@@ -11,7 +11,7 @@ static int near(Events *e, float d) { return R->dist < d && R->dist > 0; }
 static void put173(int o, float y) { position_entity(Curr173->Collider, XG(o), y, ZG(o), 0); reset_entity(Curr173->Collider); }
 static NPCs *body(int type, float x, float y, float z) { return CreateNPC(type, x, y, z); }
 static void dead(NPCs *n, float frame) { SetNPCFrame(n, frame); n->State = 8; }
-static void retex(NPCs *n, const char *f) { n->texture = (str)f; int t = LoadTexture_Strict(f, 1); entity_texture(n->obj, t, 0, 0); free_texture(t); }
+static void retex(NPCs *n, const char *f) { sset(&n->texture, (str)f); int t = LoadTexture_Strict(f, 1); entity_texture(n->obj, t, 0, 0); free_texture(t); }
 
 static int room1archive(Events *e) { if (e->EventState == 0) e->EventState = irand(1, 3); else R->RoomDoors[0]->KeyCard = iround(e->EventState); return 0; }
 
@@ -159,7 +159,7 @@ static int room2shaft(Events *e) {
 	if (IN) {
 		UpdateButton(R->Objects[2]);
 		if (ClosestButton == R->Objects[2] && MouseHit1) {
-			Msg = "The elevator appears to be broken.";
+			sset(&Msg, "The elevator appears to be broken.");
 			PlaySound2(ButtonSFX2, Camera, R->Objects[2], 10, 1);
 			MsgTimer = 5 * 70;
 			MouseHit1 = 0;
@@ -467,7 +467,7 @@ static int room2offices035(Events *e) { // 035's victim, once 035 is out
 			rotate_entity(n->Collider, 0, R->angle + 180, 0, 0);
 			move_entity(n->Collider, 0, 0, -.5f);
 			n->State = 3;
-			n->texture = "GFX\\npcs\\035victim.jpg";
+			sset(&n->texture, "GFX\\npcs\\035victim.jpg");
 			ChangeNPCTextureID(n, 7);
 			SetNPCFrame(n, 19);
 		}

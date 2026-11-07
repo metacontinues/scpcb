@@ -140,13 +140,13 @@ void InitLoadingScreens(const char *file) {
 	while (f && !file_eof(f)) {
 		str t = s_trim(read_line(f));
 		if (!s_eq(s_left(t, 1), "[")) continue;
-		t = s_mid(t, 2, s_len(t) - 2);
+		t = s_mid(t, 1, s_len(t) - 2);
 		LoadingScreens *ls = lnew(LoadingScreens);
 		ls->ID = ++LoadingScreenAmount;
-		ls->title = t;
-		ls->imgpath = GetINIString(file, t, "image path", "");
+		sset(&ls->title, t);
+		sset(&ls->imgpath, GetINIString(file, t, "image path", ""));
 		for (int i = 0; i < 5; i++) {
-			ls->txt[i] = GetINIString(file, t, cat("text", s_str(i + 1)), "");
+			sset(&ls->txt[i], GetINIString(file, t, cat("text", s_str(i + 1)), ""));
 			if (*ls->txt[i]) ls->txtamount++;
 		}
 		ls->disablebackground = GetINIInt(file, t, "disablebackground", 0);

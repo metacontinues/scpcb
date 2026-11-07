@@ -8,8 +8,8 @@ void InitAchievements(void) {
 	AchvMSGenabled = GetINIInt("options.ini", "options", "achievement popup enabled", 0);
 	for (int i = 0; i < MAXACHIEVEMENTS; i++) {
 		int loc = GetINISectionLocation(AF, cat("s", s_str(i)));
-		AchievementStrings[i] = GetINIString2(AF, loc, "string1", "");
-		AchievementDescs[i] = GetINIString2(AF, loc, "AchvDesc", "");
+		sset(&AchievementStrings[i], GetINIString2(AF, loc, "string1", ""));
+		sset(&AchievementDescs[i], GetINIString2(AF, loc, "AchvDesc", ""));
 		AchvIMG[i] = fit(LoadImage_Strict(cat("GFX\\menu\\achievements\\", GetINIString2(AF, loc, "image", ""), ".jpg")));
 	}
 	AchvLocked = fit(LoadImage_Strict("GFX\\menu\\achievements\\achvlocked.jpg"));
@@ -28,7 +28,7 @@ void GiveAchievement(int id, int showMessage) {
 
 AchievementMsg *CreateAchievementMsg(int id, const char *txt) {
 	AchievementMsg *a = lnew(AchievementMsg);
-	a->achvID = id; a->txt = s_dup(txt); a->msgx = 0; a->msgtime = FPSfactor2;
+	a->achvID = id; sset(&a->txt, s_dup(txt)); a->msgx = 0; a->msgtime = FPSfactor2;
 	a->msgID = CurrAchvMSGID++;
 	return a;
 }

@@ -20,14 +20,13 @@ static void drawcwm(LoadingScreens *ls, int percent, int shortloading, int first
 	for (int i = 0, n = irand(2, 9); i <= n; i++) s = cat(s, s_chr(irand(48, 122)));
 	AAText(GraphicWidth / 2, GraphicHeight / 2 + 80, s, 1, 1);
 	if (percent == 0) {
-		if (irand(1, 5) == 1) ls->txt[0] = irand(1, 2) == 1 ? cat("It will happen on ", current_date(), ".") : s_dup(current_time());
-		else ls->txt[0] = (str)cwm[irand(1, 13) - 1];
+		if (irand(1, 5) == 1) sset(&ls->txt[0], irand(1, 2) == 1 ? cat("It will happen on ", current_date(), ".") : s_dup(current_time()));
+		else sset(&ls->txt[0], (str)cwm[irand(1, 13) - 1]);
 	}
-	// only the last Replace survives, the loop just burns rng like the original
-	s = ls->txt[0];
+	s = ls->txt[0]; // glitch a dozen or so letters
 	for (int i = 0, n = irand(10, 15); i <= n; i++) {
-		int a = irand(1, s_len(s) - 1), c = irand(130, 250);
-		s = s_replace(ls->txt[0], s_mid(ls->txt[0], a, 1), s_chr(c));
+		int a = irand(0, s_len(s) - 1), c = irand(130, 250);
+		s = s_replace(s, s_mid(s, a, 1), s_chr(c));
 	}
 	AASetFont(Font1);
 	RowText(s, GraphicWidth / 2 - 200, GraphicHeight / 2 + 120, 400, 300, 1, 1);

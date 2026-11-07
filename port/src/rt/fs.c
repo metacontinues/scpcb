@@ -70,18 +70,20 @@ float read_float(FILE *f) { int i = read_int(f); float r; memcpy(&r, &i, 4); ret
 str read_string(FILE *f) {
 	int n = read_int(f);
 	if (n < 0 || n > 1 << 24) n = 0;
-	str s = GC_MALLOC_ATOMIC(n + 1);
+	str s = tmp_alloc(n + 1);
 	n = fread(s, 1, n, f);
 	s[n] = 0;
 	return s;
 }
 str read_line(FILE *f) {
-	size_t n = 0, cap = 64; str s = GC_MALLOC_ATOMIC(cap); int c;
+	size_t n = 0, cap = 256; char *b = malloc(cap); int c;
 	while ((c = fgetc(f)) != EOF && c != '\n') {
-		if (n + 1 >= cap) s = GC_REALLOC(s, cap *= 2);
-		s[n++] = c;
+		if (n + 1 >= cap) b = realloc(b, cap *= 2);
+		b[n++] = c;
 	}
-	if (n && s[n-1] == '\r') n--;
-	s[n] = 0;
+	if (n && b[n-1] == '\r') n--;
+	str s = tmp_alloc(n + 1);
+	memcpy(s, b, n); s[n] = 0;
+	free(b);
 	return s;
 }

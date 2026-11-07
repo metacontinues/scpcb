@@ -14,7 +14,7 @@ port/
   src/rlconfig.h   overrides for raylib's config.h: only the formats the game loads (qoi, qoa, ttf)
   data/            converted assets (gitignored), written by tools/assetconv.c
   vendor/raylib    submodule, pinned to 6.2
-  vendor/bdwgc     submodule, boehm gc v8.2.12 (for blitz strings + Type objects)
+  vendor/bdwgc     submodule, boehm gc v8.2.12 (Type objects, until those move off it)
   vendor/mimalloc  submodule, v3.5.4, overrides malloc for the whole process (-Dmimalloc=false to skip)
   setup.sh         configures port/build w/ the llvm toolchain (clang, llvm-ar, lld)
   src/rt/          the runtime
@@ -34,7 +34,7 @@ port/
     g2d.c          buffers, images, Text/Rect/Line/Oval, fonts, CopyRect, Read/WritePixel
     input.c        keyboard (directinput scancodes) + mouse, hit/speed counters
     misc.c         rng, file writing, dirs, dates
-    str.h/.c       blitz strings: gc'd char*, Left/Mid/Instr/Str/Int/... + cat(...)
+    str.h/.c       strings: frame-arena temps + sset for kept ones, s_left/s_mid/s_find/... + cat(...)
     tl.h/.c        blitz Types: lnew/ldel/each/First/After/Insert + Handle/Object
   src/fmt/         file formats: b3d.c (+ LoadMesh dispatch), x.c, rmesh.c
   src/game/        the game, hand-ported. g.h has every shared global/type/fn
@@ -114,10 +114,10 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
   alpha ignored) and get re-keyed after being drawn into. AAText.bb's sprite-camera font hack isn't
   needed: raylib text is antialiased already, so AAText -> draw_text_a (text w/ alpha). CopyRect and pixel
   ops go through cpu readback (TODO: glCopyTexSubImage2D for the per-frame Dreamfilter grab).
-- **strings**: `str` is a gc'd `char *` (bdwgc), NULL reads as "". results are fresh, never freed.
-  `cat(a, b, ...)` is blitz `+`, `s_str`/`iround`/`to_float` dispatch on the arg type. gc pointers must sit in
-  globals, locals, or gc memory (Type objects), never in malloc'd memory, or they get collected. Chr(0) can't
-  exist in a c string, so the INI code that used it as a separator is rewritten w/ a line array.
+- **strings**: `str` is a plain `char *`, NULL reads as "". results of `cat`/`sf`/`s_*`/ini reads are temporaries from a
+  frame arena, valid until the main loop's `tmp_reset()` (so through a whole load too). anything kept (fields, globals,
+  tables) is an owned heap copy set w/ `sset(&field, value)`. `s_mid`/`s_find` use 0-based positions.
+  debug: build w/ `-Dc_args=-DTMP_POISON` (plus `-Db_sanitize=address -Dmimalloc=false`) to make stale temps visible.
 - **Types**: `typedef struct T { lnode n; ...fields } T;` + `TLIST(T)` in one .c. objects are gc'd, Delete just
   unlinks, so dangling refs stay readable (blitz would error). `lobject(T, h)` is Null after Delete, like blitz.
 - **assets**: the game only reads qoi (images) and qoa (sound), so raylib is built w/o its png/jpg/bmp/ogg decoders.
