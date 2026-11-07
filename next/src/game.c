@@ -16,6 +16,7 @@
 //                          (in the menu too, w/o SCPCB_SEED)
 //   SCPCB_WALK=ticks       hold "forward" that long
 //   SCPCB_YAW=deg          start facing
+//   SCPCB_ROOM=name        start in the middle of the first room w/ that name
 //   SCPCB_NOFOG=1          see past the fog
 //   SCPCB_DOOR=1|2|3       start at the nearest door's button (2: in front of
 //                          the door, 3: same, opened); SCPCB_CLICK=frame clicks
@@ -47,6 +48,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <strings.h>
 #include <time.h>
 
@@ -97,7 +99,14 @@ static void solids(World *w) {
       for (int m = 0; m < pm->m.meshCount; m++)
         coll_mesh(pm->m.meshes[m], t);
     }
+    for (int o = 0; o < ROOM_OBJS; o++) { // FillRoom's, hidden hitboxes too
+      Mdl *om = r->obj[o].coll && r->obj[o].model[0] ? prop_get(r->obj[o].model)
+                                                     : NULL;
+      for (int m = 0; om && m < om->m.meshCount; m++)
+        coll_mesh(om->m.meshes[m], r->obj[o].m);
+    }
   }
+  door_solids(w);
   coll_build();
 }
 
@@ -124,6 +133,13 @@ static void draw(World *w, Vector3 eye) {
         Mdl *pm = prop_get(r->t->rm.props[p].model);
         if (pm)
           mdl_draw(pm, MatrixMultiply(r->t->rm.props[p].m, r->m), pass);
+      }
+      for (int o = 0; o < ROOM_OBJS; o++) {
+        RoomObj *ob = &r->obj[o];
+        Mdl *om =
+            ob->on && !ob->hide && ob->model[0] ? prop_get(ob->model) : NULL;
+        if (om)
+          mdl_draw(om, ob->m, pass);
       }
     }
     door_draw(w, eye, HIDE, pass);
@@ -181,6 +197,16 @@ static MenuAct play(Settings *s, const NewGame *ng, unsigned seed, int dev) {
   blink_range(ng->d.otherfactors, &p.blinklo, &p.blinkhi);
   apply(s, &p);
   player_spawn(&p, w.spawn, envf("SCPCB_YAW", w.spawnyaw));
+  const char *rn = getenv("SCPCB_ROOM");
+  for (int i = 0; rn && i < w.nrooms;
+       i++) // dev: start in the middle of that room, SCPCB_YAW relative to it
+    if (w.rooms[i].t && !strcmp(w.rooms[i].t->name, rn)) {
+      player_spawn(&p, Vector3Add(w.rooms[i].pos, (Vector3){0, .5f, 0}),
+                   envf("SCPCB_YAW", 0) + w.rooms[i].angle);
+      printf("room %s at %.0f %.0f, angle %d\n", rn, w.rooms[i].pos.x,
+             w.rooms[i].pos.z, w.rooms[i].angle);
+      break;
+    }
   if (getenv("SCPCB_DOOR")) { // dev: stand in front of the nearest door's
                               // button, facing it
     int best = -1;

@@ -1,11 +1,13 @@
-// door.h: sliding doors. the original nudged leaves by sin(state)/k every tick;
-// summed up that's (1 - cos(state)) * 180 / (pi * 2k), so a leaf's offset is
-// just a function of state (0 closed .. 180 open)
+// door.h: sliding doors: normal, big (containment), heavy, elevator
 #pragma once
 #include "raylib.h"
 #include "world.h"
 
 void door_init(void); // the door models
+// a door w/ the original's buttons for its kind; its index. autoclose like
+// CreateDoor (1 in 8 open normal doors)
+int door_add(World *w, Vector3 p, int angle, int kind, int room, int open);
+void door_solids(World *w); // static collision, before coll_build
 // closest usable button's door, -1 if none; *at = the button
 int door_button(World *w, Vector3 eye, Vector3 body, Vector3 *at);
 void door_use(World *w, int i);

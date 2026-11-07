@@ -86,7 +86,11 @@ from the repo root:
 3. map gen + rooms + doors + player controller/collision: walkable facility. done: `next/build/scpcb` generates the
    map (the original's algorithm, raylib's rng), drops you in the start room, wasd/mouse w/ the original's speeds,
    sprint/crouch/gravity, swept-ellipsoid collision (src/coll.c), doors between rooms open from their buttons.
-   not yet: FillRoom (rooms' own doors, items, props placed by code), sounds, the hud, room culling beyond distance.
+   FillRoom done (src/fill*.c, drafted from port/'s fillroom*.c by a throwaway translator, then fixed by hand):
+   every room's own doors (all 4 kinds, keycard/scanner/code buttons, moved/removed buttons, locks, linked +
+   timed doors), Objects[] (models + pivots, hidden hitboxes collide), Levers[], RoomDoors[], and item spawns
+   kept as records until items exist. cams, emitters, decals, sprites + extra waypoints come w/ their systems.
+   `SCPCB_ROOM=name` starts you in a room. not yet: room culling beyond distance.
 4. hud, menus, text, audio, options. hud done (blink + stamina meters, hand icon, messages, blinking itself),
    pixel-matched against port/'s. ui images bake 1:1 (tools/bake/ui.c, `.mu` = masked ui), fonts are copied as ttf.
    the meters only show when they matter: options.ini `hud mode = auto|always|off` (missing -> the original's

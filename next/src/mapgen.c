@@ -3,6 +3,7 @@
 // zone has the rooms the game needs, then each cell becomes a room of the shape
 // its neighbours make. rng is raylib's, so seeds don't match the original's
 // maps.
+#include "door.h"
 #include "raylib.h"
 #include "raymath.h"
 #include "util.h"
@@ -384,6 +385,8 @@ static Room *mkroom(World *w, int zone, int shape, int gx, int gy, float y,
   w->rooms = realloc(w->rooms, sizeof *w->rooms * (w->nrooms + 1));
   Room *r = &w->rooms[w->nrooms++];
   *r = (Room){.t = t, .zone = zone, .pos = {0, y, 0}};
+  for (int i = 0; i < ROOM_DOORS; i++)
+    r->door[i] = -1;
   if (t)
     loadtmpl(t);
   place(r, gx, gy, 0);
@@ -517,15 +520,7 @@ static int doorz(Room *r) {
   }
 }
 static void door(World *w, Vector3 p, int angle, int kind, int room) {
-  int open = (int)maxf(irnd(-3, 1), 0);
-  w->doors = realloc(w->doors, sizeof *w->doors * (w->ndoors + 1));
-  w->doors[w->ndoors++] = (Door){p,
-                                 angle,
-                                 kind,
-                                 room,
-                                 open && kind == DOOR_NORMAL && irnd(1, 8) == 1,
-                                 open,
-                                 open ? 180 : 0};
+  door_add(w, p, angle, kind, room, (int)maxf(irnd(-3, 1), 0));
 }
 static void doors(World *w) {
   for (int y = H; y >= 0; y--) {
@@ -565,6 +560,10 @@ void world_gen(World *w, unsigned seed) {
     for (int x = 0; x <= W; x++)
       G(x, y) = m1(G(x, y));
   doors(w);
+  w->accesscode = 0;
+  for (int i = 0, k = 1; i < 4; i++, k *= 10)
+    w->accesscode += irnd(1, 9) * k;
+  world_fill(w);
   for (int i = 0; i < w->nrooms; i++)
     if (w->rooms[i].t && !strcmp(w->rooms[i].t->name, "start")) {
       Vector3 p = w->rooms[i].pos;

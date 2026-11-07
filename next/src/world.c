@@ -80,5 +80,6 @@ void world_free(World *w) {
   free(w->tmpl);
   free(w->rooms);
   free(w->doors);
+  free(w->items);
   *w = (World){0};
 }
