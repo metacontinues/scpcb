@@ -109,7 +109,7 @@ rlt = declare_dependency(link_with: rltool, link_whole: mi, dependencies: sys, c
 	include_directories: include_directories(rl, 'src'), link_args: link)
 
 executable('bake', files('tools/bake/bake.c', 'tools/bake/glb.c', 'tools/bake/img.c', 'tools/bake/room.c',
-	'tools/bake/model.c', 'tools/bake/b3d.c', 'tools/bake/x.c', 'tools/bake/ui.c',
+	'tools/bake/model.c', 'tools/bake/b3d.c', 'tools/bake/x.c', 'tools/bake/ui.c', 'tools/bake/items.c',
 	'tools/bake/snd.c'),
 	dependencies: rlt)
 # the viewer runs the game's room code but links the tools' raylib so screenshots can be png
@@ -120,7 +120,7 @@ executable('scpcb', files('src/game.c',
 	'src/gfx/model.c', 'src/gfx/props.c', 'src/gfx/room.c', 'src/gfx/shd.c',
 	'src/world/coll.c', 'src/world/door.c', 'src/world/fill.c', 'src/world/fill1.c', 'src/world/fill2.c',
 	'src/world/fill3.c', 'src/world/mapgen.c', 'src/world/world.c',
-	'src/play/player.c',
+	'src/play/item.c', 'src/play/play.c', 'src/play/player.c',
 	'src/audio/sfx.c', 'src/audio/snd.c',
-	'src/ui/hud.c', 'src/ui/loading.c', 'src/ui/menu.c', 'src/ui/settings.c', 'src/ui/ui.c'),
+	'src/ui/hud.c', 'src/ui/inv.c', 'src/ui/loading.c', 'src/ui/menu.c', 'src/ui/settings.c', 'src/ui/ui.c'),
 	dependencies: rlg)

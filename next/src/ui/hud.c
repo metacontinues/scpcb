@@ -85,6 +85,13 @@ void hud_draw(const HudIn *in) {
                         sinf(edge(in->handpitch) * DEG2RAD) * (H / 3.0f) - 32);
     DrawTexture(tex_ui("gfx/handsymbol.mu"), x, y, WHITE);
   }
+  if (in->item) {
+    int x = (int)roundf(W / 2.0f +
+                        sinf(edge(in->itemyaw) * DEG2RAD) * (W / 3.0f) - 32),
+        y = (int)roundf(H / 2.0f -
+                        sinf(edge(in->itempitch) * DEG2RAD) * (H / 3.0f) - 32);
+    DrawTexture(tex_ui("gfx/handsymbol2.mu"), x, y, WHITE);
+  }
   meter(80, H - 95, in->blinkfreq > 0 ? in->blink / in->blinkfreq : 0, balpha,
         "gfx/blinkmeter.mu", "gfx/blinkicon.mu");
   meter(80, H - 55, in->stamina / 100, salpha, "gfx/staminameter.mu",

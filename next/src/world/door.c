@@ -164,24 +164,59 @@ static void toggle(World *w, Door *d) {
   sound(d);
 }
 
-void door_use(World *w, int i) {
+int door_use(World *w, int i, const char *held) {
   if (i < 0 || i >= w->ndoors)
-    return;
+    return 0;
   Door *d = &w->doors[i];
-  if (d->key > 0) { // no inventory yet, so never the right card
-    hud_msg("A keycard is required to operate this door.", 70 * 7);
-    return;
+  if (d->key > 0) { // a card reader: key1 .. key6
+    int lv = held && !strncmp(held, "key", 3) && held[3] >= '1' &&
+                     held[3] <= '6' && !held[4]
+                 ? held[3] - '0'
+                 : -1;
+    if (lv < 0) {
+      hud_msg("A keycard is required to operate this door.", 70 * 7);
+      return 0;
+    }
+    if (lv < d->key || d->locked) {
+      snd_play("sfx/interact/keycarduse2", 1);
+      if (d->locked)
+        hud_msg("The keycard was inserted into the slot but nothing happened.",
+                70 * 7);
+      else {
+        char m[96];
+        snprintf(m, sizeof m,
+                 "A keycard with security clearance %d or higher is required "
+                 "to operate this door.",
+                 d->key);
+        hud_msg(m, 70 * 7);
+      }
+      return 1;
+    }
+    snd_play("sfx/interact/keycarduse1", 1);
+    hud_msg("The keycard was inserted into the slot.", 70 * 7);
+    toggle(w, d);
+    return 1;
   }
-  if (d->key < 0) {
-    snd_play("sfx/interact/scanneruse2", 1);
-    hud_msg("You placed your palm onto the scanner. The scanner reads: \"DNA "
-            "does not match known sample. Access "
-            "denied.\"",
+  if (d->key < 0) { // a hand scanner: the severed hands
+    int ok = held && ((!strcmp(held, "hand") && d->key == -1) ||
+                      (!strcmp(held, "hand2") && d->key == -2));
+    if (!ok) {
+      snd_play("sfx/interact/scanneruse2", 1);
+      hud_msg("You placed your palm onto the scanner. The scanner reads: \"DNA "
+              "does not match known sample. Access "
+              "denied.\"",
+              70 * 10);
+      return held != NULL;
+    }
+    snd_play("sfx/interact/scanneruse1", 1);
+    hud_msg("You place the palm of the hand onto the scanner. The scanner "
+            "reads: \"DNA verified. Access granted.\"",
             70 * 10);
-    return;
+    toggle(w, d);
+    return 1;
   }
-  if (d->code[0]) // the keypad comes w/ items
-    return;
+  if (d->code[0]) // the keypad comes w/ the rest of the items
+    return 0;
   if (d->locked) {
     snd_play("sfx/interact/button2", 1);
     const Room *r =
@@ -191,9 +226,10 @@ void door_use(World *w, int i) {
             : d->open ? "You pushed the button but nothing happened."
                       : "The door appears to be locked.",
             70 * 5);
-    return;
+    return 0;
   }
   toggle(w, d);
+  return 0;
 }
 
 void door_tick(World *w, Vector3 eye) {

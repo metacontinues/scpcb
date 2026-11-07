@@ -52,13 +52,15 @@ typedef struct {
   Vector3 bp[2];       // button positions
 } Door;
 
-// an item the fill code puts down, until items exist
+// an item (play/item.c): lying around, or carried (picked)
 typedef struct {
   char name[48], tmpl[24];
-  Vector3 pos;
-  float yaw, state;
-  int room, hidden;
-} ItemSpawn;
+  int t;       // its template + 1, 0 = not looked up yet
+  Vector3 pos; // the original's collider
+  float yaw, state, state2;
+  Vector3 v; // speed per tick (DropSpeed + x/zspeed)
+  int room, hidden, picked, gone;
+} Item;
 
 typedef struct {
   RoomTmpl *tmpl;
@@ -67,7 +69,7 @@ typedef struct {
   int nrooms;
   Door *doors;
   int ndoors;
-  ItemSpawn *items;
+  Item *items;
   int nitems;
   int w, h; // grid size ("map size" in options.ini)
   Vector3 spawn;

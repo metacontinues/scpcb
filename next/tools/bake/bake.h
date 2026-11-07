@@ -59,12 +59,14 @@ int gb_times(glb *g, const float *v, int n); // anim input, w/ min/max
 // ---- images (img.c). returns the id (+ a ".a" / ".m" / ".u" suffix per mode
 // bit, combined), NULL if missing or unreadable.
 // alpha: keeps the alpha channel, or derives it from brightness if there's
-// none. mask: pure black -> clear. ui: drawn 1:1 in 2d, so no pow2 resize
-enum { IM_OPAQUE = 0, IM_ALPHA = 1, IM_MASK = 2, IM_UI = 4 };
+// none. mask: pure black -> clear. ui: drawn 1:1 in 2d, so no pow2 resize.
+// pink: pure magenta -> clear (the items' MaskImage 255, 0, 255)
+enum { IM_OPAQUE = 0, IM_ALPHA = 1, IM_MASK = 2, IM_UI = 4, IM_PINK = 8 };
 const char *bake_tex(const char *path, int mode);
 
 // ---- rooms (room.c), models (model.c)
 int bake_room(const char *path);
 int bake_model(const char *path);
-int bake_ui(void); // ui.c: the 2d images + fonts, returns how many failed
+int bake_ui(void);    // ui.c: the 2d images + fonts, returns how many failed
+int bake_items(void); // items.c: next/items.txt's images + textures, ditto
 int bake_sounds(int *count); // snd.c: SFX/ -> qoa, returns how many failed

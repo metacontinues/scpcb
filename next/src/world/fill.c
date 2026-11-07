@@ -77,9 +77,10 @@ float foz(F *f, int o) { return f->op[o].z; }
 int fitem(F *f, const char *name, const char *tmpl, float x, float y, float z) {
   World *w = f->w;
   w->items = realloc(w->items, sizeof *w->items * (w->nitems + 1));
-  ItemSpawn *it = &w->items[w->nitems];
-  *it = (ItemSpawn){
-      .pos = floc(f, x, y, z), .yaw = (float)f->r->angle, .room = f->ri};
+  Item *it = &w->items[w->nitems];
+  // CreateItem turns it a random way
+  *it = (Item){
+      .pos = floc(f, x, y, z), .yaw = (float)irnd(0, 359), .room = f->ri};
   snprintf(it->name, sizeof it->name, "%s", name);
   snprintf(it->tmpl, sizeof it->tmpl, "%s", tmpl);
   return w->nitems++;

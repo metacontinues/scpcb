@@ -182,6 +182,7 @@ int main(int argc, char **argv) {
   else {
     walk("GFX");
     nfail += bake_ui();
+    nfail += bake_items();
     nfail += bake_sounds(&nsounds);
   }
   printf("bake: %d rooms, %d models, %d sounds, %d failed, %d warnings\n",

@@ -35,14 +35,14 @@ from the repo root:
 
 ## source layout
 
-- `src/game.c`: main + the states (menu -> loading -> play, pause)
+- `src/game.c`: main: the window, main menu -> play -> back
+- `src/play/`: play (one game: the loop, pause), player, item, difficulty.h
 - `src/core/`: util.h, ini, asset (baked data lookup + texture/font cache)
 - `src/plat/`: glfw.c + the raylib configs, platform glue
 - `src/gfx/`: shd (world shaders, glsl in `shaders/`), model, room, props
 - `src/world/`: world + mapgen (the facility), fill + fill1-3 (FillRoom), door, coll
-- `src/play/`: player, difficulty.h
 - `src/audio/`: snd (voices, 3d, music), sfx (footsteps, ambience)
-- `src/ui/`: ui (the widgets), menu, settings, loading, hud
+- `src/ui/`: ui (the widgets), menu, settings, loading, hud, inv (inventory + item in hand)
 - `tools/`: bake (offline converters), view (room/model viewer), lint.sh
 
 includes are relative to `src/` (`#include "world/door.h"`).
@@ -121,7 +121,13 @@ includes are relative to `src/` (`#include "world/door.h"`).
    next/ has: vsync, volumes, mouse, key rebinding, hud mode, show fps, framelimit; saved to options.ini on BACK).
    src/ui/ui.c = the original's widgets, immediate mode. load game / achievements are greyed out until saves exist.
    left: the lamps' glow sprites, eye strain before a blink, the intro.
-5. 173/106/guard/class-d, items + inventory, the events port/ already has.
+5. items + inventory, then 173/106/guard/class-d, the events port/ already has.
+   items, part 1 done: templates in `next/items.txt` (Items.bb's, same order; the baker reads it for the inventory +
+   document images, pink masked, and the repaint textures). src/play/item.c: items fall + get pushed apart, pick
+   up w/ the hand icon, drop; src/ui/inv.c: the inventory screen (tab: drag + drop, swap slots, drag out to drop,
+   double click to use) + the item in your hand (documents w/ the codes written on, cards held up). keycards +
+   severed hands work on doors. left: using the rest (kits, masks, goggles, vests, pills, radio, s-nav...),
+   combining (clipboard, wallet, batteries), the keypad.
 6. the rest of port/README's "left to port" list, written straight against this.
 
 ## risks to check early

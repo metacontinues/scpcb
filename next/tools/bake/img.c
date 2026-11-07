@@ -34,10 +34,11 @@ const char *bake_tex(const char *path, int mode) {
     return NULL;
   char s[4096], out[4096];
   snprintf(s, sizeof s, "%s", src);
-  mkid(s, id, sizeof id - 5);
+  mkid(s, id, sizeof id - 6);
   if (mode)
-    snprintf(id + strlen(id), 5, ".%s%s%s", mode & IM_ALPHA ? "a" : "",
-             mode & IM_MASK ? "m" : "", mode & IM_UI ? "u" : "");
+    snprintf(id + strlen(id), 6, ".%s%s%s%s", mode & IM_ALPHA ? "a" : "",
+             mode & IM_MASK ? "m" : "", mode & IM_PINK ? "p" : "",
+             mode & IM_UI ? "u" : "");
   snprintf(out, sizeof out, OUT "%s.qoi", id);
   if (!stale(s, out))
     return id;
@@ -70,6 +71,8 @@ const char *bake_tex(const char *path, int mode) {
       else if (!hasa)
         p[3] = (p[0] + p[1] + p[2]) / 3;
       if (mode & IM_MASK && !p[0] && !p[1] && !p[2])
+        p[3] = 0;
+      if (mode & IM_PINK && p[0] == 255 && !p[1] && p[2] == 255)
         p[3] = 0;
     }
   }

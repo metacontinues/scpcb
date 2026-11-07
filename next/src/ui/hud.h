@@ -12,6 +12,8 @@ typedef struct {
   int crouch;               // the stamina meter's icon: crouch or sprint
   int hand;                 // something usable in reach
   float handyaw, handpitch; // where it is, relative to the view (degrees)
+  int item;                 // an item in reach (the other hand icon)
+  float itemyaw, itempitch;
   int watched; // something that moves while you blink is in view (173)
 } HudIn;
 

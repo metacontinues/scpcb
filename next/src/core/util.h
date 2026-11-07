@@ -2,6 +2,7 @@
 #pragma once
 #include "raylib.h"
 #include <math.h>
+#include <stdlib.h>
 
 // sim rate: everything gameplay is tuned in 1/70 s steps, like the original
 #define TICK 70.0f
@@ -25,4 +26,9 @@ static inline float wrapdeg(float a) {
 static inline float curve(float v, float old, float smooth) {
   float n = old + (v - old) / smooth;
   return v < old ? maxf(n, v) : minf(n, v);
+}
+// a dev env var as a number, def if unset
+static inline float envf(const char *k, float def) {
+  const char *v = getenv(k);
+  return v ? (float)atof(v) : def;
 }
