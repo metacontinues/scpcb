@@ -1,13 +1,13 @@
 // menu.c: the original's Menu.bb layout, scaled by height / 1024: the
 // background w/ 173 flickering in the corner + whispers, four buttons on the
 // left, each opening a page next to a title frame
-#include "menu.h"
-#include "asset.h"
-#include "difficulty.h"
+#include "ui/menu.h"
+#include "audio/snd.h"
+#include "core/asset.h"
+#include "core/util.h"
+#include "play/difficulty.h"
 #include "raylib.h"
-#include "snd.h"
-#include "ui.h"
-#include "util.h"
+#include "ui/ui.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>

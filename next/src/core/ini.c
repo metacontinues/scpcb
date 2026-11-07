@@ -1,6 +1,6 @@
 // ini.c: the whole file in one buffer, cut up in place
 #define _POSIX_C_SOURCE 200809L
-#include "ini.h"
+#include "core/ini.h"
 #include "raylib.h"
 #include <ctype.h>
 #include <stdio.h>

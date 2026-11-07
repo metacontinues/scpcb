@@ -2,8 +2,8 @@
 // matrix (every copy of a template shares one model). grid cell (gx, gy) sits
 // at world (gx * 8, 0, -gy * 8): the original's +z is our -z
 #pragma once
+#include "gfx/room.h"
 #include "raylib.h"
-#include "room.h"
 
 enum { ROOM1, ROOM2, ROOM2C, ROOM3, ROOM4, NSHAPES };
 enum { DOOR_NORMAL, DOOR_BIG, DOOR_HEAVY, DOOR_ELEVATOR };

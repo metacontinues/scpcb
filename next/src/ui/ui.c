@@ -1,9 +1,9 @@
 // ui.c: frames are the original's tiled menuwhite/menublack images, buttons
 // darken under the mouse, the fonts are Courier New 19 + 58 (bold) at 1024
-#include "ui.h"
-#include "asset.h"
+#include "ui/ui.h"
+#include "audio/snd.h"
+#include "core/asset.h"
 #include "raylib.h"
-#include "snd.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>

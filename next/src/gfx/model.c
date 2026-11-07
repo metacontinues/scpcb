@@ -1,10 +1,10 @@
 // model.c: load + draw a baked model (<id>.glb + <id>.txt)
-#include "model.h"
-#include "asset.h"
+#include "gfx/model.h"
+#include "core/asset.h"
+#include "gfx/shd.h"
 #include "raylib.h"
 #include "raymath.h"
 #include "rlgl.h"
-#include "shd.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

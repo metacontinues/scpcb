@@ -1,7 +1,7 @@
 // fill3.c: FillRoom's per-room cases (MapSystem.bb's big Select, same order as
 // port/'s fillroom3.c). cams, emitters, decals, sprites + waypoints come w/
 // their systems; port/ has them
-#include "fill.h"
+#include "world/fill.h"
 
 // room2ccont
 static void f_room2ccont(F *f) {

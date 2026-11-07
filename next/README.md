@@ -9,7 +9,7 @@ same toolchain as port/ (`./setup.sh && ninja -C build`). muon: `BUILD=build-muo
 (setup.sh hands it gnu ar + the system's pkg-config path, see the comments there). linux builds glfw w/ x11 + wayland (picked at
 runtime), the wayland protocol glue comes from `wayland-scanner`. `./setup.sh -Dangle=/opt/angle/usr/lib` runs on angle:
 - glfw gets angle's unversioned sonames (it'd dlopen the system's libEGL.so.1 otherwise) + an rpath to that dir
-- src/glfw.c replaces raylib's rglfw.c so glfw's wayland backend asks for EGL_PLATFORM_ANGLE_ANGLE (angle refuses
+- src/plat/glfw.c replaces raylib's rglfw.c so glfw's wayland backend asks for EGL_PLATFORM_ANGLE_ANGLE (angle refuses
   plain EGL_PLATFORM_WAYLAND_EXT), and angle builds ask for a "transparent" fb (every angle config has alpha, glfw's
   wayland backend skips those otherwise; angle's swapchain presents opaque)
 - angle dlopens libvulkan.so.1 from its own dir only, so that dir needs one (`ln -s /usr/lib/libvulkan.so.1` there)
@@ -19,7 +19,7 @@ other platforms: `TARGET=windows ./setup.sh && ninja -C build-windows` cross bui
 (`cross/windows.ini`), es2 via angle's dlls next to the exe. mac has its meson branch (cocoa as objective-c +
 frameworks, angle's dylibs) but needs an apple sdk, so it's untested; from linux that'd be osxcross + your own sdk.
 
-style: `.clang-format` (yours, `clang-format -i` on src/ + tools/; vendor/ and src/glfw.c are in .clang-format-ignore,
+style: `.clang-format` (yours, `clang-format -i` on src/ + tools/; vendor/ and src/plat/glfw.c are in .clang-format-ignore,
 glfw.c's include order is load-bearing). lint: `next/tools/lint.sh [build dir]` runs clang-tidy w/ `.clang-tidy`
 (bug-finding checks; the ones that fight the house style are off, see the comment there). both clean right now.
 
@@ -32,6 +32,20 @@ from the repo root:
   `gfx/npcs/scp096`: space play, , . step, b bones, `VIEW_POSE=f` / `VIEW_YAW=deg` for shots). f fog, g ambient,
   t/l/p trigger boxes, lights, waypoints. `VIEW_CAM="x y z tx ty tz" VIEW_SHOT=a.png VIEW_FRAME=n VIEW_FOG=0` for
   scripted screenshots (port/build/rmview takes the same shot w/ `rmview GFX/map/x.rmesh a.png 0` from the first waypoint)
+
+## source layout
+
+- `src/game.c`: main + the states (menu -> loading -> play, pause)
+- `src/core/`: util.h, ini, asset (baked data lookup + texture/font cache)
+- `src/plat/`: glfw.c + the raylib configs, platform glue
+- `src/gfx/`: shd (world shaders, glsl in `shaders/`), model, room, props
+- `src/world/`: world + mapgen (the facility), fill + fill1-3 (FillRoom), door, coll
+- `src/play/`: player, difficulty.h
+- `src/audio/`: snd (voices, 3d, music), sfx (footsteps, ambience)
+- `src/ui/`: ui (the widgets), menu, settings, loading, hud
+- `tools/`: bake (offline converters), view (room/model viewer), lint.sh
+
+includes are relative to `src/` (`#include "world/door.h"`).
 
 ## rules
 
@@ -53,7 +67,7 @@ from the repo root:
   (frame ranges = the old ExtractAnimSeq clips). picking w/ `GetRayCollisionMesh/Triangle/Box`. billboards
   (`DrawBillboardPro`) for sprites, particles, decals that face the camera.
 - **shaders**: glsl es 100 in `next/shaders/`, read at startup (`SCPCB_SHADERS=dir` to point elsewhere), variants by
-  `#define`s src/shd.c prepends. one world shader on every material: diffuse (uv0) x lightmap (`MATERIAL_MAP_OCCLUSION`, uv1) or vertex
+  `#define`s src/gfx/shd.c prepends. one world shader on every material: diffuse (uv0) x lightmap (`MATERIAL_MAP_OCCLUSION`, uv1) or vertex
   light, up to n point lights, linear fog, alpha cutout. plus small post shaders (blur, nvg, gasmask, vignette).
 - **textures**: qoi via `LoadTexture`, mipmaps via `GenTextureMipmaps`, `RenderTexture2D` for screen fx + 3d icons.
 - **text**: `LoadFontEx` on GFX/font's ttfs, `DrawTextEx`/`MeasureTextEx`. no AAText.
@@ -86,8 +100,8 @@ from the repo root:
 2. one room rendered w/ the world shader + fog, screenshot-diffed against `port/`. done (rooms + models).
 3. map gen + rooms + doors + player controller/collision: walkable facility. done: `next/build/scpcb` generates the
    map (the original's algorithm, raylib's rng), drops you in the start room, wasd/mouse w/ the original's speeds,
-   sprint/crouch/gravity, swept-ellipsoid collision (src/coll.c), doors between rooms open from their buttons.
-   FillRoom done (src/fill*.c, drafted from port/'s fillroom*.c by a throwaway translator, then fixed by hand):
+   sprint/crouch/gravity, swept-ellipsoid collision (src/world/coll.c), doors between rooms open from their buttons.
+   FillRoom done (src/world/fill*.c, drafted from port/'s fillroom*.c by a throwaway translator, then fixed by hand):
    every room's own doors (all 4 kinds, keycard/scanner/code buttons, moved/removed buttons, locks, linked +
    timed doors), Objects[] (models + pivots, hidden hitboxes collide), Levers[], RoomDoors[], and item spawns
    kept as records until items exist. cams, emitters, decals, sprites + extra waypoints come w/ their systems.
@@ -97,15 +111,15 @@ from the repo root:
    the meters only show when they matter: options.ini `hud mode = auto|always|off` (missing -> the original's
    `HUD enabled`, 1 = auto). auto: stamina once it's below full (+2 s), blink in the last third before a blink or
    while something's watching (173, once npcs exist).
-   audio done: every sound under SFX/ bakes to qoa (tools/bake/snd.c, ~30 s the first time, 247 MB), src/snd.c =
+   audio done: every sound under SFX/ bakes to qoa (tools/bake/snd.c, ~30 s the first time, 247 MB), src/audio/snd.c =
    cache + 64-voice pool (raylib sound aliases) + the original's 3d (linear falloff to `range`, pan from the view
-   angle) + music crossfades (out over 250 ticks, in 10%/tick). src/sfx.c: footsteps by floor material
+   angle) + music crossfades (out over 250 ticks, in 10%/tick). src/audio/sfx.c: footsteps by floor material
    (Data/materials.ini stepsound, ray vs the room's meshes), landing, breathing when tired, the zone's ambience +
    music. doors + buttons play theirs. options.ini [audio] volumes, keys from [binds] (or [options]).
    menus done: main menu (173 flicker, whispers, new game w/ name/seed/intro/difficulties incl. custom), loading
    screens (Loadingscreens/loadingscreens.ini pages), pause menu, the options tabs in both layouts (only options
    next/ has: vsync, volumes, mouse, key rebinding, hud mode, show fps, framelimit; saved to options.ini on BACK).
-   src/ui.c = the original's widgets, immediate mode. load game / achievements are greyed out until saves exist.
+   src/ui/ui.c = the original's widgets, immediate mode. load game / achievements are greyed out until saves exist.
    left: the lamps' glow sprites, eye strain before a blink, the intro.
 5. 173/106/guard/class-d, items + inventory, the events port/ already has.
 6. the rest of port/README's "left to port" list, written straight against this.
@@ -114,6 +128,6 @@ from the repo root:
 
 - gpu skinning: done. the model shader's skinned variant takes up to 128 bones (most is 966's 121): 512 vec4
   uniforms, mesa + angle give 4096 (es2's bare minimum is 128, so very old gles2-only gpus would need bone
-  palettes). raylib's rlSetUniformMatrices hands es2 transposed matrices, src/model.c transposes first.
+  palettes). raylib's rlSetUniformMatrices hands es2 transposed matrices, src/gfx/model.c transposes first.
 - lightmap look: blitz's TextureBlend multiply (+ the 2x on some) has to match in the shader, verify on milestone 2.
 - room meshes w/ alpha surfaces need sorting; raylib's DrawModel doesn't sort, so the draw list does.

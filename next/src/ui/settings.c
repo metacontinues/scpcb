@@ -2,13 +2,13 @@
 // original's main menu + pause menu versions (Menu.bb / Main.bb). only the
 // options next/ actually has are shown
 #define _POSIX_C_SOURCE 200809L
-#include "settings.h"
-#include "asset.h"
-#include "hud.h"
-#include "ini.h"
-#include "player.h"
+#include "ui/settings.h"
+#include "core/asset.h"
+#include "core/ini.h"
+#include "play/player.h"
 #include "raylib.h"
-#include "ui.h"
+#include "ui/hud.h"
+#include "ui/ui.h"
 #include <stdio.h>
 #include <strings.h>
 

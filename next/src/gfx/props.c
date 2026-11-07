@@ -1,6 +1,6 @@
 // props.c: the model cache. entries are allocated one by one so the Mdl
 // pointers handed out stay put while the cache grows
-#include "props.h"
+#include "gfx/props.h"
 #include "raylib.h"
 #include <stdio.h>
 #include <stdlib.h>

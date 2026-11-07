@@ -3,9 +3,9 @@
 // left-handed axes + yaw sense, before the room's turned. objects keep their
 // pos/rot/scale until fill_done bakes them into world matrices
 #pragma once
-#include "door.h"
-#include "util.h"
-#include "world.h"
+#include "core/util.h"
+#include "world/door.h"
+#include "world/world.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>

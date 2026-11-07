@@ -1,11 +1,11 @@
 // world.c: room templates (Data/rooms.ini) + the bits of a placed room that
 // don't care how the map was generated
 #define _POSIX_C_SOURCE 200809L
-#include "world.h"
-#include "ini.h"
+#include "world/world.h"
+#include "core/ini.h"
+#include "core/util.h"
 #include "raylib.h"
 #include "raymath.h"
-#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

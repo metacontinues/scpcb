@@ -1,10 +1,10 @@
 // room.c: load a baked room (<id>.glb + <id>.col.glb + <id>.txt)
-#include "room.h"
-#include "asset.h"
+#include "gfx/room.h"
+#include "core/asset.h"
+#include "gfx/shd.h"
 #include "raylib.h"
 #include "raymath.h"
 #include "rlgl.h"
-#include "shd.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -2,7 +2,7 @@
 // attributes + mvp/matModel/matView/matNormal + albedo (texture0) + colDiffuse
 // itself; rooms' lightmap rides in MATERIAL_MAP_OCCLUSION, whose loc we point
 // at "lightmap"
-#include "shd.h"
+#include "gfx/shd.h"
 #include "raylib.h"
 #include <stdio.h>
 #include <stdlib.h>

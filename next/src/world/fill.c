@@ -1,10 +1,10 @@
 // fill.c: FillRoom's helpers + world_fill. the original made a room's things
 // at room-local spots, then turned the room; here they're made local + taken
 // through the room's matrix. lh -> rh: z flips, yaw stays, pitch flips
-#include "fill.h"
-#include "door.h"
-#include "props.h"
+#include "world/fill.h"
+#include "gfx/props.h"
 #include "raymath.h"
+#include "world/door.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

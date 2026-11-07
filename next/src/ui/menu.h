@@ -1,8 +1,8 @@
 // menu.h: the main menu (new game / load game / options / quit) + the pause
 // menu. both draw inside Begin/EndDrawing
 #pragma once
-#include "difficulty.h"
-#include "settings.h"
+#include "play/difficulty.h"
+#include "ui/settings.h"
 
 typedef enum {
   MENU_NONE,

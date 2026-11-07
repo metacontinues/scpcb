@@ -1,9 +1,9 @@
 // hud.c: the original's DrawGUI layout in pixels (it didn't scale the hud
 // either), its fonts at their size * screen height / 1024
-#include "hud.h"
-#include "asset.h"
+#include "ui/hud.h"
+#include "core/asset.h"
+#include "core/util.h"
 #include "raylib.h"
-#include "util.h"
 #include <math.h>
 #include <stdio.h>
 

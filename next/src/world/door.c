@@ -3,14 +3,14 @@
 // leaves slide by sin(state)/k per tick of v state; summed that's
 // (1 - cos(state)) * 180 / (pi * v * k), so a leaf's offset is just a function
 // of state
-#include "door.h"
-#include "coll.h"
-#include "hud.h"
-#include "props.h"
+#include "world/door.h"
+#include "audio/snd.h"
+#include "core/util.h"
+#include "gfx/props.h"
 #include "raylib.h"
 #include "raymath.h"
-#include "snd.h"
-#include "util.h"
+#include "ui/hud.h"
+#include "world/coll.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

@@ -1,9 +1,9 @@
 // snd.c: the sound cache, the voice pool, the original's 3d + music fades
-#include "snd.h"
-#include "asset.h"
+#include "audio/snd.h"
+#include "core/asset.h"
+#include "core/util.h"
 #include "raylib.h"
 #include "raymath.h"
-#include "util.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

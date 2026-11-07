@@ -1,11 +1,11 @@
 // player.c: walking, falling, looking. the original's MovePlayer/MouseLook
 // minus everything that needs the rest of the game (injuries, items, sounds,
 // blinking)
-#include "player.h"
-#include "coll.h"
+#include "play/player.h"
+#include "core/util.h"
 #include "raylib.h"
 #include "raymath.h"
-#include "util.h"
+#include "world/coll.h"
 #include <math.h>
 
 static const Vector3 RADII = {.15f, .30f, .15f};

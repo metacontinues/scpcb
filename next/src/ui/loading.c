@@ -1,11 +1,11 @@
 // loading.c: the original's DrawLoading layout
 #define _POSIX_C_SOURCE 200809L
-#include "loading.h"
-#include "asset.h"
-#include "ini.h"
+#include "ui/loading.h"
+#include "core/asset.h"
+#include "core/ini.h"
+#include "core/util.h"
 #include "raylib.h"
-#include "ui.h"
-#include "util.h"
+#include "ui/ui.h"
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>

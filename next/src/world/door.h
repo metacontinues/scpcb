@@ -1,7 +1,7 @@
 // door.h: sliding doors: normal, big (containment), heavy, elevator
 #pragma once
 #include "raylib.h"
-#include "world.h"
+#include "world/world.h"
 
 void door_init(void); // the door models
 // a door w/ the original's buttons for its kind; its index. autoclose like

@@ -1,5 +1,5 @@
 // asset.c: baked files + the texture cache
-#include "asset.h"
+#include "core/asset.h"
 #include "raylib.h"
 #include "rlgl.h"
 #include <stdio.h>

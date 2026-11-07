@@ -1,11 +1,11 @@
 // sfx.c: the original's MovePlayer / main-loop sounds
 #define _POSIX_C_SOURCE 200809L
-#include "sfx.h"
-#include "ini.h"
+#include "audio/sfx.h"
+#include "audio/snd.h"
+#include "core/ini.h"
+#include "core/util.h"
 #include "raylib.h"
 #include "raymath.h"
-#include "snd.h"
-#include "util.h"
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>

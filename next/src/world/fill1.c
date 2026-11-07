@@ -1,8 +1,9 @@
 // fill1.c: FillRoom's per-room cases (MapSystem.bb's big Select, same order as
 // port/'s fillroom1.c). cams, emitters, decals, sprites + waypoints come w/
 // their systems; port/ has them
-#include "fill.h"
+#include "raylib.h"
 #include "raymath.h"
+#include "world/fill.h"
 
 // room860
 static void f_room860(F *f) {

@@ -36,7 +36,7 @@ add_project_arguments(cc.get_supported_arguments(opt), language: 'c')
 add_project_link_arguments(cc.get_supported_link_arguments(optl), language: 'c') # ld64/lld-link don't take all
 
 # raylib twice: the game's (gles2 so it runs on angle, only the formats the game loads: glb, qoi, qoa, ttf)
-# and the tools' (+ the source formats the baker reads). src/rlconfig*.h get force-included ahead of config.h
+# and the tools' (+ the source formats the baker reads). src/plat/rlconfig*.h get force-included ahead of config.h
 rl = 'vendor/raylib/src'
 plat = ['-DPLATFORM_DESKTOP_GLFW', '-DGRAPHICS_API_OPENGL_ES2']
 sys = [dependency('threads')]
@@ -73,7 +73,7 @@ elif system == 'windows'
 		sys += cc.find_library(l)
 	endforeach
 elif system == 'darwin'
-	# glfw's cocoa backend is objective-c (src/glfw.c includes the .m files). es2 comes from angle (metal):
+	# glfw's cocoa backend is objective-c (src/plat/glfw.c includes the .m files). es2 comes from angle (metal):
 	# glfw loads libEGL.dylib/libGLESv2.dylib, ship them in the app's dir. untested: needs an apple sdk
 	add_languages('objc', native: false)
 	glfwargs = ['-x', 'objective-c']
@@ -83,13 +83,13 @@ elif system == 'darwin'
 else
 	error('no build for ' + system + ' yet (glfw backend + system libs go here)')
 endif
-rldefs = plat + ['-include', meson.current_source_dir() / 'src/rlconfig.h']
-tooldefs = plat + ['-include', meson.current_source_dir() / 'src/rlconfig_tool.h']
+rldefs = plat + ['-include', meson.current_source_dir() / 'src/plat/rlconfig.h']
+tooldefs = plat + ['-include', meson.current_source_dir() / 'src/plat/rlconfig_tool.h']
 rlsrc = files(rl / 'rcore.c', rl / 'rshapes.c', rl / 'rtextures.c', rl / 'rtext.c', rl / 'rmodels.c', rl / 'raudio.c')
 rlinc = include_directories(rl, rl / 'external/glfw/include')
 # our code is strict c99; the vendored libs need gnu extensions (glfw, mimalloc), so only they get gnu11.
-# src/glfw.c = raylib's rglfw.c + angle on wayland, its own lib since mac compiles it as objective-c
-glfw = static_library('glfw', files('src/glfw.c') + wl, dependencies: sys, c_args: plat + glfwargs + ['-w'],
+# src/plat/glfw.c = raylib's rglfw.c + angle on wayland, its own lib since mac compiles it as objective-c
+glfw = static_library('glfw', files('src/plat/glfw.c') + wl, dependencies: sys, c_args: plat + glfwargs + ['-w'],
 	include_directories: rlinc, override_options: ['c_std=gnu11'])
 raylib = static_library('raylib', rlsrc, link_with: glfw, dependencies: sys, c_args: rldefs + ['-w'],
 	include_directories: rlinc, override_options: ['c_std=gnu11'])
@@ -113,9 +113,14 @@ executable('bake', files('tools/bake/bake.c', 'tools/bake/glb.c', 'tools/bake/im
 	'tools/bake/snd.c'),
 	dependencies: rlt)
 # the viewer runs the game's room code but links the tools' raylib so screenshots can be png
-executable('view', files('tools/view.c', 'src/asset.c', 'src/model.c', 'src/room.c', 'src/shd.c'), dependencies: rlt)
-executable('scpcb', files('src/game.c', 'src/asset.c', 'src/coll.c', 'src/door.c', 'src/ini.c', 'src/mapgen.c',
-	'src/fill.c', 'src/fill1.c', 'src/fill2.c', 'src/fill3.c', 'src/hud.c', 'src/loading.c', 'src/menu.c', 'src/model.c', 'src/player.c', 'src/props.c', 'src/room.c',
-	'src/settings.c', 'src/sfx.c', 'src/shd.c', 'src/ui.c',
-	'src/snd.c', 'src/world.c'),
+executable('view', files('tools/view.c', 'src/core/asset.c', 'src/gfx/model.c', 'src/gfx/room.c', 'src/gfx/shd.c'), dependencies: rlt)
+# the game, by folder (README: source layout)
+executable('scpcb', files('src/game.c',
+	'src/core/asset.c', 'src/core/ini.c',
+	'src/gfx/model.c', 'src/gfx/props.c', 'src/gfx/room.c', 'src/gfx/shd.c',
+	'src/world/coll.c', 'src/world/door.c', 'src/world/fill.c', 'src/world/fill1.c', 'src/world/fill2.c',
+	'src/world/fill3.c', 'src/world/mapgen.c', 'src/world/world.c',
+	'src/play/player.c',
+	'src/audio/sfx.c', 'src/audio/snd.c',
+	'src/ui/hud.c', 'src/ui/loading.c', 'src/ui/menu.c', 'src/ui/settings.c', 'src/ui/ui.c'),
 	dependencies: rlg)

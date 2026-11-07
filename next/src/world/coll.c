@@ -3,7 +3,7 @@
 // is a unit sphere, sweep it, slide along the plane of the first contact,
 // repeat a few times. the static triangles sit in a uniform xz grid, dynamic
 // ones are just a list
-#include "coll.h"
+#include "world/coll.h"
 #include "raylib.h"
 #include "raymath.h"
 #include <float.h>

@@ -3,4 +3,4 @@
 cd "$(dirname "$0")/.." || exit 1
 b=${1:-build}
 [ -f "$b/compile_commands.json" ] || { echo "lint.sh: no $b/compile_commands.json, configure first" >&2; exit 1; }
-find src tools -name '*.c' ! -path src/glfw.c | sort | xargs run-clang-tidy -quiet -p "$b" 2>/dev/null
+find src tools -name '*.c' ! -path src/plat/glfw.c | sort | xargs run-clang-tidy -quiet -p "$b" 2>/dev/null

@@ -1,4 +1,4 @@
-# clang-tidy for our code (vendor/ and src/glfw.c are skipped by tools/lint.sh). bug-finding checks on, the ones that
+# clang-tidy for our code (vendor/ and src/plat/glfw.c are skipped by tools/lint.sh). bug-finding checks on, the ones that
 # fight the house style off: short names, several declarations per line, unbraced if guards, ported magic numbers,
 # flag bits in ints, `if ((p = strchr(..)))`, `p = realloc(p, ..)` (no oom handling anywhere), atoi on ini values,
 # #pragma once, extra parens

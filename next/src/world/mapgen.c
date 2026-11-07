@@ -3,11 +3,11 @@
 // zone has the rooms the game needs, then each cell becomes a room of the shape
 // its neighbours make. rng is raylib's, so seeds don't match the original's
 // maps.
-#include "door.h"
+#include "core/util.h"
 #include "raylib.h"
 #include "raymath.h"
-#include "util.h"
-#include "world.h"
+#include "world/door.h"
+#include "world/world.h"
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
