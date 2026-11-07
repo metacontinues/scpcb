@@ -48,7 +48,7 @@ void UpdateStreamSounds(void) {
 	if (bbSeq(rn, "dimension1499")) return;
 	each(Events, e) {
 		if (e->SoundCHN && e->SoundCHN_isStream) { StopStream_Strict(e->SoundCHN); e->SoundCHN = 0; e->SoundCHN_isStream = 0; }
-		if (e->SoundCHN2 && e->SoundCHN2_isStream) { StopStream_Strict(e->SoundCHN2); e->SoundCHN = 0; e->SoundCHN_isStream = 0; } // sic: blitz resets SoundCHN here
+		if (e->SoundCHN2 && e->SoundCHN2_isStream) { StopStream_Strict(e->SoundCHN2); e->SoundCHN2 = 0; e->SoundCHN2_isStream = 0; }
 	}
 }
 
@@ -93,18 +93,17 @@ static int inbox(int e, int room) { // within an elevator car's 280-unit box
 	return fabsf(bbEntityX(e, 0) - bbEntityX(room, 1)) < r && fabsf(bbEntityZ(e, 0) - bbEntityZ(room, 1)) < r && fabsf(bbEntityY(e, 0) - bbEntityY(room, 1)) < r;
 }
 
-// carry e from the `from` car to the `to` car. room1/room2 are the cars as passed to UpdateElevators: blitz's rotation
-// line always uses room2 + room1 whichever way it goes, and only wraps dir going down (room1 -> room2)
-static void carry(int e, int from, int to, int room1, int room2, int ignorerot, int wrap, float radius) {
+// carry e from the `from` car to the `to` car, keeping its spot and facing relative to the car
+static void carry(int e, int from, int to, int ignorerot, float radius) {
 	float x, z, lim = 280 * RoomScale - .22f;
 	if (!ignorerot) {
 		float dist = Distance(bbEntityX(e, 1), bbEntityZ(e, 1), bbEntityX(from, 1), bbEntityZ(from, 1));
 		float dir = point_direction(bbEntityX(e, 1), bbEntityZ(e, 1), bbEntityX(from, 1), bbEntityZ(from, 1));
 		dir += bbEntityYaw(to, 1) - bbEntityYaw(from, 1);
-		if (wrap) dir = WrapAngle(dir);
+		dir = WrapAngle(dir);
 		x = Max(Min(cosf(dir * DTOR) * dist, lim), -lim);
 		z = Max(Min(sinf(dir * DTOR) * dist, lim), -lim);
-		bbRotateEntity(e, bbEntityPitch(e, 1), bbEntityYaw(room2, 1) + angleDist(bbEntityYaw(e, 1), bbEntityYaw(room1, 1)), bbEntityRoll(e, 1), 1);
+		bbRotateEntity(e, bbEntityPitch(e, 1), bbEntityYaw(to, 1) + angleDist(bbEntityYaw(e, 1), bbEntityYaw(from, 1)), bbEntityRoll(e, 1), 1);
 	} else {
 		x = Max(Min(bbEntityX(e, 0) - bbEntityX(from, 1), lim), -lim);
 		z = Max(Min(bbEntityZ(e, 0) - bbEntityZ(from, 1), lim), -lim);
@@ -113,7 +112,7 @@ static void carry(int e, int from, int to, int room1, int room2, int ignorerot, 
 }
 
 // one leg of the ride: State counts down (-) toward room2 or up (+) toward room1
-static float ride(float State, Doors *dfrom, Doors *dto, int from, int to, int room1, int room2, Events *ev, int ignorerot, int down) {
+static float ride(float State, Doors *dfrom, Doors *dto, int from, int to, Events *ev, int ignorerot, int down) {
 	int inside = 0;
 	State += down ? -FPSfactor : FPSfactor;
 	if (inbox(Collider, from)) {
@@ -125,16 +124,16 @@ static float ride(float State, Doors *dfrom, Doors *dto, int from, int to, int r
 	dfrom->locked = 1; dto->locked = 0;
 	State = 0;
 	if (inside) {
-		carry(Collider, from, to, room1, room2, ignorerot, down, .3f);
+		carry(Collider, from, to, ignorerot, .3f);
 		UpdateDoorsTimer = 0; DropSpeed = 0;
 		UpdateDoors(); UpdateRooms();
 		dto->SoundCHN = PlaySound_Strict(OpenDoorSFX[3][bbRand(0, 2)]);
 	}
 	each(NPCs, n) if (inbox(n->Collider, from)) {
-		carry(n->Collider, from, to, room1, room2, ignorerot, down, n->CollRadius);
+		carry(n->Collider, from, to, ignorerot, n->CollRadius);
 		if (n == Curr173) Curr173->IdleTimer = 10;
 	}
-	each(Items, it) if (inbox(it->collider, from)) carry(it->collider, from, to, room1, room2, ignorerot, down, .01f);
+	each(Items, it) if (inbox(it->collider, from)) carry(it->collider, from, to, ignorerot, .01f);
 	UseDoor(dto, 0, !inside);
 	dfrom->open = 0;
 	PlaySound2(ElevatorBeepSFX, Camera, from, 4, 1);
@@ -158,8 +157,8 @@ float UpdateElevators(float State, Doors *door1, Doors *door2, int room1, int ro
 	if (!door1->open && !door2->open) {
 		door1->locked = door2->locked = 1;
 		if (door1->openstate == 0 && door2->openstate == 0) {
-			if (State < 0) State = ride(State, door1, door2, room1, room2, room1, room2, ev, ignorerot, 1);
-			else State = ride(State, door2, door1, room2, room1, room1, room2, ev, ignorerot, 0);
+			if (State < 0) State = ride(State, door1, door2, room1, room2, ev, ignorerot, 1);
+			else State = ride(State, door2, door1, room2, room1, ev, ignorerot, 0);
 		}
 	}
 	return State;

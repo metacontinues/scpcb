@@ -94,7 +94,7 @@ void Update173(NPCs *n) {
 			BlurVolume = Max(Max(Min((4 - dist) / 6, .9f), .1f), BlurVolume);
 			CurrCameraZoom = Max(CurrCameraZoom, (sinf((float)MilliSecs2() / 20 * DTOR) + 1) * 15 * Max((3.5f - dist) / 3.5f, 0));
 			if (dist < 3.5f && MilliSecs2() - n->LastSeen > 60000 && temp) { PlaySound_Strict(HorrorSFX[bbRand(3, 4)]); n->LastSeen = MilliSecs2(); }
-			if ((dist < 1.5f) & (bbRand(700, 1) == 1)) PlaySound2(Scp173SFX[bbRand(0, 2)], Camera, n->obj, 10, 1); // blitz And: Rand rolls every time
+			if (dist < 1.5f && bbRand(700, 1) == 1) PlaySound2(Scp173SFX[bbRand(0, 2)], Camera, n->obj, 10, 1);
 			if (dist < 1.5f && n->LastDist > 2 && temp) {
 				CurrCameraZoom = 40;
 				HeartBeatRate = Max(HeartBeatRate, 140);
@@ -107,7 +107,7 @@ void Update173(NPCs *n) {
 		} else if (dist > 50) { // 6+ rooms away: teleport somewhere 15-25 units from the player
 			if (bbRand(70, 1) == 1 && !is(RN, "exit1") && !is(RN, "gatea") && !is(RN, "pocketdimension")) {
 				each(WayPoints, w) {
-					if (!((w->door == NULL) & (bbRand(5, 1) == 1))) continue; // Rand rolls for door waypoints too
+					if (w->door || bbRand(5, 1) != 1) continue;
 					float x = fabsf(bbEntityX(Collider, 0) - bbEntityX(w->obj, 1));
 					if (!(x < 25 && x > 15)) continue;
 					float z = fabsf(bbEntityZ(Collider, 0) - bbEntityZ(w->obj, 1));
@@ -149,7 +149,7 @@ void Update173(NPCs *n) {
 
 static void step106(NPCs *n, float prev, float cur) {
 	if ((prev <= 286 && cur > 286) || (prev <= 311 && cur > 311)) {
-		int s = Step2SFX[bbRand(0, 2)]; // Rand then Rnd: blitz codegen order, the args tie
+		int s = Step2SFX[bbRand(0, 2)];
 		PlaySound2(s, Camera, n->Collider, 6, bbRnd(.8f, 1));
 	}
 }
@@ -259,7 +259,7 @@ static void attack106(NPCs *n, float dist) {
 		walk106(n, dist, visible);
 	}
 	bbMoveEntity(n->Collider, 0, 0, n->CurrSpeed * FPSfactor);
-	if (n->State <= bbRand(-3500, -3000) && !(bbEntityInView(n->obj, Camera) & (dist > 5))) { // blitz: Not (InView And dist > 5)
+	if (n->State <= bbRand(-3500, -3000) && !bbEntityInView(n->obj, Camera) && dist > 5) { // gives up when out of sight
 		n->State = bbRand(22000, 27000);
 		bbPositionEntity(n->Collider, 0, 500, 0, 0);
 	}

@@ -166,7 +166,7 @@ NPCs *CreateNPC(int type, float x, float y, float z) {
 			bbLightRange(l, 2); bbLightColor(l, 255, 255, 255);
 			bbPositionEntity(l, 1.65f * i, 1.17f, -.25f, 0);
 			int ls = bbCreateSprite(n->obj);
-			bbPositionEntity(ls, 1.65f * i, 1.17f, 0, 0); // blitz passes -0.25 as the 5th (global) arg, which rounds to 0
+			bbPositionEntity(ls, 1.65f * i, 1.17f, -.25f, 0);
 			bbScaleSprite(ls, .13f, .13f);
 			bbEntityTexture(ls, LightSpriteTex[0], 0, 0);
 			bbEntityBlend(ls, 3);

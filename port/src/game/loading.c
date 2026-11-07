@@ -25,7 +25,7 @@ static void drawcwm(LoadingScreens *ls, int percent, int shortloading, int first
 	}
 	// only the last Replace survives, the loop just burns rng like the original
 	s = ls->txt[0];
-	for (int i = 0, n = bbRand(10, 15); i <= n; i++) { // Mid's Rand runs before Chr's in blitz: pinned, C arg order is unspecified
+	for (int i = 0, n = bbRand(10, 15); i <= n; i++) {
 		int a = bbRand(1, bbLen(s) - 1), c = bbRand(130, 250);
 		s = bbReplace(ls->txt[0], bbMid(ls->txt[0], a, 1), bbChr(c));
 	}

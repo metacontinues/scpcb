@@ -26,11 +26,10 @@ void ResumeSounds(void) { allsounds(0); }
 
 static void flushmouse(void) { bbMouseXSpeed(); bbMouseYSpeed(); bbMouseZSpeed(); mouse_x_speed_1 = mouse_y_speed_1 = 0; }
 
-// note blitz's headgear check sets the message but still says yes
 int CanUseItem(int hazmat, int gasmask, int eyewear) {
 	if (!hazmat && WearingHazmat) { say("You can't use that item while wearing a hazmat suit."); return 0; }
 	if (!gasmask && (WearingGasMask || Wearing1499)) { say("You can't use that item while wearing a gas mask."); return 0; }
-	if (!eyewear && WearingNightVision) Msg = "You can't use that item while wearing headgear.";
+	if (!eyewear && WearingNightVision) { say("You can't use that item while wearing headgear."); return 0; }
 	return 1;
 }
 

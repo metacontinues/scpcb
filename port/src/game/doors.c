@@ -148,8 +148,8 @@ static void slide(Doors *d, int dir) { // dir 1 opening, -1 closing
 		bbMoveEntity(d->obj, dir > 0 ? s * (fo * 2 + 1) * f / 162 : s * -f * (fo + 1) / 162, 0, 0);
 		if (d->obj2) bbMoveEntity(d->obj2, dir > 0 ? s * (fo * 2 + 1) * f / 162 : s * (fo + 1) * -f / 162, 0, 0);
 		break;
-	case 4: // 914 only. closing uses Min in blitz too (so it never actually closes back down)
-		d->openstate = Min(180, d->openstate + f * 1.4f * dir);
+	case 4: // 914 only
+		d->openstate = dir > 0 ? Min(180, d->openstate + f * 1.4f) : Max(0, d->openstate - f * 1.4f);
 		s = sinf(d->openstate * DTOR);
 		bbMoveEntity(d->obj, s * f * dir / 114, 0, 0);
 		break;

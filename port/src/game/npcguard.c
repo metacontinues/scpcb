@@ -4,7 +4,6 @@
 #define RN (PlayerRoom->RoomTemplate->Name)
 static int st(float s) { return s == (int)s ? (int)s : -999; } // blitz Select on a float: no Case matches 1.5
 
-// guard footstep, Rand then Rnd: codegen order (the args tie)
 static void gstep(NPCs *n) { int s = StepSFX[2][0][bbRand(0, 2)]; PlaySound2(s, Camera, n->Collider, 8, bbRnd(.5f, .7f)); }
 
 static void aimframes(NPCs *n) { // raise the gun if it's in some other anim
@@ -121,9 +120,7 @@ void UpdateGuard(NPCs *n) {
 		if (bbRand(400, 1) == 1) n->Angle = bbRnd(-180, 180);
 		bbRotateEntity(n->Collider, 0, CurveAngle(n->Angle + sinf(MilliSecs2() / 50 * DTOR) * 2, bbEntityYaw(n->Collider, 0), 150), 0, 1);
 		dist = bbEntityDistance(n->Collider, Collider);
-		// blitz checks EntityVisible(pvt, Collider) here w/ a pvt left over from (and freed by) an earlier case, so it never
-		// worked reliably; a stale handle reads as not visible here
-		(void)dist;
+		if (dist < 15 && WrapAngle(bbEntityYaw(n->Collider, 0) - bbDeltaYaw(n->Collider, Collider)) < 90 && bbEntityVisible(n->Collider, Collider)) n->State = 1; // spots you
 		break;
 	case 5: { // following a target
 		bbRotateEntity(n->Collider, 0, CurveAngle(bbVectorYaw(n->EnemyX - bbEntityX(n->Collider, 0), 0, n->EnemyZ - bbEntityZ(n->Collider, 0)) + n->Angle, bbEntityYaw(n->Collider, 0), 20), 0, 0);
@@ -210,7 +207,7 @@ void UpdateGuard(NPCs *n) {
 	bbRotateEntity(n->obj, 0, bbEntityYaw(n->Collider, 0) + 180, 0, 0);
 }
 
-static void dstep(NPCs *n, int run) { // GetStepSound, Rand, then Rnd: codegen order
+static void dstep(NPCs *n, int run) {
 	int g = GetStepSound(n->Collider), s = StepSFX[g][run][bbRand(0, 2)];
 	PlaySound2(s, Camera, n->Collider, 8, bbRnd(.3f, .5f));
 }
@@ -293,7 +290,7 @@ void Shoot(float x, float y, float z, float hitProb, int particles, int instaKil
 			for (int i = 0, k = bbRand(2, 3); i <= k; i++) {
 				p = CreateParticle(bbPickedX(), bbPickedY(), bbPickedZ(), 0, .006f, .003f, 80);
 				p->speed = .02f; p->A = .8f; p->Achange = -.01f;
-				float rp = bbRnd(170, 190), ry = bbRnd(-10, 10); // pitch then yaw: codegen order
+				float rp = bbRnd(170, 190), ry = bbRnd(-10, 10);
 				bbRotateEntity(p->pvt, bbEntityPitch(pvt, 0) + rp, bbEntityYaw(pvt, 0) + ry, 0, 0);
 			}
 			Decals *de = CreateDecal(bbRand(13, 14), bbPickedX(), bbPickedY(), bbPickedZ(), 0, 0, 0);
@@ -333,5 +330,5 @@ void ChangeNPCTextureID(NPCs *n, int id) {
 	n->obj = bbCopyEntity(DTextures[id + 1], 0);
 	float t = .5f / bbMeshWidth(n->obj);
 	bbScaleEntity(n->obj, t, t, t, 0);
-	SetNPCFrame(n, n->Frame); // a no-op (same frame), like in blitz: the new copy poses on the next update
+	bbSetAnimTime(n->obj, n->Frame, 0); // pose the new copy like the old one
 }

@@ -137,13 +137,7 @@ touching the repo's options.ini, run it from a dir that symlinks GFX, SFX, Data,
 - **rng**: Rand/Rnd/SeedRnd match blitz3d's bbruntime/bbmath.cpp exactly (park-miller, same float mapping,
   default seed 0x1234; also checked against c++'s minstd_rand). note `Rnd(x)` is `Rnd(x, 0)` (= x - u*x)
   and `Rand(x)` is `Rand(x, 1)`, so ports keep those argument orders.
-- **rng order**: seeds only reproduce if the Rand/Rnd calls run in blitz's order, and blitz doesn't run call
-  args left to right. from compiler/codegen_x86 (blitz3d source): args become a right-nested SEQ of moves, every
-  tile gets a sethi-ullman register "need", and Tile::eval runs the needier child first (ties: left). a const
-  arg is an immediate store (need 1), so heavier args later in the list go first: in FillRoom,
-  `CreateDecal(Rand(2,3), x+Rnd(..)*s, 3*s+Rnd(..), z+Rnd(..)*s, 90, Rnd(360), 0)` runs the y Rnd, then z, Rnd(360),
-  x and finally Rand(2,3). C leaves arg order unspecified, so any statement w/ 2+ rng calls (incl. CreateItem/
-  CreateDoor/AddLight, which roll inside) is split into temps in that order, w/ a comment.
+- **rng**: Rand/Rnd use blitz3d's generator (park-miller), but nothing tries to match blitz's call order any more, so seeds don't reproduce the original game's maps.
 - **audio**: the game does its own 3d (PlaySound2/UpdateSoundOrigin compute vol + pan from DeltaYaw), so
   only the plain blitz api is needed. each PlaySound gets its own voice (a raylib sound alias, 256 of them; when all are busy the oldest
   one-shot is stolen, like fmod); channel
@@ -181,7 +175,6 @@ START builds the facility from the seed and you walk it; 173 and 106 hunt you (1
 whose event isn't in yet). esc = a stub pause screen (q quits). dev env for it: `SCPCB_SEED=x` fixed seed, `SCPCB_TOPDOWN=1` whole map from
 above (ceilings are culled), `SCPCB_EV=name` prints that event's state once a second, `SCPCB_ROOM=name` start in the first room w/ that template name, `SCPCB_173=d` / `SCPCB_106=d` drop 173 / an already risen
 106 d units in front of you after loading (note u start mid-blink, so 173 at 2 snaps ur neck on the first frames, like blitz would).
-statements w/ several rng calls follow blitz's evaluation order, see "rng order" below.
 stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), Dreamfilter,
 borderless windowed + ScreenGamma (blitz did these w/ the fresize_* camera, not ported), ResizeImage2 is a plain ResizeImage,
 TextureLodBias is a no-op (es2), "antialiased text" only flips the ini value, bump maps, LoadWorld (.b3d rooms, unused),

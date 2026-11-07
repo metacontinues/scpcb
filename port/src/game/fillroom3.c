@@ -1,6 +1,6 @@
 // fillroom3.c: FillRoom's per-room cases room2ccont .. dimension1499 (MapSystem.bb's big Select, same order)
-// drafted w/ a throwaway translator, then reviewed by hand against the .bb. rng calls that share one
-// blitz statement are split into temps in blitz3d's codegen order (see README, "rng order")
+// drafted w/ a throwaway translator, then reviewed by hand against the .bb.
+
 #include "g.h"
 
 #define U __attribute__((unused))
@@ -528,7 +528,7 @@ static void f_room2gw(Rooms *r) {
 				}
 			}
 		}
-		if ((((((room2gw_brokendoor == 0) & (bbRand(1, 2) == 1)))) | (bd_temp))) {
+		if ((room2gw_brokendoor == 0 && bbRand(1, 2) == 1) || bd_temp) {
 			r->Objects[1] = bbCopyEntity(DoorOBJ, 0);
 			bbScaleEntity(r->Objects[1], (204.0f * RoomScale) / bbMeshWidth(r->Objects[1]), 312.0f * RoomScale / bbMeshHeight(r->Objects[1]), 16.0f * RoomScale / bbMeshDepth(r->Objects[1]), 0);
 			bbEntityType(r->Objects[1], HIT_MAP, 0);

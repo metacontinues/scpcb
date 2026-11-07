@@ -173,9 +173,8 @@ static void cigarette(void) {
 		case 5: Msg = quote("Could really go for one now... Wish I had a lighter."); break;
 		case 6: Msg = quote("Don't plan on starting, even at a time like this."); gone = 1; break;
 		}
-		Items *it = SI;
-		if (gone) RemoveItem(it);
-		it->state = 1; // blitz writes this through the now Null SelectedItem (a runtime error there); harmless on the removed item here
+		if (gone) RemoveItem(SI);
+		else SI->state = 1;
 	} else Msg = "You are unable to get lit.";
 	MsgTimer = 70 * 5;
 }

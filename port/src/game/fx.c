@@ -138,7 +138,7 @@ void UpdateDecals(void) {
 					Decals *d2 = CreateDecal(1, bbEntityX(d->obj, 0) + cosf(a * DTOR) * t, bbEntityY(d->obj, 0) - .0005f, bbEntityZ(d->obj, 0) + sinf(a * DTOR) * t, bbEntityPitch(d->obj, 0), yaw, bbEntityRoll(d->obj, 0));
 					d2 = d2 ? d2 : bbLast(Decals); // blitz gets the decal back even when its texture is missing
 					d2->Size = bbRnd(.1f, .5f); bbScaleSprite(d2->obj, d2->Size, d2->Size);
-					int s = DecaySFX[bbRand(1, 3)]; // Rand then Rnd: codegen order, the args tie
+					int s = DecaySFX[bbRand(1, 3)];
 					PlaySound2(s, Camera, d2->obj, 10, bbRnd(.1f, .5f));
 					d->Timer = bbRand(50, 100);
 				} else d->Timer -= FPSfactor;

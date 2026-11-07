@@ -1,7 +1,7 @@
 // evpd.c: the "pocketdimension" event (UpdateEvents.bb) + the faces DrawGUI flashes at you in there (Main.bb 4629)
 // EventState: timer for the breathing tunnels. EventState2: 0 starting room, 1 throne/plane/trench rooms, 12-15 the
 // pillar room (106 hops pillar to pillar). EventState3: 1 the hcz-looking trick tunnel, 2 its door opened.
-// EventStr holds a float as text, like blitz (it does Float(e\EventStr) + ..., so the Str() rounding is kept)
+// EventVal: how long 106's eyes have stared at you (1000 = kneel)
 #include "g.h"
 
 #define R (e->room)
@@ -14,7 +14,6 @@ static float Y(int o) { return bbEntityY(o, 0); }
 static float Z(int o) { return bbEntityZ(o, 0); }
 static float sind(float a) { return sinf(a * DTOR); }
 static float cosd(float a) { return cosf(a * DTOR); }
-static float strf(Events *e) { return bbLen(e->EventStr) ? bbFloat(e->EventStr) : 0; }
 
 static void fog(int r, int g, int b) { bbCameraFogColor(Camera, r, g, b); bbCameraClsColor(Camera, r, g, b); }
 static void refresh(void) { UpdateDoorsTimer = 0; UpdateDoors(); UpdateRooms(); }
@@ -118,7 +117,7 @@ static void throne(Events *e) { // the throne room w/ the moving pillars, 106's 
 				KillTimer = -1;
 			}
 		}
-		if (strf(e) < 1000) e->SoundCHN = LoopSound2(e->Sound, e->SoundCHN, Camera, oi, 6, 1);
+		if (e->EventVal < 1000) e->SoundCHN = LoopSound2(e->Sound, e->SoundCHN, Camera, oi, 6, 1);
 	}
 	int pvt = bbCreatePivot(0);
 	bbPositionEntity(pvt, XG(o8) - 1536 * RS, 500 * RS, ZG(o8) + 608 * RS, 0);
@@ -132,11 +131,11 @@ static void throne(Events *e) { // the throne room w/ the moving pillars, 106's 
 	int temp = bbInt(bbEntityDistance(Collider, eyes)); // blitz's temp is an int
 	if (temp < 2000 * RS) {
 		Injuries += FPSfactor / 4000;
-		e->EventStr = bbStr(strf(e) + FPSfactor / 1000);
-		if (strf(e) > 1 && strf(e) < 1000) {
+		e->EventVal += FPSfactor / 1000;
+		if (e->EventVal > 1 && e->EventVal < 1000) {
 			PlaySound_Strict(LoadTempSound("SFX\\Room\\PocketDimension\\Kneel.ogg"));
 			LoadEventSound(e, "SFX\\Room\\PocketDimension\\Screech.ogg", 0);
-			e->EventStr = bbStr(1000.0f);
+			e->EventVal = 1000;
 		}
 		Sanity = Max(Sanity - FPSfactor / temp / 8, -1000);
 		CurrCameraZoom = Max(CurrCameraZoom, (sinf((float)MilliSecs2() / 20 * DTOR) + 1) * 15 * Max((6.0f - temp) / 6, 0));
@@ -149,7 +148,7 @@ static void throne(Events *e) { // the throne room w/ the moving pillars, 106's 
 			LoadEventSound(e, "SFX\\Room\\PocketDimension\\Explosion.ogg", 0);
 			LoadEventSound(e, "SFX\\Room\\PocketDimension\\TrenchPlane.ogg", 1);
 			bbPositionEntity(R->Objects[20], XG(o8) - 1000, 0, 0, 1);
-			e->EventStr = bbStr(0.0f);
+			e->EventVal = 0;
 		}
 	} else if (Y(Collider) < -180 * RS) { // the exit room
 		float t = Distance(X(Collider), Z(Collider), XG(o8) + 1024 * RS, ZG(o8));
@@ -168,7 +167,7 @@ static void throne(Events *e) { // the throne room w/ the moving pillars, 106's 
 				int o = r->Objects[0];
 				Decals *de = CreateDecal(0, XG(o), YG(o), ZG(o), 270, bbRand(360, 1), 0);
 				if (de) TeleportEntity(de->obj, XG(o), YG(o) + .6f, ZG(o), 0, 1, 4, 1);
-				break; // blitz: Exit (the Return after it never runs)
+				break;
 			}
 		}
 	}
@@ -197,7 +196,7 @@ static void secondroom(Events *e) { // EventState2 = 1
 			fog(0, 0, 0);
 			DropSpeed = 0;
 			BlurTimer = 1500;
-			bbPositionEntity(Collider, XG(R->obj), .4f, XG(R->obj), 0); // sic: x for z, like blitz
+			bbPositionEntity(Collider, XG(R->obj), .4f, ZG(R->obj), 0);
 			int out = 0;
 			each(Rooms, r) if (bbSeq(r->RoomTemplate->Name, "room106")) {
 				e->EventState = 0; e->EventState2 = 0;
@@ -288,7 +287,7 @@ static void pillars(Events *e) { // EventState2 12-15
 		int o = R->Objects[bbInt(e->EventState2)];
 		the106(o, .27f);
 		show106();
-		if ((bbRand(750, 1) == 1) & (e->EventState2 > 12)) { BlinkTimer = -10; e->EventState2--; PlaySound_Strict(HorrorSFX[8]); }
+		if (bbRand(750, 1) == 1) { BlinkTimer = -10; e->EventState2--; PlaySound_Strict(HorrorSFX[8]); }
 		if (e->EventState2 == 12) {
 			CameraShake = 1;
 			int o12 = R->Objects[12];
@@ -317,7 +316,7 @@ int EvPocketDimension(Events *e) {
 	if (PlayerRoom != R) {
 		bbHideEntity(R->obj);
 		e->EventState = e->EventState2 = e->EventState3 = 0;
-		e->EventStr = bbStr(0.0f);
+		e->EventVal = 0;
 		return 0;
 	}
 	bbShowEntity(R->obj);
@@ -331,10 +330,8 @@ int EvPocketDimension(Events *e) {
 	ShouldPlay = Y(Collider) < 2000 * RS || e->EventState3 == 0 || Y(Collider) > 2608 * RS ? 3 : 0;
 	float s = e->EventState;
 	bbScaleEntity(R->obj, RS, RS * (1 + sind(s / 14) * .2f), RS, 0);
-	int i;
-	for (i = 0; i <= 7; i++) bbScaleEntity(R->Objects[i], RS * (1 + fabsf(sind(s / 21 + i * 45) * .1f)), RS * (1 + sind(s / 14 + i * 20) * .1f), RS, 1);
-	// i is 8 here, blitz uses the loop's leftover i too
-	bbScaleEntity(R->Objects[9], RS * (1.5f + fabsf(sind(s / 21 + i * 45) * .1f)), RS * (1 + sind(s / 14 + i * 20) * .1f), RS, 1);
+	for (int i = 0; i <= 7; i++) bbScaleEntity(R->Objects[i], RS * (1 + fabsf(sind(s / 21 + i * 45) * .1f)), RS * (1 + sind(s / 14 + i * 20) * .1f), RS, 1);
+	bbScaleEntity(R->Objects[9], RS * (1.5f + fabsf(sind(s / 21 + 9 * 45) * .1f)), RS * (1 + sind(s / 14 + 9 * 20) * .1f), RS, 1);
 	e->EventState += FPSfactor;
 	s = e->EventState;
 	if (e->EventState2 == 0) {
@@ -342,7 +339,7 @@ int EvPocketDimension(Events *e) {
 		NPCs *n = Curr106;
 		if (n->State > 0) { // 106 circles the starting room
 			float angle = fmodf(s / 10, 360);
-			bbPositionEntity(n->Collider, X(R->obj), .2f + .35f + sind(s / 14 + i * 20) * .4f, X(R->obj), 0); // sic: x for z, like blitz
+			bbPositionEntity(n->Collider, X(R->obj), .2f + .35f + sind(s / 14) * .4f, Z(R->obj), 0);
 			bbRotateEntity(n->Collider, 0, angle, 0, 0);
 			bbMoveEntity(n->Collider, 0, 0, 6 - sind(s / 10));
 			AnimateNPC(n, 55, 104, .5f, 1);
@@ -369,11 +366,11 @@ void PocketDimensionFaces(void) {
 	each(Events, e) {
 		if (e->room != PlayerRoom) continue;
 		int blink = BlinkTimer < -3 && BlinkTimer > -10;
-		if (strf(e) < 1000) {
+		if (e->EventVal < 1000) {
 			if (e->EventState <= 600) continue;
 			if (blink) {
 				if (!e->img) {
-					if ((BlinkTimer > -5) & (bbRand(30, 1) == 1)) { // blitz And: Rand always rolls
+					if (BlinkTimer > -5 && bbRand(30, 1) == 1) {
 						PlaySound_Strict(DripSFX[0]);
 						if (!e->img) e->img = LoadImage_Strict("GFX\\npcs\\106face.jpg");
 					}

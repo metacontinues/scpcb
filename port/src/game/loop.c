@@ -6,7 +6,7 @@ static void ambience(void) {
 	if (bbSeq(rn, "pocketdimension") || bbSeq(rn, "gatea") || bbSeq(rn, "exit1") || MenuOpen || ConsoleOpen || InvOpen) return;
 	if (bbRand(1, 1500) == 1) {
 		for (int i = 0; i <= 5; i++) if (AmbientSFX[i][CurrAmbientSFX] && !bbChannelPlaying(AmbientSFXCHN)) { FreeSound_Strict(AmbientSFX[i][CurrAmbientSFX]); AmbientSFX[i][CurrAmbientSFX] = 0; }
-		float rx = bbRnd(-1, 1), rz = bbRnd(-1, 1); // x then z (blitz codegen order, the args tie)
+		float rx = bbRnd(-1, 1), rz = bbRnd(-1, 1);
 		bbPositionEntity(SoundEmitter, bbEntityX(Camera, 0) + rx, 0, bbEntityZ(Camera, 0) + rz, 0);
 		if (bbRand(1, 3) == 1) PlayerZone = 3;
 		if (bbSeq(rn, "173")) PlayerZone = 4;

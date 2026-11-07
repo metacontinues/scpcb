@@ -69,8 +69,7 @@ static int gateaentrance(Events *e) {
 
 static int sinkhole(Events *e) { // 106's sinkhole drags you to the pocket dimension
 	if (e->EventState == 0) {
-		float rx = bbRnd(-.5f, .5f), rz = bbRnd(-.5f, .5f); int a = bbRand(360, 1); // x, z, then the Rand: codegen order
-		Decals *de = CreateDecal(0, bbEntityX(R->obj, 0) + rx, .01f, bbEntityZ(R->obj, 0) + rz, 90, a, 0);
+		Decals *de = CreateDecal(0, bbEntityX(R->obj, 0) + bbRnd(-.5f, .5f), .01f, bbEntityZ(R->obj, 0) + bbRnd(-.5f, .5f), 90, bbRand(360, 1), 0);
 		if (de) { de->Size = 2.5f; bbScaleSprite(de->obj, de->Size, de->Size); }
 		e->EventState = 1;
 		return 0;
@@ -177,7 +176,7 @@ static int room2elevator(Events *e) { // a guard walks into the elevator and die
 		return 0;
 	}
 	if (e->EventState == 1) {
-		if ((R->dist < 5) | (bbRand(700, 1) == 1)) { // blitz Or: Rand always rolls
+		if (R->dist < 5 || bbRand(700, 1) == 1) {
 			e->EventState = 2;
 			n->State = 5;
 			n->EnemyX = XG(R->Objects[1]); n->EnemyY = YG(R->Objects[1]); n->EnemyZ = ZG(R->Objects[1]);
@@ -395,7 +394,7 @@ static int tunnel106(Events *e) { // 106 rises out of the tunnel floor
 		return 0;
 	}
 	if (e->EventState == 1) {
-		if ((R->dist < 3) | (bbRand(7000, 1) == 1)) { // blitz Or: Rand always rolls
+		if (R->dist < 3 || bbRand(7000, 1) == 1) {
 			e->EventState = 2;
 			Decals *d = CreateDecal(0, bbEntityX(R->obj, 0), 445 * RS, bbEntityZ(R->obj, 0), -90, bbRand(360, 1), 0);
 			if (d) {

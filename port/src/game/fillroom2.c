@@ -1,6 +1,6 @@
 // fillroom2.c: FillRoom's per-room cases room049 .. 173 (MapSystem.bb's big Select, same order)
-// drafted w/ a throwaway translator, then reviewed by hand against the .bb. rng calls that share one
-// blitz statement are split into temps in blitz3d's codegen order (see README, "rng order")
+// drafted w/ a throwaway translator, then reviewed by hand against the .bb.
+
 #include "g.h"
 
 #define U __attribute__((unused))

@@ -15,7 +15,7 @@ Events *CreateEvent(const char *eventname, const char *roomname, int id, float p
 		if (prob == 0) {
 			i++;
 			if (i >= id && !t) { Events *e = bbNew(Events); e->EventName = bbSdup(eventname); e->room = r; return e; }
-		} else if ((bbRnd(0, 1) < prob) & !t) { // blitz And: Rnd rolls for taken rooms too
+		} else if (!t && bbRnd(0, 1) < prob) {
 			Events *e = bbNew(Events); e->EventName = bbSdup(eventname); e->room = r;
 		}
 	}
@@ -149,8 +149,7 @@ static void explosion(void) { // the 294 drinks' explosion, kept here like blitz
 		ExplosionSFX = LoadSound_Strict("SFX\\Ending\\GateB\\Nuke2.ogg");
 		PlaySound_Strict(ExplosionSFX);
 		for (int i = 0; i <= 10 + 10 * (ParticleAmount + 1); i++) {
-			// codegen order: z's Rnd, the size, y's, then x's (the coord args need 3, the tail from z on needs 4)
-			float rz = bbRnd(-.5f, .5f), sz = bbRnd(.2f, .6f), ry = bbRnd(.2f, 1.5f), rx = bbRnd(-.5f, .5f);
+			float rx = bbRnd(-.5f, .5f), ry = bbRnd(.2f, 1.5f), rz = bbRnd(-.5f, .5f), sz = bbRnd(.2f, .6f);
 			Particles *p = CreateParticle(bbEntityX(Collider, 0) + rx, bbEntityY(Collider, 0) - ry, bbEntityZ(Collider, 0) + rz, 0, sz, 0, 350);
 			bbRotateEntity(p->pvt, -90, 0, 0, 1);
 			p->speed = bbRnd(.05f, .07f);
