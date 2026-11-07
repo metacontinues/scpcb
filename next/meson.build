@@ -6,11 +6,15 @@
 project('scpcb-next', 'c', default_options: ['c_std=c99', 'buildtype=release', 'warning_level=2'])
 
 cc = meson.get_compiler('c')
+# tcc (muon only, meson doesn't know it): a quick unoptimized build. it takes
+# gcc's flags w/o a word + ignores them, so no lto/march/linker, and no
+# mimalloc (no thread locals)
+tcc = cc.get_id() == 'tcc'
 add_project_arguments('-Wno-unused-parameter', '-pedantic', language: 'c')
-if cc.get_id() != 'clang'
+if cc.get_id() != 'clang' and not tcc
 	warning('not clang (got ' + cc.get_id() + '), configure w/ ./setup.sh or CC=clang AR=llvm-ar')
 endif
-ld = get_option('linker')
+ld = tcc ? '' : get_option('linker')
 if ld != ''
 	if not cc.has_link_argument('-fuse-ld=' + ld)
 		error(ld + ' not usable as the linker; install it or pass -Dlinker= for the default')
@@ -21,10 +25,14 @@ endif
 # same opt flags as port/
 opt = ['-fno-plt', '-fno-semantic-interposition', '-fno-math-errno', '-ffunction-sections', '-fdata-sections']
 optl = ['-Wl,-O2', '-Wl,--gc-sections', '-Wl,--as-needed']
-if get_option('march') != ''
+if tcc
+	opt = []
+	optl = []
+endif
+if get_option('march') != '' and not tcc
 	opt += '-march=' + get_option('march')
 endif
-lto = get_option('lto')
+lto = tcc ? '' : get_option('lto')
 if lto != ''
 	opt += '-flto=' + lto
 	optl += '-flto=' + lto
@@ -98,7 +106,7 @@ rltool = static_library('raylib_tool', rlsrc, link_with: glfw, dependencies: sys
 
 mi = []
 # overriding malloc on windows needs mimalloc's redirect dll, so it's off there
-if get_option('mimalloc') and system != 'windows'
+if get_option('mimalloc') and system != 'windows' and not tcc
 	mi = static_library('mimalloc', 'vendor/mimalloc/src/static.c',
 		c_args: ['-w', '-DNDEBUG', '-DMI_MALLOC_OVERRIDE=1'], include_directories: 'vendor/mimalloc/include', override_options: ['c_std=gnu11'])
 endif

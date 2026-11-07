@@ -6,6 +6,10 @@ to diff against) until this reaches parity, then it goes.
 ## build + run
 
 same toolchain as port/ (`./setup.sh && ninja -C build`). muon: `BUILD=build-muon MESON=./muon ./setup.sh && ./muon -C build-muon samu`
+tcc (muon only, meson doesn't know tcc): `CC=tcc AR=tcc BUILD=build-tcc MESON=./muon ./setup.sh && ./muon -C build-tcc samu`.
+a quick unoptimized build (~0.5 s from scratch): no lto/march/lld, no mimalloc (tcc has no thread locals). muon's tcc
+toolchain asks for no depfiles, so header edits don't rebuild anything there: `rm -rf build-tcc` + configure again.
+renders match the clang build except a few dozen edge pixels (fma/lto float rounding)
 (setup.sh hands it gnu ar + the system's pkg-config path, see the comments there). linux builds glfw w/ x11 + wayland (picked at
 runtime), the wayland protocol glue comes from `wayland-scanner`. `./setup.sh -Dangle=/opt/angle/usr/lib` runs on angle:
 - glfw gets angle's unversioned sonames (it'd dlopen the system's libEGL.so.1 otherwise) + an rpath to that dir
