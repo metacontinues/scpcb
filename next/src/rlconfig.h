@@ -1,7 +1,8 @@
 // rlconfig.h: the game's overrides for raylib's config.h, force-included ahead
 // of it (see meson.build). config.h #ifndef-guards every flag, so this only
 // lists what differs. the game loads glb, qoi, qoa + ttf, everything else gets
-// baked into those by tools/bake. don't define CONFIG_H here.
+// baked into those by tools/bake. png stays for screenshots (TakeScreenshot).
+// don't define CONFIG_H here.
 #pragma once
 
 #define SUPPORT_GESTURES_SYSTEM 0
@@ -11,7 +12,6 @@
 #define SUPPORT_AUTOMATION_EVENTS 0
 #define SUPPORT_CLIPBOARD_IMAGE 0
 
-#define SUPPORT_FILEFORMAT_PNG 0
 #define SUPPORT_FILEFORMAT_BMP 0
 #define SUPPORT_FILEFORMAT_GIF 0
 #define SUPPORT_FILEFORMAT_DDS 0
