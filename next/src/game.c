@@ -1,11 +1,20 @@
-// game.c: the game. for now: generate the facility, drop you in the start room,
-// walk it, open doors. run from the repo root (it reads options.ini,
-// Data/rooms.ini and next/data). dev env: SCPCB_SEED=n fixed map,
-// SCPCB_SHOT=a.png + SCPCB_SHOT_FRAME=n screenshot then quit,
-//          SCPCB_WALK=ticks hold "forward" that long, SCPCB_YAW=deg start
-//          facing
+// game.c: the game so far: generate the facility, drop you in the start room,
+// walk it, open doors, blink. run from the repo root (it reads options.ini,
+// Data/rooms.ini and next/data).
+//
+// dev env:
+//   SCPCB_SEED=n           fixed map
+//   SCPCB_SHOT=a.png       screenshot at frame SCPCB_SHOT_FRAME (60), then quit
+//   SCPCB_WALK=ticks       hold "forward" that long
+//   SCPCB_YAW=deg          start facing
+//   SCPCB_NOFOG=1          see past the fog
+//   SCPCB_DOOR=1|2|3       start at the nearest door's button (2: in front of
+//                          the door, 3: same, opened); SCPCB_CLICK=frame clicks
+//   SCPCB_MSG=text         a hud message
+//   SCPCB_DEBUG=1          the debug line (f2 toggles it)
 #include "coll.h"
 #include "door.h"
+#include "hud.h"
 #include "ini.h"
 #include "player.h"
 #include "props.h"
@@ -22,6 +31,17 @@
 
 #define HIDE                                                                   \
   15.0f // rooms + doors further than this aren't drawn (HideDistance)
+
+// where a point is relative to the view, in the original's hand-icon terms:
+// yaw > 0 = to the right, pitch > 0 = above
+static float handyaw(const Player *p, Vector3 at) {
+  Vector3 d = Vector3Subtract(at, player_eye(p));
+  return p->yaw - atan2f(-d.x, -d.z) * RAD2DEG;
+}
+static float handpitch(const Player *p, Vector3 at) {
+  Vector3 d = Vector3Subtract(at, player_eye(p));
+  return p->pitch - atan2f(-d.y, sqrtf(d.x * d.x + d.z * d.z)) * RAD2DEG;
+}
 
 static float envf(const char *k, float def) {
   const char *v = getenv(k);
@@ -156,36 +176,46 @@ int main(void) {
       kleft = key_dik(ini_int(&opt, "options", "left key", 30)),
       kright = key_dik(ini_int(&opt, "options", "right key", 32)),
       ksprint = key_dik(ini_int(&opt, "options", "sprint key", 42)),
+      kblink = key_dik(ini_int(&opt, "options", "blink key", 57)),
       kcrouch = key_dik(ini_int(&opt, "options", "crouch key", 29));
   ini_free(&opt);
   float fovy = 2 * atanf(tanf(45 * DEG2RAD) * sh / (float)sw) *
                RAD2DEG; // the original's 90 degrees across
 
   float acc = 0;
-  int ticks = 0, crouch = 0, btn = -1;
+  int ticks = 0, crouch = 0, blink = 0, btn = -1,
+      debug = getenv("SCPCB_DEBUG") != NULL;
+  Vector3 btnat = {0};
+  hud_init(sw, sh);
+  if (getenv("SCPCB_MSG")) // dev: show a message
+    hud_msg(getenv("SCPCB_MSG"), 70 * 6);
   Vector2 mouse = {0};
   for (int f = 0; !WindowShouldClose(); f++) {
     acc = minf(acc + (shot ? 1 / TICK : GetFrameTime()), .25f);
     mouse = Vector2Add(mouse, shot ? Vector2Zero() : GetMouseDelta());
     crouch |= IsKeyPressed(kcrouch);
+    blink |= IsKeyPressed(kblink);
     while (acc >= 1 / TICK) {
       int fw = ticks < walk;
-      PlayerIn in = {IsKeyDown(kup) || fw,
-                     IsKeyDown(kdown),
-                     IsKeyDown(kleft),
-                     IsKeyDown(kright),
-                     IsKeyDown(ksprint),
-                     crouch,
-                     mouse};
+      PlayerIn in = {.up = IsKeyDown(kup) || fw,
+                     .down = IsKeyDown(kdown),
+                     .left = IsKeyDown(kleft),
+                     .right = IsKeyDown(kright),
+                     .sprint = IsKeyDown(ksprint),
+                     .crouch = crouch,
+                     .blink = blink,
+                     .blinkheld = IsKeyDown(kblink),
+                     .mouse = mouse};
       mouse = Vector2Zero();
-      crouch = 0;
+      crouch = blink = 0;
       door_coll(&w, p.pos, 4);
       player_tick(&p, in);
       door_tick(&w, player_eye(&p));
+      hud_tick();
       acc -= 1 / TICK;
       ticks++;
     }
-    btn = door_button(&w, player_eye(&p), p.pos);
+    btn = door_button(&w, player_eye(&p), p.pos, &btnat);
     if (btn >= 0 && (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || f == click))
       door_use(&w, btn);
 
@@ -194,10 +224,17 @@ int main(void) {
     BeginMode3D(player_camera(&p, fovy));
     draw(&w, player_eye(&p));
     EndMode3D();
-    if (btn >= 0)
-      DrawCircleLines(sw / 2, sh / 2, 10,
-                      RAYWHITE); // TODO the hand icon w/ the hud
-    if (!shot)
+    hud_draw(&(HudIn){.dark = player_dark(&p),
+                      .blink = p.blink,
+                      .blinkfreq = p.blinkfreq,
+                      .stamina = p.stamina,
+                      .crouch = p.crouch,
+                      .hand = btn >= 0,
+                      .handyaw = handyaw(&p, btnat),
+                      .handpitch = handpitch(&p, btnat)});
+    if (IsKeyPressed(KEY_F2))
+      debug = !debug;
+    if (debug)
       DrawText(TextFormat("%d fps  (%.2f %.2f %.2f)  stamina %.0f", GetFPS(),
                           p.pos.x, p.pos.y, p.pos.z, p.stamina),
                10, 10, 20, DARKGRAY);

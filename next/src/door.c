@@ -61,7 +61,7 @@ static Matrix btnm(const Door *d, int i) {
       MatrixTranslate(p.x, p.y, p.z));
 }
 
-int door_button(World *w, Vector3 eye, Vector3 body) {
+int door_button(World *w, Vector3 eye, Vector3 body, Vector3 *at) {
   int best = -1;
   float bd = 1e9f;
   for (int i = 0; i < w->ndoors; i++) {
@@ -80,6 +80,8 @@ int door_button(World *w, Vector3 eye, Vector3 body) {
         continue;
       best = i;
       bd = de;
+      if (at)
+        *at = p;
     }
   }
   return best;

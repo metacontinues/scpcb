@@ -6,8 +6,8 @@
 #include "world.h"
 
 void door_init(void); // the door models
-int door_button(World *w, Vector3 eye,
-                Vector3 body); // closest usable button's door, -1 if none
+// closest usable button's door, -1 if none; *at = the button
+int door_button(World *w, Vector3 eye, Vector3 body, Vector3 *at);
 void door_use(World *w, int i);
 void door_tick(World *w, Vector3 eye); // slide + auto-close
 void door_coll(World *w, Vector3 near,

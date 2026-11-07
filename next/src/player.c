@@ -13,7 +13,9 @@ static const Vector3 RADII = {.15f, .30f, .15f};
 void player_spawn(Player *p, Vector3 pos, float yaw) {
   float sens = p->sens, smooth = p->smooth;
   int inv = p->invert;
-  *p = (Player){.pos = pos, .yaw = yaw, .stamina = 100};
+  float f = frnd(455, 665); // normal difficulty's blink interval
+  *p = (Player){
+      .pos = pos, .yaw = yaw, .stamina = 100, .blink = f, .blinkfreq = f};
   p->sens = sens;
   p->smooth = smooth > 0 ? smooth : 1;
   p->invert = inv;
@@ -43,8 +45,37 @@ static void look(Player *p, Vector2 m) {
   p->pitch = clampf(p->pitch + p->msy * .3f, -70, 70);
 }
 
+// eyes: the timer runs down at .6/tick, at 0 you blink for 20 ticks (shut for
+// 10 of them), then a new random interval. the key blinks early / keeps them
+// shut
+static void blink(Player *p, PlayerIn in) {
+  if (in.blink)
+    p->blink = 0;
+  if (in.blinkheld && p->blink < -10)
+    p->blink = -10;
+  if (p->blink >= 0) {
+    p->blink -= .6f;
+    return;
+  }
+  if (p->blink <= -20)
+    p->blink = p->blinkfreq = frnd(455, 665);
+  p->blink -= 1;
+}
+
+float player_dark(const Player *p) {
+  float b = p->blink;
+  if (b >= 0)
+    return 0;
+  if (b > -5)
+    return sinf(fabsf(b * 18) * DEG2RAD);
+  if (b > -15)
+    return 1;
+  return fabsf(sinf(b * 18 * DEG2RAD));
+}
+
 void player_tick(Player *p, PlayerIn in) {
   look(p, in.mouse);
+  blink(p, in);
   p->stamina =
       minf(p->stamina + .15f * (p->speed > 0 ? 1 / 1.25f : 1.25f), 100);
   if (in.crouch)
