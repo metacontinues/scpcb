@@ -170,17 +170,31 @@ game: hand-ported (no transpiler) into `src/game/`. done so far: Main.bb's top l
 loop's menu side, INI, StrictLoads, launcher, loading screens, the whole main menu, save/map lists, UpdateMusic,
 KeyName, Difficulty, Achievements init, LoadEntities (most), room templates + rmesh rooms, CreateMap (the full map
 generator), CreateRoom, CreateDoor, FillRoom, the player (MovePlayer/MouseLook/hud), UpdateRooms/UpdateDoors, waypoints +
-FindPath, CreateNPC (every type) + UpdateNPCs w/ SCP-173 and SCP-106, InitEvents, decals, achievement popups.
-START builds the facility from the seed and you walk it; 173 and 106 hunt you (106 drags you to the pocket dimension,
-whose event isn't in yet). esc = a stub pause screen (q quits). dev env for it: `SCPCB_SEED=x` fixed seed, `SCPCB_TOPDOWN=1` whole map from
+FindPath, CreateNPC (every type) + UpdateNPCs w/ 173, 106, guards and class-d/clerks, InitEvents + UpdateEvents w/ 52
+events (173 intro, alarm, pocket dimension, most of the plain room events, room2closets' quickload), decals, particles,
+achievement popups, the inventory (UpdateItems, inv.c) + most item use (use.c), DrawMenu (pause/death screen, in-game
+options, achievements, quit to menu).
+START builds the facility from the seed and you walk it; 173 and 106 hunt you, 106's pocket dimension works. dev env for it: `SCPCB_SEED=x` fixed seed, `SCPCB_TOPDOWN=1` whole map from
 above (ceilings are culled), `SCPCB_EV=name` prints that event's state once a second, `SCPCB_ROOM=name` start in the first room w/ that template name, `SCPCB_173=d` / `SCPCB_106=d` drop 173 / an already risen
 106 d units in front of you after loading (note u start mid-blink, so 173 at 2 snaps ur neck on the first frames, like blitz would).
 stubbed: CheckForUpdates (needs http), PlayStartupVideos (needs a video decoder), Dreamfilter,
 borderless windowed + ScreenGamma (blitz did these w/ the fresize_* camera, not ported), ResizeImage2 is a plain ResizeImage,
 TextureLodBias is a no-op (es2), "antialiased text" only flips the ini value, bump maps, LoadWorld (.b3d rooms, unused),
 light cones, the 1499 chunks, loading saves, EntityAutoFade (1499-1 only), MeshCullBox (no per-entity culling here).
-next up: the other UpdateNPCs cases (096, 049, guards/MTF, ...), UpdateEvents.bb (the intro, 173's chamber, pocket
-dimension...), then DrawMenu, inventory/UpdateItems and the console (all hand-ported).
+left to port (all hand-ported), roughly in this order:
+- npc ai: 096, 049 + zombies, MTF (UpdateMTFUnit, TeleportMTFGroup, camera-check announcements), 939, 966, 860-2, 066,
+  372, 513-1, 1048-a, 1499-1, 008, apache, tentacles; ManipulateNPCBones. most missing events need these first
+- events: room106, room079, room035, room049, room205, room860, room966, room1123, room1162, room2test1074, room2storage,
+  room2servers, room2sl, room2tunnel, room3storage, room3pit1048, room_gw, 914, 1048a, the 2nd select (096spawn,
+  room3pit/room4pit/room3z2, 939-*_fix), Update096ElevatorEvent
+- endings: exit1, gatea, UpdateEndings/DrawEnding, credits
+- dimension1499 + its chunks, UpdateForest/DestroyForest
+- items: radio, navigator, 1499, 294 (Using294 is a stub), 1025, Use914, Use427, the clipboard/wallet screen, dropping a
+  half-worn vest/hazmat
+- room stuff: keypad, SelectedScreen/UpdateScreens, security cams, UpdateRoomLights, UpdateDeafPlayer, devil emitters,
+  the nvg "REFRESHING DATA" readout
+- Save.bb: saving + loading (blocks Save & Quit, Load Game, quicksave)
+- the console, the debug hud
 
 known gaps: Animate's transition blending is ignored (game only uses SetAnimTime anyway), skinned
 CopyEntity copies get their own vertex buffers (needed, each npc poses separately), collision response 3 (no sliding down slopes) is approximated, moving targets are tested
