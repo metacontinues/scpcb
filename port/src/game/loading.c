@@ -17,17 +17,17 @@ static void drawcwm(LoadingScreens *ls, int percent, int shortloading, int first
 	}
 	AASetFont(Font2);
 	str s = "";
-	for (int i = 0, n = bbRand(2, 9); i <= n; i++) s = cat(s, bbChr(bbRand(48, 122)));
+	for (int i = 0, n = irand(2, 9); i <= n; i++) s = cat(s, s_chr(irand(48, 122)));
 	AAText(GraphicWidth / 2, GraphicHeight / 2 + 80, s, 1, 1);
 	if (percent == 0) {
-		if (bbRand(1, 5) == 1) ls->txt[0] = bbRand(1, 2) == 1 ? cat("It will happen on ", bbCurrentDate(), ".") : bbSdup(bbCurrentTime());
-		else ls->txt[0] = (str)cwm[bbRand(1, 13) - 1];
+		if (irand(1, 5) == 1) ls->txt[0] = irand(1, 2) == 1 ? cat("It will happen on ", current_date(), ".") : s_dup(current_time());
+		else ls->txt[0] = (str)cwm[irand(1, 13) - 1];
 	}
 	// only the last Replace survives, the loop just burns rng like the original
 	s = ls->txt[0];
-	for (int i = 0, n = bbRand(10, 15); i <= n; i++) {
-		int a = bbRand(1, bbLen(s) - 1), c = bbRand(130, 250);
-		s = bbReplace(ls->txt[0], bbMid(ls->txt[0], a, 1), bbChr(c));
+	for (int i = 0, n = irand(10, 15); i <= n; i++) {
+		int a = irand(1, s_len(s) - 1), c = irand(130, 250);
+		s = s_replace(ls->txt[0], s_mid(ls->txt[0], a, 1), s_chr(c));
 	}
 	AASetFont(Font1);
 	RowText(s, GraphicWidth / 2 - 200, GraphicHeight / 2 + 120, 400, 300, 1, 1);
@@ -36,7 +36,7 @@ static void drawcwm(LoadingScreens *ls, int percent, int shortloading, int first
 void DrawLoading(int percent, int shortloading) {
 	if (percent == 0) {
 		LoadingScreenText = 0;
-		int t = bbRand(1, LoadingScreenAmount);
+		int t = irand(1, LoadingScreenAmount);
 		each(LoadingScreens, ls) if (ls->ID == t) {
 			if (!ls->img) ls->img = LoadImage_Strict(cat("Loadingscreens\\", ls->imgpath));
 			SelectedLoadingScreen = ls;
@@ -46,44 +46,44 @@ void DrawLoading(int percent, int shortloading) {
 	LoadingScreens *ls = SelectedLoadingScreen;
 	int first = 1;
 	do {
-		bbClsColor(0, 0, 0);
-		bbCls();
+		clear_color(0, 0, 0);
+		clear_screen();
 		if (percent > 20) UpdateMusic();
 		if (!shortloading && percent > (100.0f / ls->txtamount) * (LoadingScreenText + 1)) LoadingScreenText++;
 		if (!ls->disablebackground)
-			bbDrawImage(LoadingBack, GraphicWidth / 2 - bbImageWidth(LoadingBack) / 2, GraphicHeight / 2 - bbImageHeight(LoadingBack) / 2, 0);
-		int iw = bbImageWidth(ls->img), ih = bbImageHeight(ls->img);
+			draw_image(LoadingBack, GraphicWidth / 2 - image_width(LoadingBack) / 2, GraphicHeight / 2 - image_height(LoadingBack) / 2, 0);
+		int iw = image_width(ls->img), ih = image_height(ls->img);
 		int x = ls->alignx == 0 ? GraphicWidth / 2 - iw / 2 : ls->alignx == 1 ? GraphicWidth - iw : 0;
 		int y = ls->aligny == 0 ? GraphicHeight / 2 - ih / 2 : ls->aligny == 1 ? GraphicHeight - ih : 0;
-		bbDrawImage(ls->img, x, y, 0);
+		draw_image(ls->img, x, y, 0);
 
 		int w = 300, h = 20;
 		x = GraphicWidth / 2 - w / 2; y = GraphicHeight / 2 + 30 - 100;
-		bbRect(x, y, w + 4, h, 0);
-		for (int i = 1; i <= bbInt((w - 2) * (percent / 100.0f) / 10); i++) bbDrawImage(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3, 0);
+		draw_rect(x, y, w + 4, h, 0);
+		for (int i = 1; i <= iround((w - 2) * (percent / 100.0f) / 10); i++) draw_image(BlinkMeterIMG, x + 3 + 10 * (i - 1), y + 3, 0);
 
-		if (bbSeq(ls->title, "CWM")) drawcwm(ls, percent, shortloading, first);
+		if (s_eq(ls->title, "CWM")) drawcwm(ls, percent, shortloading, first);
 		else for (int pass = 0; pass < 2; pass++) { // shadow, then text
 			int o = !pass;
-			if (o) bbColor(0, 0, 0); else bbColor(255, 255, 255);
+			if (o) set_color(0, 0, 0); else set_color(255, 255, 255);
 			AASetFont(Font2);
 			AAText(GraphicWidth / 2 + o, GraphicHeight / 2 + 80 + o, ls->title, 1, 1);
 			AASetFont(Font1);
 			RowText(ls->txt[LoadingScreenText], GraphicWidth / 2 - 200 + o, GraphicHeight / 2 + 120 + o, 400, 300, 1, 1);
 		}
 
-		str lt = cat("LOADING - ", bbStr(percent), " %");
-		bbColor(0, 0, 0);
+		str lt = cat("LOADING - ", s_str(percent), " %");
+		set_color(0, 0, 0);
 		AAText(GraphicWidth / 2 + 1, GraphicHeight / 2 - 100 + 1, lt, 1, 1);
-		bbColor(255, 255, 255);
+		set_color(255, 255, 255);
 		AAText(GraphicWidth / 2, GraphicHeight / 2 - 100, lt, 1, 1);
 		if (percent == 100) {
-			if (first && !bbSeq(ls->title, "CWM")) PlaySound_Strict(LoadTempSound("SFX\\Horror\\Horror8.ogg"));
+			if (first && !s_eq(ls->title, "CWM")) PlaySound_Strict(LoadTempSound("SFX\\Horror\\Horror8.ogg"));
 			AAText(GraphicWidth / 2, GraphicHeight - 50, "PRESS ANY KEY TO CONTINUE", 1, 1);
-		} else { bbFlushKeys(); bbFlushMouse(); }
+		} else { flush_keys(); flush_mouse(); }
 		// TODO borderless upscale + ScreenGamma passes (need fresize_*)
-		bbFlip(0);
+		flip_frame(0);
 		first = 0;
 		if (percent != 100) break;
-	} while (!bbGetKey() && !bbMouseHit(1));
+	} while (!get_key() && !mouse_hit(1));
 }

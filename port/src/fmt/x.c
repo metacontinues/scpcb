@@ -5,7 +5,7 @@
 #include <string.h>
 #include <strings.h>
 #include <ctype.h>
-#include "../bb/in.h"
+#include "../rt/in.h"
 
 enum { T_EOF, T_NAME, T_STR, T_NUM, T_OB, T_CB };
 typedef struct { int k; double n; char s[256]; } tok;
@@ -110,7 +110,7 @@ static int open_(xr *r, char *name) {
 
 // ---- materials
 static brush material(xr *r) {
-	brush b = bb_brdef();
+	brush b = rt_brdef();
 	b.r = num(r); b.g = num(r); b.b = num(r); b.a = num(r);
 	b.shine = num(r) / 128.0f; // power
 	for (int i = 0; i < 6; i++) num(r); // specular, emissive
@@ -126,11 +126,11 @@ static brush material(xr *r) {
 			if (s.k == T_STR && s.s[0]) {
 				char p[1024];
 				snprintf(p, sizeof p, "%s%s", r->dir, s.s);
-				htex tx = bbLoadTexture(p, TF_COLOR | TF_MIP);
+				htex tx = load_texture(p, TF_COLOR | TF_MIP);
 				const char *bn = s.s;
 				for (const char *q = s.s; *q; q++) if (*q == '/' || *q == '\\') bn = q + 1;
-				if (!tx) { snprintf(p, sizeof p, "%s%s", r->dir, bn); tx = bbLoadTexture(p, TF_COLOR | TF_MIP); } // exporter's abs paths
-				if (!tx) tx = bbLoadTexture(s.s, TF_COLOR | TF_MIP);
+				if (!tx) { snprintf(p, sizeof p, "%s%s", r->dir, bn); tx = load_texture(p, TF_COLOR | TF_MIP); } // exporter's abs paths
+				if (!tx) tx = load_texture(s.s, TF_COLOR | TF_MIP);
 				if (tx) { b.tex[0] = tx; } // brush owns the load ref
 				else fprintf(stderr, "x: texture %s missing\n", p);
 			}
@@ -147,7 +147,7 @@ static void addmat(xr *r, const char *n, brush b) {
 }
 static brush matref(xr *r, const char *n) {
 	for (int i = r->nmat - 1; i >= 0; i--) if (!strcmp(r->mats[i].name, n)) { brush b = r->mats[i].br; br_ref(&b); return b; }
-	return bb_brdef();
+	return rt_brdef();
 }
 
 // ---- meshes
@@ -219,7 +219,7 @@ static void mesh(xr *r, ent e) {
 	}
 
 	// build: one surface per material, corners deduped on (vertex, normal)
-	E *x = bb_e(e);
+	E *x = rt_e(e);
 	if (!x->md) { x->kind = EK_MESH; x->md = md_new(); }
 	int ns = m.nb ? m.nb : 1;
 	int *key = malloc(sizeof(int) * 2 * (tot + 1) * 2), hs = (tot + 1) * 2; // open addressing: (vi*nn+ni) -> local idx
@@ -231,7 +231,7 @@ static void mesh(xr *r, ent e) {
 			int k = m.fc[f], mi = m.fm && m.nfi ? m.fm[f < m.nfi ? f : m.nfi - 1] : 0;
 			if (mi < 0 || mi >= ns) mi = 0;
 			if (mi != s || k < 3) { o += k; continue; }
-			if (!sf) sf = md_addsurf(bb_md(e), m.nb ? m.b[s] : bb_brdef());
+			if (!sf) sf = md_addsurf(rt_md(e), m.nb ? m.b[s] : rt_brdef());
 			int ix[64];
 			for (int j = 0; j < k; j++) {
 				int vi = m.fv[o + j], ni = m.fn ? m.fn[o + j] : 0, kk = vi * (m.nn ? m.nn : 1) + ni;
@@ -239,21 +239,21 @@ static void mesh(xr *r, ent e) {
 				while (key[h*2] >= 0 && key[h*2] != kk) h = (h + 1) % hs;
 				if (key[h*2] < 0) {
 					float *p = m.v + vi * 3;
-					int v = bbAddVertex(sf, p[0], p[1], p[2], 0, 0, 0);
-					if (m.uv && vi < m.nuv) { bbVertexTexCoords(sf, v, m.uv[vi*2], m.uv[vi*2+1], 0, 0); bbVertexTexCoords(sf, v, m.uv[vi*2], m.uv[vi*2+1], 0, 1); }
-					if (m.n) { float *q = m.n + ni * 3; bbVertexNormal(sf, v, q[0], q[1], q[2]); }
-					if (m.col) { float *c = m.col + vi * 4; bbVertexColor(sf, v, c[0]*255, c[1]*255, c[2]*255, c[3]); }
+					int v = add_vertex(sf, p[0], p[1], p[2], 0, 0, 0);
+					if (m.uv && vi < m.nuv) { vertex_tex_coords(sf, v, m.uv[vi*2], m.uv[vi*2+1], 0, 0); vertex_tex_coords(sf, v, m.uv[vi*2], m.uv[vi*2+1], 0, 1); }
+					if (m.n) { float *q = m.n + ni * 3; vertex_normal(sf, v, q[0], q[1], q[2]); }
+					if (m.col) { float *c = m.col + vi * 4; vertex_color(sf, v, c[0]*255, c[1]*255, c[2]*255, c[3]); }
 					key[h*2] = kk; key[h*2+1] = v;
 				}
 				ix[j] = key[h*2+1];
 			}
-			for (int j = 2; j < k; j++) bbAddTriangle(sf, ix[0], ix[j-1], ix[j]);
+			for (int j = 2; j < k; j++) add_triangle(sf, ix[0], ix[j-1], ix[j]);
 			o += k;
 		}
 	}
 	for (int s = 0; s < m.nb; s++) br_unref(&m.b[s]); // surfaces took their own refs
 	free(key); free(m.v); free(m.fc); free(m.fv); free(m.fn); free(m.fm); free(m.n); free(m.uv); free(m.col); free(m.b);
-	if (!m.n) bbUpdateNormals(e);
+	if (!m.n) update_normals(e);
 }
 
 static void block(xr *r, const char *type, ent par);
@@ -270,23 +270,23 @@ static void block(xr *r, const char *type, ent par) {
 	if (!strcasecmp(type, "template")) { if (open_(r, n)) skip(r); return; }
 	if (!open_(r, n)) return;
 	if (!strcasecmp(type, "Frame")) {
-		ent e = bb_new(EK_PIVOT, par);
-		bbNameEntity(e, n);
+		ent e = rt_new(EK_PIVOT, par);
+		name_entity(e, n);
 		frame(r, e);
 	} else if (!strcasecmp(type, "FrameTransformMatrix")) {
 		float a[16];
 		for (int i = 0; i < 16; i++) a[i] = num(r);
-		E *x = bb_e(par);
+		E *x = rt_e(par);
 		m3 m = {{a[0], a[1], a[2]}, {a[4], a[5], a[6]}, {a[8], a[9], a[10]}}; // rows = axes
 		x->pos = v3n(a[12], a[13], a[14]);
 		x->scl = v3n(v3len(m.i), v3len(m.j), v3len(m.k));
 		x->rot = m3ortho(m);
-		bb_dirty(par);
+		rt_dirty(par);
 		close_(r);
 	} else if (!strcasecmp(type, "Mesh")) {
-		ent e = bb_new(EK_MESH, par); // own child, so frame matrices still apply
-		bbNameEntity(e, n);
-		bb_e(e)->md = md_new();
+		ent e = rt_new(EK_MESH, par); // own child, so frame matrices still apply
+		name_entity(e, n);
+		rt_e(e)->md = md_new();
 		mesh(r, e);
 	} else if (!strcasecmp(type, "Material")) {
 		addmat(r, n, material(r));
@@ -311,7 +311,7 @@ static unsigned char *unzip(unsigned char *b, size_t n, size_t *on) {
 }
 
 ent x_load(const char *p, ent par) {
-	const char *rp = bbPath(p);
+	const char *rp = res_path(p);
 	if (!rp) return 0;
 	int n = 0;
 	unsigned char *b = LoadFileData(rp, &n);
@@ -331,7 +331,7 @@ ent x_load(const char *p, ent par) {
 	for (char *q = r.dir; *q; q++) if (*q == '\\' || *q == '/') sl = q;
 	if (sl) sl[1] = 0; else r.dir[0] = 0;
 
-	ent root = bb_new(EK_PIVOT, par);
+	ent root = rt_new(EK_PIVOT, par);
 	for (;;) {
 		tok t = next(&r);
 		if (!t.k) break;

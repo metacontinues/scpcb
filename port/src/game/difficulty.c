@@ -4,7 +4,7 @@
 TLIST(Difficulty);
 
 static Difficulty *mk(int i, const char *name, const char *desc, int pd, int agg, int save, int other, int r, int g, int b) {
-	Difficulty *d = difficulties[i] = bbNew(Difficulty);
+	Difficulty *d = difficulties[i] = lnew(Difficulty);
 	d->name = (str)name; d->description = (str)desc;
 	d->permaDeath = pd; d->aggressiveNPCs = agg; d->saveType = save; d->otherFactors = other;
 	d->r = r; d->g = g; d->b = b;

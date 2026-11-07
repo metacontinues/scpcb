@@ -5,41 +5,41 @@ TLIST(ItemTemplates); TLIST(Items);
 
 ItemTemplates *CreateItemTemplate(const char *name, const char *tempname, const char *objpath, const char *invimgpath,
 	const char *imgpath, float scale, const char *texturepath, const char *invimgpath2, int anim, int texflags) {
-	ItemTemplates *it = bbNew(ItemTemplates);
+	ItemTemplates *it = lnew(ItemTemplates);
 	// items sharing a model copy it
-	each(ItemTemplates, it2) if (bbSeq(it2->objpath, objpath) && it2->obj) { it->obj = bbCopyEntity(it2->obj, 0); it->parentobjpath = it2->objpath; break; }
+	each(ItemTemplates, it2) if (s_eq(it2->objpath, objpath) && it2->obj) { it->obj = copy_entity(it2->obj, 0); it->parentobjpath = it2->objpath; break; }
 	if (!it->obj) {
 		it->isAnim = anim != 0;
 		it->obj = anim ? LoadAnimMesh_Strict(objpath, 0) : LoadMesh_Strict(objpath, 0);
 	}
-	it->objpath = bbSdup(objpath);
-	if (bbLen(texturepath)) {
+	it->objpath = s_dup(objpath);
+	if (s_len(texturepath)) {
 		int tex = 0;
-		each(ItemTemplates, it2) if (bbSeq(it2->texpath, texturepath) && it2->tex) { tex = it2->tex; break; }
-		if (!tex) { tex = LoadTexture_Strict(texturepath, texflags); it->texpath = bbSdup(texturepath); }
-		bbEntityTexture(it->obj, tex, 0, 0);
+		each(ItemTemplates, it2) if (s_eq(it2->texpath, texturepath) && it2->tex) { tex = it2->tex; break; }
+		if (!tex) { tex = LoadTexture_Strict(texturepath, texflags); it->texpath = s_dup(texturepath); }
+		entity_texture(it->obj, tex, 0, 0);
 		it->tex = tex;
 	}
 	it->scale = scale;
-	bbScaleEntity(it->obj, scale, scale, scale, 1);
-	each(ItemTemplates, it2) if (bbSeq(it2->invimgpath, invimgpath) && it2->invimg) {
+	scale_entity(it->obj, scale, scale, scale, 1);
+	each(ItemTemplates, it2) if (s_eq(it2->invimgpath, invimgpath) && it2->invimg) {
 		it->invimg = it2->invimg;
 		if (it2->invimg2) it->invimg2 = it2->invimg2;
 		break;
 	}
 	if (!it->invimg) {
 		it->invimg = LoadImage_Strict(invimgpath);
-		it->invimgpath = bbSdup(invimgpath);
-		bbMaskImage(it->invimg, 255, 0, 255);
+		it->invimgpath = s_dup(invimgpath);
+		mask_image(it->invimg, 255, 0, 255);
 	}
-	if (bbLen(invimgpath2)) {
-		if (!it->invimg2) { it->invimg2 = LoadImage_Strict(invimgpath2); bbMaskImage(it->invimg2, 255, 0, 255); }
+	if (s_len(invimgpath2)) {
+		if (!it->invimg2) { it->invimg2 = LoadImage_Strict(invimgpath2); mask_image(it->invimg2, 255, 0, 255); }
 	} else it->invimg2 = 0;
-	it->imgpath = bbSdup(imgpath);
-	it->tempname = bbSdup(tempname);
-	it->name = bbSdup(name);
+	it->imgpath = s_dup(imgpath);
+	it->tempname = s_dup(tempname);
+	it->name = s_dup(name);
 	it->sound = 1;
-	bbHideEntity(it->obj);
+	hide_entity(it->obj);
 	return it;
 }
 
@@ -117,7 +117,7 @@ void InitItemTemplates(void) {
 	it = CreateItemTemplate("Heavy Hazmat Suit", "hazmatsuit3", "GFX\\items\\hazmat.b3d", "GFX\\items\\INVhazmat.jpg", "", 0.013, "", "", 0, 9); it->sound = 2;
 	it = CreateItemTemplate("cup", "cup", "GFX\\items\\cup.x", "GFX\\items\\INVcup.jpg", "", 0.04, "", "", 0, 9); it->sound = 2;
 	it = CreateItemTemplate("Empty Cup", "emptycup", "GFX\\items\\cup.x", "GFX\\items\\INVcup.jpg", "", 0.04, "", "", 0, 9); it->sound = 2;
-	it = CreateItemTemplate("SCP-500-01", "scp500", "GFX\\items\\pill.b3d", "GFX\\items\\INVpill.jpg", "", 0.0001, "", "", 0, 9); it->sound = 2; bbEntityColor(it->obj, 255, 0, 0);
+	it = CreateItemTemplate("SCP-500-01", "scp500", "GFX\\items\\pill.b3d", "GFX\\items\\INVpill.jpg", "", 0.0001, "", "", 0, 9); it->sound = 2; entity_color(it->obj, 255, 0, 0);
 	it = CreateItemTemplate("First Aid Kit", "firstaid", "GFX\\items\\firstaid.x", "GFX\\items\\INVfirstaid.jpg", "", 0.05, "", "", 0, 9);
 	it = CreateItemTemplate("Small First Aid Kit", "finefirstaid", "GFX\\items\\firstaid.x", "GFX\\items\\INVfirstaid.jpg", "", 0.03, "", "", 0, 9);
 	it = CreateItemTemplate("Blue First Aid Kit", "firstaid2", "GFX\\items\\firstaid.x", "GFX\\items\\INVfirstaid2.jpg", "", 0.03, "GFX\\items\\firstaidkit2.jpg", "", 0, 9);
@@ -171,8 +171,8 @@ void InitItemTemplates(void) {
 	it = CreateItemTemplate("Quarter", "25ct", "GFX\\items\\key.b3d", "GFX\\items\\INVcoin.jpg", "", 0.0005, "GFX\\items\\coin.png", "", 0, 1+2+8); it->sound = 3;
 	it = CreateItemTemplate("Wallet", "wallet", "GFX\\items\\wallet.b3d", "GFX\\items\\INVwallet.jpg", "", 0.0005, "", "", 1, 9); it->sound = 2;
 	it = CreateItemTemplate("SCP-427", "scp427", "GFX\\items\\427.b3d", "GFX\\items\\INVscp427.jpg", "", 0.001, "", "", 0, 9);
-	it = CreateItemTemplate("Upgraded pill", "scp500death", "GFX\\items\\pill.b3d", "GFX\\items\\INVpill.jpg", "", 0.0001, "", "", 0, 9); it->sound = 2; bbEntityColor(it->obj, 255, 0, 0);
-	it = CreateItemTemplate("Pill", "pill", "GFX\\items\\pill.b3d", "GFX\\items\\INVpillwhite.jpg", "", 0.0001, "", "", 0, 9); it->sound = 2; bbEntityColor(it->obj, 255, 255, 255);
+	it = CreateItemTemplate("Upgraded pill", "scp500death", "GFX\\items\\pill.b3d", "GFX\\items\\INVpill.jpg", "", 0.0001, "", "", 0, 9); it->sound = 2; entity_color(it->obj, 255, 0, 0);
+	it = CreateItemTemplate("Pill", "pill", "GFX\\items\\pill.b3d", "GFX\\items\\INVpillwhite.jpg", "", 0.0001, "", "", 0, 9); it->sound = 2; entity_color(it->obj, 255, 255, 255);
 	it = CreateItemTemplate("Sticky Note", "paper", "GFX\\items\\note.x", "GFX\\items\\INVnote2.jpg", "GFX\\items\\note682.jpg", 0.0025, "", "", 0, 9); it->sound = 0;
 	it = CreateItemTemplate("The Modular Site Project", "paper", "GFX\\items\\paper.x", "GFX\\items\\INVpaper.jpg", "GFX\\items\\docMSP.jpg", 0.003, "", "", 0, 9); it->sound = 0;
 	it = CreateItemTemplate("Research Sector-02 Scheme", "paper", "GFX\\items\\paper.x", "GFX\\items\\INVpaper.jpg", "GFX\\items\\docmap.jpg", 0.003, "", "", 0, 9); it->sound = 0;
@@ -181,105 +181,105 @@ void InitItemTemplates(void) {
 	// the textures were only needed to paint the models, free each one once
 	each(ItemTemplates, t) {
 		if (!t->tex) continue;
-		if (bbLen(t->texpath)) each(ItemTemplates, t2) if (t2 != t && t2->tex == t->tex) t2->tex = 0;
-		bbFreeTexture(t->tex); t->tex = 0;
+		if (s_len(t->texpath)) each(ItemTemplates, t2) if (t2 != t && t2->tex == t->tex) t2->tex = 0;
+		free_texture(t->tex); t->tex = 0;
 	}
 }
 
 Items *CreateItem(const char *name, const char *tempname, float x, float y, float z, int r, int g, int b, float a, int invSlots) {
-	Items *i = bbNew(Items);
-	str n = bbLower(name), tn = bbLower(tempname);
-	each(ItemTemplates, it) if (bbSeq(bbLower(it->name), n) && bbSeq(bbLower(it->tempname), tn)) {
+	Items *i = lnew(Items);
+	str n = s_lower(name), tn = s_lower(tempname);
+	each(ItemTemplates, it) if (s_eq(s_lower(it->name), n) && s_eq(s_lower(it->tempname), tn)) {
 		i->itemtemplate = it;
-		i->collider = bbCreatePivot(0);
-		bbEntityRadius(i->collider, .01f, .01f);
-		bbEntityPickMode(i->collider, 1, 0);
-		i->model = bbCopyEntity(it->obj, i->collider);
+		i->collider = create_pivot(0);
+		entity_radius(i->collider, .01f, .01f);
+		entity_pick_mode(i->collider, 1, 0);
+		i->model = copy_entity(it->obj, i->collider);
 		i->name = it->name;
-		bbShowEntity(i->collider);
-		bbShowEntity(i->model);
+		show_entity(i->collider);
+		show_entity(i->model);
 	}
 	if (!i->itemtemplate) RuntimeError(cat("Item template not found (", n, ", ", tn, ")"));
-	bbResetEntity(i->collider);
-	bbPositionEntity(i->collider, x, y, z, 1);
-	bbRotateEntity(i->collider, 0, bbRand(1, 360), 0, 0);
-	i->dist = bbEntityDistance(Collider, i->collider);
-	if (bbSeq(tn, "cup")) {
+	reset_entity(i->collider);
+	position_entity(i->collider, x, y, z, 1);
+	rotate_entity(i->collider, 0, irand(1, 360), 0, 0);
+	i->dist = entity_distance(Collider, i->collider);
+	if (s_eq(tn, "cup")) {
 		i->r = r; i->g = g; i->b = b; i->a = a;
 		float sc = i->itemtemplate->scale;
-		int liquid = bbCopyEntity(LiquidObj, 0);
-		bbScaleEntity(liquid, sc, sc, sc, 1);
-		bbPositionEntity(liquid, bbEntityX(i->collider, 1), bbEntityY(i->collider, 1), bbEntityZ(i->collider, 1), 0);
-		bbEntityParent(liquid, i->model, 1);
-		bbEntityColor(liquid, r, g, b);
-		if (a < 0) bbEntityFX(liquid, 1);
-		bbEntityAlpha(liquid, fabsf(a));
-		bbEntityShininess(liquid, 1);
+		int liquid = copy_entity(LiquidObj, 0);
+		scale_entity(liquid, sc, sc, sc, 1);
+		position_entity(liquid, entity_x(i->collider, 1), entity_y(i->collider, 1), entity_z(i->collider, 1), 0);
+		entity_parent(liquid, i->model, 1);
+		entity_color(liquid, r, g, b);
+		if (a < 0) entity_fx(liquid, 1);
+		entity_alpha(liquid, fabsf(a));
+		entity_shininess(liquid, 1);
 	}
 	i->invimg = i->itemtemplate->invimg;
-	if (bbSeq(tn, "clipboard") && !invSlots) { invSlots = 10; bbSetAnimTime(i->model, 17, 0); i->invimg = i->itemtemplate->invimg2; }
-	else if (bbSeq(tn, "wallet") && !invSlots) { invSlots = 10; bbSetAnimTime(i->model, 0, 0); }
+	if (s_eq(tn, "clipboard") && !invSlots) { invSlots = 10; set_anim_time(i->model, 17, 0); i->invimg = i->itemtemplate->invimg2; }
+	else if (s_eq(tn, "wallet") && !invSlots) { invSlots = 10; set_anim_time(i->model, 0, 0); }
 	i->invSlots = invSlots;
 	i->ID = ++LastItemID;
 	return i;
 }
 
 void RemoveItem(Items *i) {
-	bbFreeEntity(i->model); bbFreeEntity(i->collider); i->collider = 0;
+	free_entity(i->model); free_entity(i->collider); i->collider = 0;
 	for (int n = 0; n < MaxItemAmount; n++) if (Inventory[n] == i) { Inventory[n] = NULL; ItemAmount--; break; }
 	if (SelectedItem == i) {
 		str t = i->itemtemplate->tempname;
-		if (bbSeq(t, "nvgoggles") || bbSeq(t, "supernv")) WearingNightVision = 0;
-		else if (bbSeq(t, "gasmask") || bbSeq(t, "supergasmask") || bbSeq(t, "gasmask2") || bbSeq(t, "gasmask3")) WearingGasMask = 0;
-		else if (bbSeq(t, "vest") || bbSeq(t, "finevest") || bbSeq(t, "veryfinevest")) WearingVest = 0;
-		else if (bbSeq(t, "hazmatsuit") || bbSeq(t, "hazmatsuit2") || bbSeq(t, "hazmatsuit3")) WearingHazmat = 0;
-		else if (bbSeq(t, "scp714")) Wearing714 = 0;
-		else if (bbSeq(t, "scp1499") || bbSeq(t, "super1499")) Wearing1499 = 0;
-		else if (bbSeq(t, "scp427")) I_427->Using = 0;
+		if (s_eq(t, "nvgoggles") || s_eq(t, "supernv")) WearingNightVision = 0;
+		else if (s_eq(t, "gasmask") || s_eq(t, "supergasmask") || s_eq(t, "gasmask2") || s_eq(t, "gasmask3")) WearingGasMask = 0;
+		else if (s_eq(t, "vest") || s_eq(t, "finevest") || s_eq(t, "veryfinevest")) WearingVest = 0;
+		else if (s_eq(t, "hazmatsuit") || s_eq(t, "hazmatsuit2") || s_eq(t, "hazmatsuit3")) WearingHazmat = 0;
+		else if (s_eq(t, "scp714")) Wearing714 = 0;
+		else if (s_eq(t, "scp1499") || s_eq(t, "super1499")) Wearing1499 = 0;
+		else if (s_eq(t, "scp427")) I_427->Using = 0;
 		SelectedItem = NULL;
 	}
-	if (i->itemtemplate->img) { bbFreeImage(i->itemtemplate->img); i->itemtemplate->img = 0; }
-	bbDelete(i);
+	if (i->itemtemplate->img) { free_image(i->itemtemplate->img); i->itemtemplate->img = 0; }
+	ldel(i);
 }
 
 // ---- Items.bb: per frame (UpdateItems), PickItem, DropItem
 
-static int istemp(Items *it, const char *a) { return bbSeq(it->itemtemplate->tempname, a); }
+static int istemp(Items *it, const char *a) { return s_eq(it->itemtemplate->tempname, a); }
 static int ishazmat(Items *it) { return istemp(it, "hazmatsuit") || istemp(it, "hazmatsuit2") || istemp(it, "hazmatsuit3"); }
 static int isvest(Items *it) { return istemp(it, "vest") || istemp(it, "finevest"); }
 
 void UpdateItems(void) {
-	int hd = bbInt(HideDistance * .5f); // blitz Local w/o suffix: int
+	int hd = iround(HideDistance * .5f); // blitz Local w/o suffix: int
 	ClosestItem = NULL;
 	each(Items, i) {
 		i->Dropped = 0;
 		if (i->Picked) { i->DropSpeed = 0; i->xspeed = i->zspeed = 0; continue; }
 		if (i->disttimer < MilliSecs2()) {
-			i->dist = bbEntityDistance(Camera, i->collider);
+			i->dist = entity_distance(Camera, i->collider);
 			i->disttimer = MilliSecs2() + 700;
-			if (i->dist < hd) bbShowEntity(i->collider);
+			if (i->dist < hd) show_entity(i->collider);
 		}
-		if (i->dist >= hd) { bbHideEntity(i->collider); continue; }
-		bbShowEntity(i->collider);
-		if (i->dist < 1.2f && (!ClosestItem || ClosestItem == i || i->dist < bbEntityDistance(Camera, ClosestItem->collider))
-			&& bbEntityInView(i->model, Camera) && bbEntityVisible(i->collider, Camera)) ClosestItem = i;
-		if (bbEntityCollided(i->collider, HIT_MAP)) { i->DropSpeed = 0; i->xspeed = i->zspeed = 0; }
-		else if (ShouldEntitiesFall && bbLinePick(bbEntityX(i->collider, 0), bbEntityY(i->collider, 0), bbEntityZ(i->collider, 0), 0, -10, 0, 0)) {
+		if (i->dist >= hd) { hide_entity(i->collider); continue; }
+		show_entity(i->collider);
+		if (i->dist < 1.2f && (!ClosestItem || ClosestItem == i || i->dist < entity_distance(Camera, ClosestItem->collider))
+			&& entity_in_view(i->model, Camera) && entity_visible(i->collider, Camera)) ClosestItem = i;
+		if (entity_collided(i->collider, HIT_MAP)) { i->DropSpeed = 0; i->xspeed = i->zspeed = 0; }
+		else if (ShouldEntitiesFall && line_pick(entity_x(i->collider, 0), entity_y(i->collider, 0), entity_z(i->collider, 0), 0, -10, 0, 0)) {
 			i->DropSpeed -= .0004f * FPSfactor;
-			bbTranslateEntity(i->collider, i->xspeed * FPSfactor, i->DropSpeed * FPSfactor, i->zspeed * FPSfactor, 0);
-			if (i->WontColl) bbResetEntity(i->collider);
+			translate_entity(i->collider, i->xspeed * FPSfactor, i->DropSpeed * FPSfactor, i->zspeed * FPSfactor, 0);
+			if (i->WontColl) reset_entity(i->collider);
 		} else { i->DropSpeed = 0; i->xspeed = i->zspeed = 0; }
 		if (i->dist < hd * .2f) each(Items, i2) { // push items apart that sit on top of each other
 			if (i == i2 || i2->Picked || i2->dist >= hd * .2f) continue;
-			float xt = bbEntityX(i2->collider, 1) - bbEntityX(i->collider, 1), yt = bbEntityY(i2->collider, 1) - bbEntityY(i->collider, 1);
-			float zt = bbEntityZ(i2->collider, 1) - bbEntityZ(i->collider, 1), ed = xt * xt + zt * zt;
-			if (!(ed < .07f && fabsf(yt) < .25f) || bbSeq(PlayerRoom->RoomTemplate->Name, "room2storage")) continue;
+			float xt = entity_x(i2->collider, 1) - entity_x(i->collider, 1), yt = entity_y(i2->collider, 1) - entity_y(i->collider, 1);
+			float zt = entity_z(i2->collider, 1) - entity_z(i->collider, 1), ed = xt * xt + zt * zt;
+			if (!(ed < .07f && fabsf(yt) < .25f) || s_eq(PlayerRoom->RoomTemplate->Name, "room2storage")) continue;
 			xt *= .07f - ed; zt *= .07f - ed;
-			while (fabsf(xt) + fabsf(zt) < .001f) { xt += bbRnd(-.002f, .002f); zt += bbRnd(-.002f, .002f); }
-			bbTranslateEntity(i2->collider, xt, 0, zt, 0);
-			bbTranslateEntity(i->collider, -xt, 0, -zt, 0);
+			while (fabsf(xt) + fabsf(zt) < .001f) { xt += frnd(-.002f, .002f); zt += frnd(-.002f, .002f); }
+			translate_entity(i2->collider, xt, 0, zt, 0);
+			translate_entity(i->collider, -xt, 0, -zt, 0);
 		}
-		if (bbEntityY(i->collider, 0) < -35) RemoveItem(i);
+		if (entity_y(i->collider, 0) < -35) RemoveItem(i);
 	}
 	if (ClosestItem && MouseHit1) PickItem(ClosestItem);
 }
@@ -303,10 +303,10 @@ void PickItem(Items *item) {
 	int n = 0;
 	while (Inventory[n]) n++;
 	str t = item->itemtemplate->tempname;
-	if (bbSeq(t, "1123")) {
+	if (s_eq(t, "1123")) {
 		if (Wearing714 == 1) return;
-		if (!bbSeq(PlayerRoom->RoomTemplate->Name, "room1123")) {
-			bbShowEntity(Light); LightFlash = 7;
+		if (!s_eq(PlayerRoom->RoomTemplate->Name, "room1123")) {
+			show_entity(Light); LightFlash = 7;
 			PlaySound_Strict(LoadTempSound("SFX\\SCP\\1123\\Touch.ogg"));
 			DeathMSG = "Subject D-9341 was shot dead after attempting to attack a member of Nine-Tailed Fox. Surveillance tapes show that the subject had been "
 				"wandering around the site approximately 9 minutes prior, shouting the phrase \"get rid of the four pests\""
@@ -316,23 +316,23 @@ void PickItem(Items *item) {
 		}
 		Events *e = FindEvent("room1123");
 		if (e) {
-			if (e->EventState == 0) { bbShowEntity(Light); LightFlash = 3; PlaySound_Strict(LoadTempSound("SFX\\SCP\\1123\\Touch.ogg")); }
+			if (e->EventState == 0) { show_entity(Light); LightFlash = 3; PlaySound_Strict(LoadTempSound("SFX\\SCP\\1123\\Touch.ogg")); }
 			e->EventState = Max(1, e->EventState);
 		}
 		return;
-	} else if (bbSeq(t, "killbat")) {
-		bbShowEntity(Light); LightFlash = 1;
+	} else if (s_eq(t, "killbat")) {
+		show_entity(Light); LightFlash = 1;
 		PlaySound_Strict(IntroSFX[11]);
 		DeathMSG = "Subject D-9341 found dead inside SCP-914's output booth next to what appears to be an ordinary nine-volt battery. The subject is covered in severe "
 			"electrical burns, and assumed to be killed via an electrical shock caused by the battery. The battery has been stored for further study.";
 		Kill();
-	} else if (bbSeq(t, "scp148")) GiveAchievement(Achv148, 1);
-	else if (bbSeq(t, "scp513")) GiveAchievement(Achv513, 1);
-	else if (bbSeq(t, "scp860")) GiveAchievement(Achv860, 1);
-	else if (bbSeq(t, "key6")) GiveAchievement(AchvOmni, 1);
-	else if (bbSeq(t, "veryfinevest")) { Msg = "The vest is too heavy to pick up."; MsgTimer = 70 * 6; return; }
-	else if (bbSeq(t, "firstaid") || bbSeq(t, "finefirstaid") || bbSeq(t, "veryfinefirstaid") || bbSeq(t, "firstaid2")) item->state = 0;
-	else if (bbSeq(t, "navigator") || bbSeq(t, "nav")) { if (bbSeq(item->itemtemplate->name, "S-NAV Navigator Ultimate")) GiveAchievement(AchvSNAV, 1); }
+	} else if (s_eq(t, "scp148")) GiveAchievement(Achv148, 1);
+	else if (s_eq(t, "scp513")) GiveAchievement(Achv513, 1);
+	else if (s_eq(t, "scp860")) GiveAchievement(Achv860, 1);
+	else if (s_eq(t, "key6")) GiveAchievement(AchvOmni, 1);
+	else if (s_eq(t, "veryfinevest")) { Msg = "The vest is too heavy to pick up."; MsgTimer = 70 * 6; return; }
+	else if (s_eq(t, "firstaid") || s_eq(t, "finefirstaid") || s_eq(t, "veryfinefirstaid") || s_eq(t, "firstaid2")) item->state = 0;
+	else if (s_eq(t, "navigator") || s_eq(t, "nav")) { if (s_eq(item->itemtemplate->name, "S-NAV Navigator Ultimate")) GiveAchievement(AchvSNAV, 1); }
 	else if (ishazmat(item)) {
 		int c = wearclash(ishazmat, isvest);
 		if (c == 1) { Msg = "You are not able to wear two hazmat suits at the same time."; MsgTimer = 70 * 5; return; }
@@ -349,29 +349,29 @@ void PickItem(Items *item) {
 	item->itemtemplate->found = 1;
 	ItemAmount++;
 	Inventory[n] = item;
-	bbHideEntity(item->collider);
+	hide_entity(item->collider);
 }
 
 void DropItem(Items *item, int playdropsound) {
 	if (WearingHazmat > 0) { Msg = "You cannot drop any items while wearing a hazmat suit."; MsgTimer = 70 * 5; return; }
 	if (playdropsound && item->itemtemplate->sound != 66) PlaySound_Strict(PickSFX[item->itemtemplate->sound]);
 	item->Dropped = 1;
-	bbShowEntity(item->collider);
-	bbPositionEntity(item->collider, bbEntityX(Camera, 0), bbEntityY(Camera, 0), bbEntityZ(Camera, 0), 0);
-	bbRotateEntity(item->collider, bbEntityPitch(Camera, 0), bbEntityYaw(Camera, 0) + bbRnd(-20, 20), 0, 0);
-	bbMoveEntity(item->collider, 0, -.1f, .1f);
-	bbRotateEntity(item->collider, 0, bbEntityYaw(Camera, 0) + bbRnd(-110, 110), 0, 0);
-	bbResetEntity(item->collider);
+	show_entity(item->collider);
+	position_entity(item->collider, entity_x(Camera, 0), entity_y(Camera, 0), entity_z(Camera, 0), 0);
+	rotate_entity(item->collider, entity_pitch(Camera, 0), entity_yaw(Camera, 0) + frnd(-20, 20), 0, 0);
+	move_entity(item->collider, 0, -.1f, .1f);
+	rotate_entity(item->collider, 0, entity_yaw(Camera, 0) + frnd(-110, 110), 0, 0);
+	reset_entity(item->collider);
 	item->Picked = 0;
 	for (int z = 0; z < MaxItemAmount; z++) if (Inventory[z] == item) Inventory[z] = NULL;
 	str t = item->itemtemplate->tempname;
-	if (bbSeq(t, "gasmask") || bbSeq(t, "supergasmask") || bbSeq(t, "gasmask3")) WearingGasMask = 0;
+	if (s_eq(t, "gasmask") || s_eq(t, "supergasmask") || s_eq(t, "gasmask3")) WearingGasMask = 0;
 	else if (ishazmat(item)) WearingHazmat = 0;
 	else if (isvest(item)) WearingVest = 0;
-	else if (bbSeq(t, "nvgoggles")) { if (WearingNightVision == 1) { CameraFogFar = StoredCameraFogFar; WearingNightVision = 0; } }
-	else if (bbSeq(t, "supernv")) { if (WearingNightVision == 2) { CameraFogFar = StoredCameraFogFar; WearingNightVision = 0; } }
-	else if (bbSeq(t, "finenvgoggles")) { if (WearingNightVision == 3) { CameraFogFar = StoredCameraFogFar; WearingNightVision = 0; } }
-	else if (bbSeq(t, "scp714")) Wearing714 = 0;
-	else if (bbSeq(t, "scp1499") || bbSeq(t, "super1499")) Wearing1499 = 0;
-	else if (bbSeq(t, "scp427")) I_427->Using = 0;
+	else if (s_eq(t, "nvgoggles")) { if (WearingNightVision == 1) { CameraFogFar = StoredCameraFogFar; WearingNightVision = 0; } }
+	else if (s_eq(t, "supernv")) { if (WearingNightVision == 2) { CameraFogFar = StoredCameraFogFar; WearingNightVision = 0; } }
+	else if (s_eq(t, "finenvgoggles")) { if (WearingNightVision == 3) { CameraFogFar = StoredCameraFogFar; WearingNightVision = 0; } }
+	else if (s_eq(t, "scp714")) Wearing714 = 0;
+	else if (s_eq(t, "scp1499") || s_eq(t, "super1499")) Wearing1499 = 0;
+	else if (s_eq(t, "scp427")) I_427->Using = 0;
 }

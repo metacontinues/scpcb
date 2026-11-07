@@ -1,18 +1,18 @@
 // g.h: everything the game shares. blitz has one global namespace, so this does too.
 // globals are G(type, names...) so they're declared once: main.c defines G_DEFINE first.
-// porting rules: float -> int goes through bbInt (blitz rounds), Min/Max are float like blitz,
+// porting rules: float -> int goes through iround (blitz rounds), Min/Max are float like blitz,
 // Dim x(n) is x[n+1], True/False are 1/0, strings are str (gc'd, see bb/str.h).
 // blitz arrays a[n] (Field/Global/Local) have n+1 slots like Dim, so they're a[n+1] here too.
 // And/Or are bitwise in blitz: on raw ints use & and |, && || only where both sides are 0/1.
 // blitz precedence: And/Or/Xor are ONE level, left to right (a Or b And c = (a Or b) And c), and Not is the
 // lowest of all (Not a And b = Not (a And b)). both are below comparisons, like c's &&.
 // game names that clash w/ raylib's exported symbols get a trailing _ (LoadMaterials_).
-// str globals/fields start NULL, not "": test them w/ bbLen/bbSeq, never *s.
+// str globals/fields start NULL, not "": test them w/ s_len/s_eq, never *s.
 #pragma once
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include "../bb/bb.h"
+#include "../rt/rt.h"
 
 #ifdef G_DEFINE
 #define G(T, ...) T __VA_ARGS__
@@ -136,12 +136,12 @@ void InitMusic(void);
 void CollectGfxModes(void);
 
 // ---- AAText.bb: raylib text is already smooth, so these are thin
-static inline int AALoadFont(const char *f, int h, int b, int i, int u) { return bbLoadFont(f, h, b, i, u); }
-static inline void AASetFont(int f) { bbSetFont(f); }
-static inline int AAStringWidth(const char *s) { return bbStringWidth(s); }
-static inline int AAStringHeight(const char *s) { return bbStringHeight(s); }
-static inline void AAText(int x, int y, const char *s, int cx, int cy) { bbTextA(x, y, s, cx, cy, 1); }
-static inline void AATextA(int x, int y, const char *s, int cx, int cy, float a) { bbTextA(x, y, s, cx, cy, a); }
+static inline int AALoadFont(const char *f, int h, int b, int i, int u) { return load_font(f, h, b, i, u); }
+static inline void AASetFont(int f) { set_font(f); }
+static inline int AAStringWidth(const char *s) { return string_width(s); }
+static inline int AAStringHeight(const char *s) { return string_height(s); }
+static inline void AAText(int x, int y, const char *s, int cx, int cy) { draw_text_a(x, y, s, cx, cy, 1); }
+static inline void AATextA(int x, int y, const char *s, int cx, int cy, float a) { draw_text_a(x, y, s, cx, cy, a); }
 static inline void InitAAFont(void) {}
 
 // ---- KeyName.bb

@@ -32,12 +32,12 @@ void snd_quit(void) {
 // ---- sounds
 static snd *gsnd(int h) { return h > 0 && h < nss && ss[h].used ? &ss[h] : NULL; }
 // no audio device: still hand out a handle (silent), so game code doesn't see load errors
-int bbLoadSound(const char *p) {
-	const char *r = bbPath(p);
+int load_sound(const char *p) {
+	const char *r = res_path(p);
 	if (!r || DirectoryExists(r)) return 0;
 	Sound so = {0}; int rate = 44100;
 	if (up()) {
-		const char *q = bb_media(r, "qoa");
+		const char *q = rt_media(r, "qoa");
 		Wave w = q ? LoadWave(q) : (Wave){0};
 		if (!w.data) return 0;
 		so = LoadSoundFromWave(w); rate = w.sampleRate;
@@ -53,17 +53,17 @@ int bbLoadSound(const char *p) {
 static void stopall(int h) {
 	for (int i = 0; i < NCH; i++) if (ch[i].used && ch[i].snd == h) { StopSound(ch[i].a); UnloadSoundAlias(ch[i].a); ch[i].used = 0; }
 }
-void bbFreeSound(int h) {
+void free_sound(int h) {
 	snd *s = gsnd(h);
 	if (!s) return;
 	stopall(h); // aliases share its buffer
 	if (s->s.stream.buffer) UnloadSound(s->s);
 	s->used = 0;
 }
-void bbLoopSound(int h) { snd *s = gsnd(h); if (s) s->loop = 1; }
-void bbSoundVolume(int h, float v) { snd *s = gsnd(h); if (s) s->vol = v; }
-void bbSoundPan(int h, float p) { snd *s = gsnd(h); if (s) s->pan = p; }
-void bbSoundPitch(int h, float hz) { snd *s = gsnd(h); if (s) s->hz = hz; }
+void loop_sound(int h) { snd *s = gsnd(h); if (s) s->loop = 1; }
+void sound_volume(int h, float v) { snd *s = gsnd(h); if (s) s->vol = v; }
+void sound_pan(int h, float p) { snd *s = gsnd(h); if (s) s->pan = p; }
+void sound_pitch(int h, float hz) { snd *s = gsnd(h); if (s) s->hz = hz; }
 
 // ---- channels
 static chan *gch(int h) {
@@ -73,7 +73,7 @@ static chan *gch(int h) {
 }
 static float rlpan(float p) { return fmaxf(-1, fminf(1, p)); } // blitz and raylib 6: -1 left .. 1 right
 
-int bbPlaySound(int h) {
+int play_sound(int h) {
 	snd *s = gsnd(h);
 	if (!s || !s->s.stream.buffer) return 0; // silent
 	int i = -1;
@@ -94,14 +94,14 @@ int bbPlaySound(int h) {
 	PlaySound(c->a);
 	return (c->gen << 12) | (i + 1);
 }
-void bbStopChannel(int h) { chan *c = gch(h); if (c) { StopSound(c->a); c->loop = 0; c->paused = 0; } }
-void bbPauseChannel(int h) { chan *c = gch(h); if (c && IsSoundPlaying(c->a)) { PauseSound(c->a); c->paused = 1; } }
-void bbResumeChannel(int h) { chan *c = gch(h); if (c && c->paused) { ResumeSound(c->a); c->paused = 0; } }
-void bbChannelVolume(int h, float v) { chan *c = gch(h); if (c) SetSoundVolume(c->a, fmaxf(0, v)); }
-void bbChannelPan(int h, float p) { chan *c = gch(h); if (c) SetSoundPan(c->a, rlpan(p)); }
-void bbChannelPitch(int h, float hz) { chan *c = gch(h); if (c && gsnd(c->snd)) SetSoundPitch(c->a, hz / ss[c->snd].rate); }
+void stop_channel(int h) { chan *c = gch(h); if (c) { StopSound(c->a); c->loop = 0; c->paused = 0; } }
+void pause_channel(int h) { chan *c = gch(h); if (c && IsSoundPlaying(c->a)) { PauseSound(c->a); c->paused = 1; } }
+void resume_channel(int h) { chan *c = gch(h); if (c && c->paused) { ResumeSound(c->a); c->paused = 0; } }
+void channel_volume(int h, float v) { chan *c = gch(h); if (c) SetSoundVolume(c->a, fmaxf(0, v)); }
+void channel_pan(int h, float p) { chan *c = gch(h); if (c) SetSoundPan(c->a, rlpan(p)); }
+void channel_pitch(int h, float hz) { chan *c = gch(h); if (c && gsnd(c->snd)) SetSoundPitch(c->a, hz / ss[c->snd].rate); }
 // paused counts as playing, like blitz
-int bbChannelPlaying(int h) { chan *c = gch(h); return c && (c->paused || c->loop || IsSoundPlaying(c->a)); }
+int channel_playing(int h) { chan *c = gch(h); return c && (c->paused || c->loop || IsSoundPlaying(c->a)); }
 
 // ---- streams (what StreamSound_Strict & co need from fmod)
 static strm *gst(int h) {
@@ -109,33 +109,33 @@ static strm *gst(int h) {
 	if (h <= 0 || i >= NST || !st[i].used || st[i].gen != h >> 12) return NULL;
 	return &st[i];
 }
-int bbStreamOpen(const char *p, int loop) {
-	const char *r = bbPath(p);
+int stream_open(const char *p, int loop) {
+	const char *r = res_path(p);
 	if (!r || !up()) return 0;
 	int i = -1;
 	for (int k = 0; k < NST && i < 0; k++) if (!st[k].used) i = k;
 	if (i < 0) return 0;
-	const char *q = bb_media(r, "qoa");
+	const char *q = rt_media(r, "qoa");
 	Music m = q ? LoadMusicStream(q) : (Music){0};
 	if (!m.stream.buffer) return 0;
 	m.looping = loop;
 	st[i] = (strm){m, 1, (st[i].gen + 1) & 0x7ffff, 1};
 	return (st[i].gen << 12) | (i + 1);
 }
-void bbStreamPlay(int h) { strm *s = gst(h); if (s) { PlayMusicStream(s->m); s->paused = 0; } }
-void bbStreamPaused(int h, int p) {
+void stream_play(int h) { strm *s = gst(h); if (s) { PlayMusicStream(s->m); s->paused = 0; } }
+void stream_paused(int h, int p) {
 	strm *s = gst(h);
 	if (!s) return;
 	if (p) PauseMusicStream(s->m);
 	else if (!IsMusicStreamPlaying(s->m)) { if (s->paused) ResumeMusicStream(s->m); else PlayMusicStream(s->m); }
 	s->paused = p;
 }
-void bbStreamVolume(int h, float v) { strm *s = gst(h); if (s) SetMusicVolume(s->m, fmaxf(0, v)); }
-void bbStreamPan(int h, float p) { strm *s = gst(h); if (s) SetMusicPan(s->m, rlpan(p)); }
-int bbStreamPlaying(int h) { strm *s = gst(h); return s && (s->paused || IsMusicStreamPlaying(s->m)); }
-void bbStreamClose(int h) { strm *s = gst(h); if (s) { StopMusicStream(s->m); UnloadMusicStream(s->m); s->used = 0; } }
+void stream_volume(int h, float v) { strm *s = gst(h); if (s) SetMusicVolume(s->m, fmaxf(0, v)); }
+void stream_pan(int h, float p) { strm *s = gst(h); if (s) SetMusicPan(s->m, rlpan(p)); }
+int stream_playing(int h) { strm *s = gst(h); return s && (s->paused || IsMusicStreamPlaying(s->m)); }
+void stream_close(int h) { strm *s = gst(h); if (s) { StopMusicStream(s->m); UnloadMusicStream(s->m); s->used = 0; } }
 
-// per frame (bbFlip): feed streams, restart LoopSound voices
+// per frame (flip_frame): feed streams, restart LoopSound voices
 void snd_update(void) {
 	if (audio <= 0) return;
 	for (int i = 0; i < NST; i++) if (st[i].used && !st[i].paused) UpdateMusicStream(st[i].m);

@@ -8,7 +8,7 @@
 #include "in.h"
 
 // resolve "GFX\map\door01.x" -> "GFX/map/Door01.x". walks components, case-insensitive
-const char *bbPath(const char *p) {
+const char *res_path(const char *p) {
 	static char out[1024];
 	char in[1024], *save, *c;
 	struct stat st;
@@ -33,11 +33,11 @@ const char *bbPath(const char *p) {
 }
 
 // media (images, sounds) is read from the qoi/qoa copies tools/assetconv.c writes: <data>/<real path>.qoi|qoa.
-// <data> is BB_DATA or port/data, both relative to the game dir like the assets themselves
-const char *bb_media(const char *real, const char *ext) {
+// <data> is SCPCB_DATA or port/data, both relative to the game dir like the assets themselves
+const char *rt_media(const char *real, const char *ext) {
 	static char out[2048], cwd[1024];
 	if (!real) return NULL;
-	const char *d = getenv("BB_DATA");
+	const char *d = getenv("SCPCB_DATA");
 	if (real[0] == '/') { // absolute (CurrentDir() + ...): make it relative again
 		if (!cwd[0] && !getcwd(cwd, sizeof cwd)) return NULL;
 		size_t n = strlen(cwd);
@@ -54,28 +54,28 @@ const char *bb_media(const char *real, const char *ext) {
 	return out;
 }
 
-FILE *bbReadFile(const char *p) {
-	const char *r = bbPath(p);
+FILE *read_file(const char *p) {
+	const char *r = res_path(p);
 	return r ? fopen(r, "rb") : NULL;
 }
 // files are little-endian, like x86 blitz
-int bbReadByte(FILE *f) { int c = fgetc(f); return c == EOF ? 0 : c; }
-int bbReadShort(FILE *f) { unsigned char b[2] = {0}; (void)!fread(b, 1, 2, f); return b[0] | b[1] << 8; }
-int bbReadInt(FILE *f) {
+int read_byte(FILE *f) { int c = fgetc(f); return c == EOF ? 0 : c; }
+int read_short(FILE *f) { unsigned char b[2] = {0}; (void)!fread(b, 1, 2, f); return b[0] | b[1] << 8; }
+int read_int(FILE *f) {
 	unsigned char b[4] = {0};
 	(void)!fread(b, 1, 4, f);
 	return (int)((unsigned)b[0] | (unsigned)b[1] << 8 | (unsigned)b[2] << 16 | (unsigned)b[3] << 24);
 }
-float bbReadFloat(FILE *f) { int i = bbReadInt(f); float r; memcpy(&r, &i, 4); return r; }
-str bbReadString(FILE *f) {
-	int n = bbReadInt(f);
+float read_float(FILE *f) { int i = read_int(f); float r; memcpy(&r, &i, 4); return r; }
+str read_string(FILE *f) {
+	int n = read_int(f);
 	if (n < 0 || n > 1 << 24) n = 0;
 	str s = GC_MALLOC_ATOMIC(n + 1);
 	n = fread(s, 1, n, f);
 	s[n] = 0;
 	return s;
 }
-str bbReadLine(FILE *f) {
+str read_line(FILE *f) {
 	size_t n = 0, cap = 64; str s = GC_MALLOC_ATOMIC(cap); int c;
 	while ((c = fgetc(f)) != EOF && c != '\n') {
 		if (n + 1 >= cap) s = GC_REALLOC(s, cap *= 2);

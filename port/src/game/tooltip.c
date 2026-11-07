@@ -7,16 +7,16 @@
 // RowText's wrapping, only counting lines
 int GetLineAmount(const char *a, int w, int h, float leading) {
 	if (h < 1) h = 2048;
-	int shown = 0, lh = bbInt(AAStringHeight(a) + leading);
-	str A = bbSdup(a), b = "";
-	while (bbLen(A) > 0) {
-		int sp = bbInstr(A, " ", 1);
-		if (!sp) sp = bbLen(A);
-		str t = bbLeft(A, sp), tr = bbTrim(t);
+	int shown = 0, lh = iround(AAStringHeight(a) + leading);
+	str A = s_dup(a), b = "";
+	while (s_len(A) > 0) {
+		int sp = s_instr(A, " ", 1);
+		if (!sp) sp = s_len(A);
+		str t = s_left(A, sp), tr = s_trim(t);
 		int extra = 0;
 		if (AAStringWidth(cat(b, t)) > w && AAStringWidth(cat(b, tr)) <= w) { t = tr; extra = 1; }
 		if (AAStringWidth(cat(b, t)) > w) { shown++; b = ""; }
-		else { b = cat(b, t); A = bbRight(A, bbLen(A) - (bbLen(t) + extra)); }
+		else { b = cat(b, t); A = s_right(A, s_len(A) - (s_len(t) + extra)); }
 		if ((shown + 1) * lh > h) break;
 	}
 	return shown + 1;
@@ -24,22 +24,22 @@ int GetLineAmount(const char *a, int w, int h, float leading) {
 
 void DrawTooltip(const char *msg) {
 	float sc = GraphicHeight / 768.0f;
-	int w = bbInt(AAStringWidth(msg) + 20 * M), mx = ScaledMouseX(), my = ScaledMouseY();
-	bbColor(25, 25, 25); bbRect(mx + 20, my, w, bbInt(19 * sc), 1);
-	bbColor(150, 150, 150); bbRect(mx + 20, my, w, bbInt(19 * sc), 0);
+	int w = iround(AAStringWidth(msg) + 20 * M), mx = ScaledMouseX(), my = ScaledMouseY();
+	set_color(25, 25, 25); draw_rect(mx + 20, my, w, iround(19 * sc), 1);
+	set_color(150, 150, 150); draw_rect(mx + 20, my, w, iround(19 * sc), 0);
 	AASetFont(Font1);
-	AAText(bbInt(mx + 20 * M + w / 2), bbInt(my + 12 * M), msg, 1, 1);
+	AAText(iround(mx + 20 * M + w / 2), iround(my + 12 * M), msg, 1, 1);
 }
 
-static str pct(const char *pre, float v, const char *def) { return cat(pre, bbStr(bbInt(v * 100)), "% (default is ", def, ")"); }
+static str pct(const char *pre, float v, const char *def) { return cat(pre, s_str(iround(v * 100)), "% (default is ", def, ")"); }
 
 void DrawOptionsTooltip(int x, int y, int w, int h, const char *option, float value, int ingame) {
 	float fx = x + 6 * M, fy = y + 6 * M, fw = w - 12 * M, fh = h - 12 * M;
-	str txt = "", txt2 = "", o = bbLower(option);
+	str txt = "", txt2 = "", o = s_lower(option);
 	int R = 0, G_ = 0, B = 0;
 	AASetFont(Font1);
-	bbColor(255, 255, 255);
-#define IS(s) bbSeq(o, s)
+	set_color(255, 255, 255);
+#define IS(s) s_eq(o, s)
 	if (IS("bump")) { txt = Q "Bump mapping" Q " is used to simulate bumps and dents by distorting the lightmaps."; txt2 = "This option cannot be changed in-game."; R = 255; }
 	else if (IS("vsync")) txt = Q "Vertical sync" Q " waits for the display to finish its current refresh cycle before calculating the next frame, preventing issues such as "
 		"screen tearing. This ties the game's frame rate to your display's refresh rate and may cause some input lag.";
@@ -53,7 +53,7 @@ void DrawOptionsTooltip(int x, int y, int w, int h, const char *option, float va
 	else if (IS("texquality")) txt = Q "Texture LOD Bias" Q " affects the distance at which texture detail will change to prevent aliasing. Change this option if textures flicker or look too blurry.";
 	else if (IS("particleamount")) {
 		txt = "Determines the amount of particles that can be rendered per tick.";
-		int v = bbInt(value);
+		int v = iround(value);
 		if (v == 0) { R = 255; txt2 = "Only smoke emitters will produce particles."; }
 		else if (v == 1) { R = G_ = 255; txt2 = "Only a few particles will be rendered per tick."; }
 		else if (v == 2) { G_ = 255; txt2 = "All particles are rendered."; }
@@ -87,47 +87,47 @@ void DrawOptionsTooltip(int x, int y, int w, int h, const char *option, float va
 	}
 	else if (IS("antialiastext")) txt = Q "Antialiased text" Q " smooths out the text before displaying. Makes text easier to read at high resolutions.";
 #undef IS
-	int lines = GetLineAmount(txt, bbInt(fw), bbInt(fh), 1), sh = AAStringHeight(txt);
+	int lines = GetLineAmount(txt, iround(fw), iround(fh), 1), sh = AAStringHeight(txt);
 	float fh1 = sh * lines + (10 + lines) * M;
-	if (!*txt2) DrawFrame(x, y, w, bbInt(fh1), 0, 0);
+	if (!*txt2) DrawFrame(x, y, w, iround(fh1), 0, 0);
 	else {
-		int l2 = GetLineAmount(txt2, bbInt(fw), bbInt(fh), 1);
-		DrawFrame(x, y, w, bbInt(fh1 + AAStringHeight(txt2) * l2 + (10 + l2) * M), 0, 0);
+		int l2 = GetLineAmount(txt2, iround(fw), iround(fh), 1);
+		DrawFrame(x, y, w, iround(fh1 + AAStringHeight(txt2) * l2 + (10 + l2) * M), 0, 0);
 	}
-	RowText(txt, bbInt(fx), bbInt(fy), bbInt(fw), bbInt(fh), 0, 1);
+	RowText(txt, iround(fx), iround(fy), iround(fw), iround(fh), 0, 1);
 	if (*txt2) {
-		bbColor(R, G_, B);
-		RowText(txt2, bbInt(fx), bbInt(fy + sh * lines + (5 + lines) * M), bbInt(fw), bbInt(fh), 0, 1);
+		set_color(R, G_, B);
+		RowText(txt2, iround(fx), iround(fy + sh * lines + (5 + lines) * M), iround(fw), iround(fh), 0, 1);
 	}
 }
 
 void DrawMapCreatorTooltip(int x, int y, int w, int h, const char *map) {
 	float fx = x + 6 * M, fy = y + 6 * M, fw = w - 12 * M, fh = h - 12 * M;
 	AASetFont(Font1);
-	bbColor(255, 255, 255);
+	set_color(255, 255, 255);
 	str t[6], author = "[Unknown]", descr = "[No description]";
 	int ramount = 0, forest = 0, mt = 0;
-	if (bbSeq(bbRight(map, 6), "cbmap2")) {
-		t[0] = bbLeft(map, bbLen(map) - 7);
-		FILE *f = bbOpenFile(cat("Map Creator\\Maps\\", map));
+	if (s_eq(s_right(map, 6), "cbmap2")) {
+		t[0] = s_left(map, s_len(map) - 7);
+		FILE *f = open_file(cat("Map Creator\\Maps\\", map));
 		if (f) {
-			author = bbReadLine(f); descr = bbReadLine(f);
-			bbReadByte(f); bbReadByte(f);
-			ramount = bbReadInt(f);
-			forest = bbReadInt(f) > 0; mt = bbReadInt(f) > 0;
-			bbCloseFile(f);
+			author = read_line(f); descr = read_line(f);
+			read_byte(f); read_byte(f);
+			ramount = read_int(f);
+			forest = read_int(f) > 0; mt = read_int(f) > 0;
+			close_file(f);
 		}
-	} else t[0] = bbLeft(map, bbLen(map) - 6);
+	} else t[0] = s_left(map, s_len(map) - 6);
 	t[1] = cat("Made by: ", author);
 	t[2] = cat("Description: ", descr);
-	t[3] = ramount > 0 ? cat("Room amount: ", bbStr(ramount)) : "Room amount: [Unknown]";
+	t[3] = ramount > 0 ? cat("Room amount: ", s_str(ramount)) : "Room amount: [Unknown]";
 	t[4] = forest ? "Has custom forest: Yes" : "Has custom forest: No";
 	t[5] = mt ? "Has custom maintenance tunnel: Yes" : "Has custom maintenance tunnel: No";
-	int lines = GetLineAmount(t[2], bbInt(fw), bbInt(fh), 1), h0 = AAStringHeight(t[0]), h2 = AAStringHeight(t[2]);
-	DrawFrame(x, y, w, bbInt(h0 * 6 + h2 * lines + 5 * M), 0, 0);
-	bbColor(255, 255, 255);
-	AAText(bbInt(fx), bbInt(fy), t[0], 0, 0);
-	AAText(bbInt(fx), bbInt(fy + h0), t[1], 0, 0);
-	RowText(t[2], bbInt(fx), bbInt(fy + h0 * 2), bbInt(fw), bbInt(fh), 0, 1);
-	for (int i = 3; i < 6; i++) AAText(bbInt(fx), bbInt(fy + h0 * (i - 1) + h2 * lines + 5 * M), t[i], 0, 0);
+	int lines = GetLineAmount(t[2], iround(fw), iround(fh), 1), h0 = AAStringHeight(t[0]), h2 = AAStringHeight(t[2]);
+	DrawFrame(x, y, w, iround(h0 * 6 + h2 * lines + 5 * M), 0, 0);
+	set_color(255, 255, 255);
+	AAText(iround(fx), iround(fy), t[0], 0, 0);
+	AAText(iround(fx), iround(fy + h0), t[1], 0, 0);
+	RowText(t[2], iround(fx), iround(fy + h0 * 2), iround(fw), iround(fh), 0, 1);
+	for (int i = 3; i < 6; i++) AAText(iround(fx), iround(fy + h0 * (i - 1) + h2 * lines + 5 * M), t[i], 0, 0);
 }

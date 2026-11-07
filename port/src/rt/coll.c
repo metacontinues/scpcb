@@ -37,8 +37,8 @@ static void quad(E *x, int *cap, v3 a, v3 b, v3 c, v3 d, v3 out) {
 	addtri(x, cap, a, b, c, NULL, 0); addtri(x, cap, a, c, d, NULL, 0);
 }
 static ctri *gettris(ent e, int mode, int *n) {
-	E *x = bb_e(e);
-	tf w = bb_wt(e);
+	E *x = rt_e(e);
+	tf w = rt_wt(e);
 	unsigned k = keyof(x, mode);
 	if (x->ct && x->cver == k && !memcmp(&x->ctf, &w, sizeof w)) { *n = x->nct; return x->ct; }
 	free(x->ct); x->ct = NULL; x->nct = 0;
@@ -160,28 +160,28 @@ static int raysph(v3 p, v3 d, v3 c, float r, float *t) {
 }
 
 // ---- collisions
-void bbCollisions(int src, int dst, int meth, int resp) {
+void coll_rule(int src, int dst, int meth, int resp) {
 	for (int i = 0; i < nrules; i++)
 		if (rules[i].src == src && rules[i].dst == dst) { rules[i].meth = meth; rules[i].resp = resp; return; }
 	grow(rules, nrules, crules);
 	rules[nrules++] = (rule){src, dst, meth, resp};
 }
-void bbClearCollisions(void) { nrules = 0; }
+void clear_collisions(void) { nrules = 0; }
 
-void bbResetEntity(ent e) {
-	E *x = bb_e(e);
-	x->opos = bb_wt(e).v; x->ohas = 1; x->nhit = 0;
+void reset_entity(ent e) {
+	E *x = rt_e(e);
+	x->opos = rt_wt(e).v; x->ohas = 1; x->nhit = 0;
 }
 
 typedef struct { ent e; int meth, resp; } cand;
 static cand *cs; static int ncs, ccs;
 
-static void record(ent e, hit h) { E *x = bb_e(e); grow(x->hits, x->nhit, x->chit); x->hits[x->nhit++] = h; }
+static void record(ent e, hit h) { E *x = rt_e(e); grow(x->hits, x->nhit, x->chit); x->hits[x->nhit++] = h; }
 
 static void collide(ent e) {
-	E *x = bb_e(e);
+	E *x = rt_e(e);
 	v3 rad = v3n(x->rx, x->ry, x->rx), inv = v3n(1 / x->rx, 1 / x->ry, 1 / x->rx);
-	v3 wf = x->opos, wt = bb_wt(e).v;
+	v3 wf = x->opos, wt = rt_wt(e).v;
 	float mv = v3len(v3sub(wt, wf));
 	if (mv < 1e-7f) return;
 	// broad phase once: everything the slide could reach
@@ -190,15 +190,15 @@ static void collide(ent e) {
 	ncs = 0;
 	for (int r = 0; r < nrules; r++) {
 		if (rules[r].src != me) continue;
-		for (ent t = 1; t < bb_nents; t++) {
-			E *y = &bb_ents[t];
-			if (t == e || !y->used || y->ctype != rules[r].dst || bbEntityHidden(t)) continue;
+		for (ent t = 1; t < rt_nents; t++) {
+			E *y = &rt_ents[t];
+			if (t == e || !y->used || y->ctype != rules[r].dst || entity_hidden(t)) continue;
 			if (rules[r].meth == 1) {
-				v3 c = bb_wt(t).v, rr = v3n(y->rx, y->rx, y->rx);
+				v3 c = rt_wt(t).v, rr = v3n(y->rx, y->rx, y->rx);
 				if (!boxhit(lo, hi, v3sub(c, rr), v3add(c, rr))) continue;
 			} else {
 				int n; gettris(t, rules[r].meth == 3 ? 3 : 2, &n);
-				y = &bb_ents[t];
+				y = &rt_ents[t];
 				if (!n || !boxhit(lo, hi, y->clo, y->chi)) continue;
 			}
 			grow(cs, ncs, ccs);
@@ -213,8 +213,8 @@ static void collide(ent e) {
 		float bt = 1; v3 bcp = {0}; int bc = -1; surf *bs = NULL; int bti = 0;
 		for (int i = 0; i < ncs; i++) {
 			if (cs[i].meth == 1) { // sphere vs sphere, in world space; t is the same fraction
-				v3 c = bb_wt(cs[i].e).v;
-				float rt = bb_e(cs[i].e)->rx, tt = bt;
+				v3 c = rt_wt(cs[i].e).v;
+				float rt = rt_e(cs[i].e)->rx, tt = bt;
 				v3 wp = v3scl(pos, rad), wv = v3scl(vel, rad);
 				if (raysph(wp, wv, c, x->rx + rt, &tt)) {
 					v3 hp = v3add(wp, v3mul(wv, tt));
@@ -241,66 +241,66 @@ static void collide(ent e) {
 		if (cs[bc].resp == 3 && sn.y > 0) nd.y = fmaxf(nd.y, np.y); // no sliding down slopes
 		pos = np; dst = nd;
 	}
-	bbPositionEntity(e, pos.x * rad.x, pos.y * rad.y, pos.z * rad.z, 1);
+	position_entity(e, pos.x * rad.x, pos.y * rad.y, pos.z * rad.z, 1);
 }
 
-void bbUpdateWorld(float anim) {
+void update_world(float anim) {
 	anim_step(anim); // blitz animates first, then collides
-	for (ent e = 1; e < bb_nents; e++) if (bb_ents[e].used) bb_ents[e].nhit = 0;
-	for (ent e = 1; e < bb_nents; e++) {
-		E *x = &bb_ents[e];
-		if (!x->used || !x->ctype || !x->ohas || bbEntityHidden(e)) continue;
+	for (ent e = 1; e < rt_nents; e++) if (rt_ents[e].used) rt_ents[e].nhit = 0;
+	for (ent e = 1; e < rt_nents; e++) {
+		E *x = &rt_ents[e];
+		if (!x->used || !x->ctype || !x->ohas || entity_hidden(e)) continue;
 		int src = 0;
 		for (int r = 0; r < nrules && !src; r++) src = rules[r].src == x->ctype;
 		if (src) collide(e);
 	}
-	for (ent e = 1; e < bb_nents; e++) {
-		E *x = &bb_ents[e];
-		if (x->used && x->ctype) { x->opos = bb_wt(e).v; x->ohas = 1; }
+	for (ent e = 1; e < rt_nents; e++) {
+		E *x = &rt_ents[e];
+		if (x->used && x->ctype) { x->opos = rt_wt(e).v; x->ohas = 1; }
 	}
 }
 
-static hit *gethit(ent e, int i) { E *x = bb_e(e); static hit z; return i >= 1 && i <= x->nhit ? &x->hits[i-1] : &z; }
-int bbCountCollisions(ent e) { return bb_e(e)->nhit; }
-float bbCollisionX(ent e, int i) { return gethit(e, i)->p.x; }
-float bbCollisionY(ent e, int i) { return gethit(e, i)->p.y; }
-float bbCollisionZ(ent e, int i) { return gethit(e, i)->p.z; }
-float bbCollisionNX(ent e, int i) { return gethit(e, i)->n.x; }
-float bbCollisionNY(ent e, int i) { return gethit(e, i)->n.y; }
-float bbCollisionNZ(ent e, int i) { return gethit(e, i)->n.z; }
-float bbCollisionTime(ent e, int i) { return gethit(e, i)->t; }
-ent bbCollisionEntity(ent e, int i) { return gethit(e, i)->e; }
-surf *bbCollisionSurface(ent e, int i) { return gethit(e, i)->s; }
-int bbCollisionTriangle(ent e, int i) { return gethit(e, i)->ti; }
-ent bbEntityCollided(ent e, int type) {
-	E *x = bb_e(e);
-	for (int i = 0; i < x->nhit; i++) if (bbEntityExists(x->hits[i].e) && bb_e(x->hits[i].e)->ctype == type) return x->hits[i].e;
+static hit *gethit(ent e, int i) { E *x = rt_e(e); static hit z; return i >= 1 && i <= x->nhit ? &x->hits[i-1] : &z; }
+int count_collisions(ent e) { return rt_e(e)->nhit; }
+float collision_x(ent e, int i) { return gethit(e, i)->p.x; }
+float collision_y(ent e, int i) { return gethit(e, i)->p.y; }
+float collision_z(ent e, int i) { return gethit(e, i)->p.z; }
+float collision_nx(ent e, int i) { return gethit(e, i)->n.x; }
+float collision_ny(ent e, int i) { return gethit(e, i)->n.y; }
+float collision_nz(ent e, int i) { return gethit(e, i)->n.z; }
+float collision_time(ent e, int i) { return gethit(e, i)->t; }
+ent collision_entity(ent e, int i) { return gethit(e, i)->e; }
+surf *collision_surface(ent e, int i) { return gethit(e, i)->s; }
+int collision_triangle(ent e, int i) { return gethit(e, i)->ti; }
+ent entity_collided(ent e, int type) {
+	E *x = rt_e(e);
+	for (int i = 0; i < x->nhit; i++) if (entity_exists(x->hits[i].e) && rt_e(x->hits[i].e)->ctype == type) return x->hits[i].e;
 	return 0;
 }
 
 // ---- picking
 static hit pk;
 
-ent bb_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly) {
+ent rt_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly) {
 	pk = (hit){0};
 	float bt = 1;
 	v3 to = v3add(from, d), rr = v3n(rad, rad, rad);
 	v3 lo = v3sub(v3n(fminf(from.x, to.x), fminf(from.y, to.y), fminf(from.z, to.z)), rr);
 	v3 hi = v3add(v3n(fmaxf(from.x, to.x), fmaxf(from.y, to.y), fmaxf(from.z, to.z)), rr);
-	for (ent e = 1; e < bb_nents; e++) {
-		E *x = &bb_ents[e];
-		if (!x->used || !x->pmode || e == ex1 || e == ex2 || (obsonly && !x->pobsc) || bbEntityHidden(e)) continue;
+	for (ent e = 1; e < rt_nents; e++) {
+		E *x = &rt_ents[e];
+		if (!x->used || !x->pmode || e == ex1 || e == ex2 || (obsonly && !x->pobsc) || entity_hidden(e)) continue;
 		if (x->pmode == 1) {
-			v3 c = bb_wt(e).v;
+			v3 c = rt_wt(e).v;
 			float tt = bt;
-			if (raysph(from, d, c, bb_e(e)->rx + rad, &tt)) {
+			if (raysph(from, d, c, rt_e(e)->rx + rad, &tt)) {
 				v3 hp = v3add(from, v3mul(d, tt)), n = v3norm(v3sub(hp, c));
 				bt = tt; pk = (hit){v3sub(hp, v3mul(n, rad)), n, e, tt, NULL, 0};
 			}
 			continue;
 		}
 		int n; ctri *tr = gettris(e, x->pmode == 3 ? 3 : 2, &n);
-		x = &bb_ents[e];
+		x = &rt_ents[e];
 		if (!n || !boxhit(lo, hi, x->clo, x->chi)) continue;
 		for (int k = 0; k < n; k++) {
 			ctri *c = &tr[k];
@@ -319,22 +319,22 @@ ent bb_pick(v3 from, v3 d, float rad, ent ex1, ent ex2, int obsonly) {
 	return pk.e;
 }
 
-ent bbLinePick(float x, float y, float z, float dx, float dy, float dz, float r) { return bb_pick(v3n(x, y, z), v3n(dx, dy, dz), r, 0, 0, 0); }
-ent bbEntityPick(ent e, float range) {
-	tf w = bb_wt(e);
-	return bb_pick(w.v, v3mul(v3norm(w.m.k), range), 0, e, 0, 0);
+ent line_pick(float x, float y, float z, float dx, float dy, float dz, float r) { return rt_pick(v3n(x, y, z), v3n(dx, dy, dz), r, 0, 0, 0); }
+ent entity_pick(ent e, float range) {
+	tf w = rt_wt(e);
+	return rt_pick(w.v, v3mul(v3norm(w.m.k), range), 0, e, 0, 0);
 }
-int bbEntityVisible(ent a, ent b) {
-	v3 p = bb_wt(a).v;
-	return !bb_pick(p, v3sub(bb_wt(b).v, p), 0, a, b, 1);
+int entity_visible(ent a, ent b) {
+	v3 p = rt_wt(a).v;
+	return !rt_pick(p, v3sub(rt_wt(b).v, p), 0, a, b, 1);
 }
-float bbPickedX(void) { return pk.p.x; }
-float bbPickedY(void) { return pk.p.y; }
-float bbPickedZ(void) { return pk.p.z; }
-float bbPickedNX(void) { return pk.n.x; }
-float bbPickedNY(void) { return pk.n.y; }
-float bbPickedNZ(void) { return pk.n.z; }
-float bbPickedTime(void) { return pk.t; }
-ent bbPickedEntity(void) { return pk.e; }
-surf *bbPickedSurface(void) { return pk.s; }
-int bbPickedTriangle(void) { return pk.ti; }
+float picked_x(void) { return pk.p.x; }
+float picked_y(void) { return pk.p.y; }
+float picked_z(void) { return pk.p.z; }
+float picked_nx(void) { return pk.n.x; }
+float picked_ny(void) { return pk.n.y; }
+float picked_nz(void) { return pk.n.z; }
+float picked_time(void) { return pk.t; }
+ent picked_entity(void) { return pk.e; }
+surf *picked_surface(void) { return pk.s; }
+int picked_triangle(void) { return pk.ti; }
