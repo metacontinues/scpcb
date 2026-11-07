@@ -17,7 +17,8 @@ static void mat(Mdl *o, int i, float r, float g, float b, float a,
   Material *m = &o->m.materials[i + 1];
   MdlMat *x = &o->mat[i + 1];
   int full = strchr(fl, 'f') != NULL, vcol = strchr(fl, 'v') != NULL;
-  m->shader = shd_world[MK_MODEL + full + vcol * 2];
+  int skin = o->m.skeleton.boneCount > 0 && o->m.boneMatrices; // gpu skinned
+  m->shader = shd_world[MK_MODEL + full + vcol * 2 + skin * 4];
   m->maps[MATERIAL_MAP_ALBEDO].texture = tex_get(tex);
   m->maps[MATERIAL_MAP_ALBEDO].color = (Color){
       roundf(r * 255), roundf(g * 255), roundf(b * 255), roundf(a * 255)};
@@ -74,7 +75,8 @@ void mdl_free(Mdl *o) {
 
 void mdl_pose(Mdl *o, float frame) {
   if (o->nanims)
-    UpdateModelAnimation(o->m, o->anims[0], frame);
+    UpdateModelAnimation(o->m, o->anims[0],
+                         frame); // bones only: our shader skins
 }
 
 void mdl_draw(const Mdl *o, Matrix m, int alpha) {
@@ -88,6 +90,19 @@ void mdl_draw(const Mdl *o, Matrix m, int alpha) {
       rlDisableBackfaceCulling();
     if (alpha)
       BeginBlendMode(x->blend);
+    Shader s = o->m.materials[mi].shader;
+    if (o->m.boneMatrices && s.locs &&
+        s.locs[SHADER_LOC_MATRIX_BONETRANSFORMS] >= 0) {
+      rlEnableShader(s.id); // this pose's bones, set right before the draw
+      int n = o->m.skeleton.boneCount < SHD_BONES ? o->m.skeleton.boneCount
+                                                  : SHD_BONES;
+      // es2's glUniformMatrix4fv can't transpose and raylib's Matrix is row
+      // major, so its rlSetUniformMatrices hands es2 transposed matrices
+      static Matrix bt[SHD_BONES];
+      for (int b = 0; b < n; b++)
+        bt[b] = MatrixTranspose(o->m.boneMatrices[b]);
+      rlSetUniformMatrices(s.locs[SHADER_LOC_MATRIX_BONETRANSFORMS], bt, n);
+    }
     DrawMesh(o->m.meshes[i], o->m.materials[mi], t);
     if (alpha)
       EndBlendMode();

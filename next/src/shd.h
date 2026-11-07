@@ -1,11 +1,13 @@
 // shd.h: the world shaders (glsl es 100, so angle/es2 runs them). rooms get one
-// per material kind, models one per (fullbright, vertex color) pair: MK_MODEL +
-// (f ? 1 : 0) + (v ? 2 : 0)
+// per material kind, models one per (fullbright, vertex color, skinned) combo:
+// MK_MODEL + (f ? 1 : 0) + (v ? 2 : 0) + (skinned ? 4 : 0)
 #pragma once
 #include "raylib.h"
 
-enum { MK_LIT, MK_VERT, MK_FLAT, MK_ALPHA, MK_MODEL, MK_N = MK_MODEL + 4 };
-enum { SHD_LIGHTS = 4 };
+enum { MK_LIT, MK_VERT, MK_FLAT, MK_ALPHA, MK_MODEL, MK_N = MK_MODEL + 8 };
+// skinned models: bones go to the gpu as a uniform array. 128 mat4 = 512 vec4,
+// way under what mesa + angle give (4096) but over es2's bare minimum (128)
+enum { SHD_LIGHTS = 4, SHD_BONES = 128 };
 extern Shader shd_world[MK_N];
 
 void shd_init(void);

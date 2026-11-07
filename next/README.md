@@ -93,6 +93,8 @@ from the repo root:
 
 ## risks to check early
 
-- es2 uniform limits for gpu skinning (~128 vec4 -> ~30 bones); fallback is cpu skinning, few npcs on screen anyway.
+- gpu skinning: done. the model shader's skinned variant takes up to 128 bones (most is 966's 121): 512 vec4
+  uniforms, mesa + angle give 4096 (es2's bare minimum is 128, so very old gles2-only gpus would need bone
+  palettes). raylib's rlSetUniformMatrices hands es2 transposed matrices, src/model.c transposes first.
 - lightmap look: blitz's TextureBlend multiply (+ the 2x on some) has to match in the shader, verify on milestone 2.
 - room meshes w/ alpha surfaces need sorting; raylib's DrawModel doesn't sort, so the draw list does.
