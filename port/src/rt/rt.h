@@ -35,6 +35,7 @@ int app_closing(void);
 int count_gfx_drivers(void);
 const char *gfx_driver_name(int i);
 void anti_alias(int on);
+int app_focused(void);
 int desktop_width(void);  // 0 before the first Graphics3D
 int desktop_height(void);
 
@@ -52,6 +53,7 @@ str read_line(FILE *f);   // "" at eof
 ent create_pivot(ent par);
 ent copy_entity(ent e, ent par);
 void free_entity(ent e);
+void clear_world(void); // ClearWorld: all entities, brushes, textures
 void entity_parent(ent e, ent par, int glob);
 ent get_parent(ent e);
 int count_children(ent e);

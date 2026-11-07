@@ -53,6 +53,7 @@ int milli_secs(void) { return (int)(GetTime() * 1000); }
 int app_closing(void) { return WindowShouldClose(); }
 int count_gfx_drivers(void) { return 1; }
 const char *gfx_driver_name(int i) { return i == 1 ? "OpenGL ES 2 (raylib)" : ""; }
+int app_focused(void) { return getenv("SCPCB_INPUT") || IsWindowFocused(); } // scripted runs never pause
 void anti_alias(int on) { (void)on; } // msaa has to be picked before the window exists
 int desktop_width(void) { return IsWindowReady() ? GetMonitorWidth(GetCurrentMonitor()) : 0; }
 int desktop_height(void) { return IsWindowReady() ? GetMonitorHeight(GetCurrentMonitor()) : 0; }

@@ -48,7 +48,7 @@ const char *rt_media(const char *real, const char *ext) {
 	struct stat st;
 	if (stat(out, &st)) {
 		static int warned;
-		if (!warned++) fprintf(stderr, "bb: no converted asset %s (run port/build/assetconv from the game dir)\n", out);
+		if (!warned++) fprintf(stderr, "rt: no converted asset %s (run port/build/assetconv from the game dir)\n", out);
 		return NULL;
 	}
 	return out;

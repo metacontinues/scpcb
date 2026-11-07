@@ -11,6 +11,9 @@ static tcache *tcs; static int ntc, ctc;
 typedef struct { char file[256]; ent e; } pcache;
 static pcache *pcs; static int npc, cpc;
 
+// clear_world took everything these point at
+void rmesh_clear_cache(void) { ntc = npc = 0; }
+
 static const char *strip(const char *p) {
 	const char *b = p;
 	for (; *p; p++) if (*p == '\\' || *p == '/') b = p + 1;

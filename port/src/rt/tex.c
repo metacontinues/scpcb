@@ -104,6 +104,15 @@ void tex_unref(htex h) {
 	for (int i = 0; i < nf; i++) tex_unref(fr[i]);
 	free(fr);
 }
+// clear_world: whatever's left goes, refs or not
+void rt_texclear(void) {
+	for (int i = 1; i < nts; i++) {
+		tex *t = &ts[i];
+		if (!t->used) continue;
+		if (t->hasrt) UnloadRenderTexture(t->rt); else UnloadTexture(t->t);
+		free(t->fr); t->fr = NULL; t->nf = 0; t->used = 0;
+	}
+}
 // handle drop; brushes may still hold it.
 void free_texture(htex h) { tex_unref(h); }
 

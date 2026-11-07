@@ -18,7 +18,7 @@ static strm st[NST];
 static int audio; // -1 failed, 1 up
 
 static int up(void) {
-	if (!audio) { InitAudioDevice(); audio = IsAudioDeviceReady() ? 1 : -1; if (audio < 0) fprintf(stderr, "bb: no audio device, sounds are silent\n"); }
+	if (!audio) { InitAudioDevice(); audio = IsAudioDeviceReady() ? 1 : -1; if (audio < 0) fprintf(stderr, "rt: no audio device, sounds are silent\n"); }
 	return audio > 0;
 }
 void snd_quit(void) {

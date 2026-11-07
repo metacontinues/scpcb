@@ -175,6 +175,11 @@ TLIST_DECL(AchievementMsg);
 void GiveAchievement(int id, int showMessage);
 AchievementMsg *CreateAchievementMsg(int id, const char *txt);
 void UpdateAchievementMsg(void);
+void DrawAchvIMG(int x, int y, int no);
+void AchievementTooltip(int no);
+void DrawMenu(void);
+void NullGame(int buttonsfx);
+void KillSounds(void);
 
 // ---- Menu.bb
 typedef struct LoadingScreens { lnode n; str imgpath; int img, ID; str title; int alignx, aligny, disablebackground; str txt[5]; int txtamount; } LoadingScreens;
