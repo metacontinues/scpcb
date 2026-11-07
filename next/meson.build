@@ -113,3 +113,5 @@ executable('bake', files('tools/bake/bake.c', 'tools/bake/glb.c', 'tools/bake/im
 	dependencies: rlt)
 # the viewer runs the game's room code but links the tools' raylib so screenshots can be png
 executable('view', files('tools/view.c', 'src/asset.c', 'src/model.c', 'src/room.c', 'src/shd.c'), dependencies: rlt)
+executable('scpcb', files('src/game.c', 'src/asset.c', 'src/coll.c', 'src/door.c', 'src/ini.c', 'src/mapgen.c',
+	'src/model.c', 'src/player.c', 'src/props.c', 'src/room.c', 'src/shd.c', 'src/world.c'), dependencies: rlg)

@@ -25,6 +25,9 @@ glfw.c's include order is load-bearing). lint: `next/tools/lint.sh [build dir]` 
 
 from the repo root:
 - `next/build/bake [x.rmesh|.b3d|.x ...]` bakes into `next/data` (only stale outputs; all of GFX/map takes ~2s)
+- `next/build/scpcb` the game so far (reads options.ini: size, keys, mouse, fog, map size). dev env: `SCPCB_SEED=n`,
+  `SCPCB_SHOT=a.png SCPCB_SHOT_FRAME=n`, `SCPCB_WALK=ticks`, `SCPCB_YAW=deg`, `SCPCB_NOFOG=1`, `SCPCB_DOOR=1|2|3` +
+  `SCPCB_CLICK=frame` (door tests), see the top of src/game.c
 - `next/build/view [id]` flies around a baked room (eg `gfx/map/room2cafeteria_opt`) or orbits a model (eg
   `gfx/npcs/scp096`: space play, , . step, b bones, `VIEW_POSE=f` / `VIEW_YAW=deg` for shots). f fog, g ambient,
   t/l/p trigger boxes, lights, waypoints. `VIEW_CAM="x y z tx ty tz" VIEW_SHOT=a.png VIEW_FRAME=n VIEW_FOG=0` for
@@ -79,8 +82,11 @@ from the repo root:
    rooms done: 112 baked, screenshots match port/'s rmview. models done: all 168 .b3d/.x -> glb (skin + anim
    when they have keys/bones, keyframe n = blitz frame n), npc poses match port/'s rmview. rooms draw their props.
    left: dds textures (2, the forest), a few textures missing in the repo itself.
-2. one room rendered w/ the world shader + fog, screenshot-diffed against `port/`.
-3. map gen + rooms + doors + player controller/collision: walkable facility (= port/'s state).
+2. one room rendered w/ the world shader + fog, screenshot-diffed against `port/`. done (rooms + models).
+3. map gen + rooms + doors + player controller/collision: walkable facility. done: `next/build/scpcb` generates the
+   map (the original's algorithm, raylib's rng), drops you in the start room, wasd/mouse w/ the original's speeds,
+   sprint/crouch/gravity, swept-ellipsoid collision (src/coll.c), doors between rooms open from their buttons.
+   not yet: FillRoom (rooms' own doors, items, props placed by code), sounds, the hud, room culling beyond distance.
 4. hud, menus, text, audio, options.
 5. 173/106/guard/class-d, items + inventory, the events port/ already has.
 6. the rest of port/README's "left to port" list, written straight against this.
