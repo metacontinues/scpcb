@@ -16,8 +16,9 @@ runtime), the wayland protocol glue comes from `wayland-scanner`. `./setup.sh -D
 - check w/ `VIEW_LOG=1 next/build/view`: the renderer line should say ANGLE
 
 from the repo root:
-- `next/build/bake [x.rmesh ...]` bakes into `next/data` (only stale outputs; all of GFX/map takes ~2s)
-- `next/build/view [room id]` flies around a baked room, eg `gfx/map/room2cafeteria_opt`. f fog, g ambient,
+- `next/build/bake [x.rmesh|.b3d|.x ...]` bakes into `next/data` (only stale outputs; all of GFX/map takes ~2s)
+- `next/build/view [id]` flies around a baked room (eg `gfx/map/room2cafeteria_opt`) or orbits a model (eg
+  `gfx/npcs/scp096`: space play, , . step, b bones, `VIEW_POSE=f` / `VIEW_YAW=deg` for shots). f fog, g ambient,
   t/l/p trigger boxes, lights, waypoints. `VIEW_CAM="x y z tx ty tz" VIEW_SHOT=a.png VIEW_FRAME=n VIEW_FOG=0` for
   scripted screenshots (port/build/rmview takes the same shot w/ `rmview GFX/map/x.rmesh a.png 0` from the first waypoint)
 
@@ -67,7 +68,9 @@ from the repo root:
 
 0. portability should be the goal, not strictly only for x11 because the game should be able to run on windows/mac later
 1. bake: every room + model -> glb, checked in a tiny viewer (orbit cam, anim scrub).
-   rooms done: 112 baked, screenshots match port/'s rmview. models (.b3d/.x, props, npcs) next.
+   rooms done: 112 baked, screenshots match port/'s rmview. models done: all 168 .b3d/.x -> glb (skin + anim
+   when they have keys/bones, keyframe n = blitz frame n), npc poses match port/'s rmview. rooms draw their props.
+   left: dds textures (2, the forest), a few textures missing in the repo itself.
 2. one room rendered w/ the world shader + fog, screenshot-diffed against `port/`.
 3. map gen + rooms + doors + player controller/collision: walkable facility (= port/'s state).
 4. hud, menus, text, audio, options.
