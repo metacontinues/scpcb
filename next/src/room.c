@@ -14,7 +14,7 @@
 static void mat(RoomMesh *r, int i, const char *kind, const char *diff, const char *lm) {
 	static const char *ks[] = {"lit", "vert", "flat", "alpha"};
 	int k = MK_FLAT;
-	for (int j = 0; j < MK_N; j++) if (!strcmp(kind, ks[j])) k = j;
+	for (int j = 0; j < MK_MODEL; j++) if (!strcmp(kind, ks[j])) k = j;
 	if (i + 1 >= r->vis.materialCount) return; // raylib puts gltf material i at i + 1 (0 = default)
 	Material *m = &r->vis.materials[i + 1];
 	m->shader = shd_world[k];
