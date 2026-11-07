@@ -49,13 +49,26 @@ static const char *room_fs =
 // * (ambient + lights)
 static const char *model_vs =
     "attribute vec3 vertexPosition, vertexNormal; attribute vec2 "
-    "vertexTexCoord; attribute vec4 vertexColor;\n"
+    "vertexTexCoord;"
+    " attribute vec4 vertexColor;\n"
+    "#if SKIN\n"
+    "attribute vec4 vertexBoneIndices, vertexBoneWeights;\n"
+    "uniform mat4 boneMatrices[128];\n"
+    "#endif\n"
     "uniform mat4 mvp, matModel, matView, matNormal;\n"
     "uniform vec4 colDiffuse;\n"
     "uniform vec3 lamb; uniform int nl; uniform vec4 lpos[4], lcol[4];\n"
     "varying vec2 uv0; varying vec4 vc; varying float vd;\n"
     "void main() {\n"
-    "  vec4 wp = matModel * vec4(vertexPosition, 1.0);\n"
+    "  vec4 lp = vec4(vertexPosition, 1.0), ln = vec4(vertexNormal, 0.0);\n"
+    "#if SKIN\n"
+    "  mat4 sk = boneMatrices[int(vertexBoneIndices.x)] * vertexBoneWeights.x"
+    " + boneMatrices[int(vertexBoneIndices.y)] * vertexBoneWeights.y"
+    " + boneMatrices[int(vertexBoneIndices.z)] * vertexBoneWeights.z"
+    " + boneMatrices[int(vertexBoneIndices.w)] * vertexBoneWeights.w;\n"
+    "  lp = sk * lp; ln = sk * ln;\n"
+    "#endif\n"
+    "  vec4 wp = matModel * lp;\n"
     "#if VCOL\n"
     "  vec4 base = vec4(vertexColor.rgb, colDiffuse.a * vertexColor.a);\n"
     "#else\n"
@@ -64,20 +77,20 @@ static const char *model_vs =
     "#if FULLBRIGHT\n"
     "  vec3 l = vec3(1.0);\n"
     "#else\n"
-    "  vec3 l = lamb, n = normalize((matNormal * vec4(vertexNormal, "
-    "0.0)).xyz);\n"
+    "  vec3 l = lamb, n = normalize((matNormal * ln).xyz);\n"
     "  for (int i = 0; i < 4; i++) {\n"
     "    if (i >= nl) break;\n"
     "    vec3 L = -lpos[i].xyz; float at = 1.0;\n"
     "    if (lpos[i].w > 0.5) { vec3 v = lpos[i].xyz - wp.xyz; float d = "
-    "length(v); L = v / max(d, 1e-4); at = 1.0 / (1.0 + d / lcol[i].w); }\n"
+    "length(v);"
+    " L = v / max(d, 1e-4); at = 1.0 / (1.0 + d / lcol[i].w); }\n"
     "    l += lcol[i].rgb * max(dot(n, normalize(L)), 0.0) * at;\n"
     "  }\n"
     "#endif\n"
     "  vc = vec4(base.rgb * l, base.a);\n"
     "  uv0 = vertexTexCoord;\n"
     "  vd = -(matView * wp).z;\n"
-    "  gl_Position = mvp * vec4(vertexPosition, 1.0);\n"
+    "  gl_Position = mvp * lp;\n"
     "}\n";
 
 static const char *model_fs =
@@ -94,7 +107,7 @@ static const char *model_fs =
     "}\n";
 
 void shd_init(void) {
-  char vs[4096], fs[4096];
+  char vs[8192], fs[4096];
   for (int k = 0; k < MK_N; k++) {
     if (k < MK_MODEL) {
       snprintf(fs, sizeof fs, "#version 100\n#define KIND %d\n%s", k, room_fs);
@@ -104,8 +117,9 @@ void shd_init(void) {
     } else {
       int v = k - MK_MODEL;
       snprintf(vs, sizeof vs,
-               "#version 100\n#define FULLBRIGHT %d\n#define VCOL %d\n%s",
-               v & 1, v >> 1 & 1, model_vs);
+               "#version 100\n#define FULLBRIGHT %d\n#define VCOL %d\n#define "
+               "SKIN %d\n%s",
+               v & 1, v >> 1 & 1, v >> 2 & 1, model_vs);
       snprintf(fs, sizeof fs, "#version 100\n%s", model_fs);
       shd_world[k] = LoadShaderFromMemory(vs, fs);
     }

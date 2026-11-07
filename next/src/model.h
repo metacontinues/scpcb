@@ -1,6 +1,7 @@
 // model.h: a baked model (tools/bake/model.c has the file format): raylib Model
-// + its animation, if any. skinned models pose on the cpu
-// (UpdateModelAnimation), so one Mdl shown in several poses gets posed per draw
+// + its animation, if any. skinned models skin on the gpu: mdl_pose only works
+// out the bone matrices and mdl_draw hands them over, so one Mdl shown in
+// several poses is mdl_pose + mdl_draw per copy, no mesh re-upload
 #pragma once
 #include "raylib.h"
 

@@ -91,6 +91,9 @@ int main(int argc, char **argv) {
            md.frames, bb.max.x - bb.min.x, bb.max.y - bb.min.y,
            bb.max.z - bb.min.z);
     mdl_pose(&md, frame);
+    if (md.m.skeleton.boneCount) // raylib only fills animVertices when it skins
+                                 // on the cpu
+      printf("skinning: %s\n", md.m.meshes[0].animVertices ? "cpu" : "gpu");
   }
   const char *vc = getenv("VIEW_CAM");
   if (vc)
