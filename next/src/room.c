@@ -30,6 +30,9 @@ static void mat(RoomMesh *r, int i, const char *kind, const char *diff,
   m->maps[MATERIAL_MAP_ALBEDO].color = WHITE;
   m->maps[MATERIAL_MAP_OCCLUSION].texture = tex_get(lm);
   r->kind[i + 1] = k;
+  free(r->diff[i + 1]);
+  r->diff[i + 1] = malloc(strlen(diff) + 1);
+  memcpy(r->diff[i + 1], diff, strlen(diff) + 1);
 }
 
 int room_load(RoomMesh *r, const char *id) {
@@ -40,6 +43,7 @@ int room_load(RoomMesh *r, const char *id) {
   r->vis = LoadModel(asset_path(id, ".glb"));
   r->col = LoadModel(asset_path(id, ".col.glb"));
   r->kind = calloc(r->vis.materialCount, sizeof *r->kind);
+  r->diff = calloc(r->vis.materialCount, sizeof *r->diff);
   for (int i = 0; i < r->vis.materialCount; i++)
     r->kind[i] = MK_FLAT;
   for (char *l = txt, *e; l && *l; l = e) {
@@ -104,6 +108,9 @@ void room_free(RoomMesh *r) {
   }
   UnloadModel(r->vis);
   UnloadModel(r->col);
+  for (int i = 0; r->diff && i < r->vis.materialCount; i++)
+    free(r->diff[i]);
+  free(r->diff);
   free(r->kind);
   free(r->lights);
   free(r->sounds);
