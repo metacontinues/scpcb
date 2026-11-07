@@ -5,7 +5,8 @@ to diff against) until this reaches parity, then it goes.
 
 ## build + run
 
-same toolchain as port/ (`./setup.sh && ninja -C build`, muon works). linux builds glfw w/ x11 + wayland (picked at
+same toolchain as port/ (`./setup.sh && ninja -C build`). muon: `BUILD=build-muon MESON=./muon ./setup.sh && ./muon -C build-muon samu`
+(setup.sh hands it gnu ar + the system's pkg-config path, see the comments there). linux builds glfw w/ x11 + wayland (picked at
 runtime), the wayland protocol glue comes from `wayland-scanner`. `./setup.sh -Dangle=/opt/angle/usr/lib` runs on angle:
 - glfw gets angle's unversioned sonames (it'd dlopen the system's libEGL.so.1 otherwise) + an rpath to that dir
 - src/glfw.c replaces raylib's rglfw.c so glfw's wayland backend asks for EGL_PLATFORM_ANGLE_ANGLE (angle refuses
