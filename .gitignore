@@ -4,8 +4,8 @@
 *.DS_Store
 *.ipf
 *.iws
-MapSystem.bb.rej
-UpdateEvents.bb.rej
+bb/MapSystem.bb.rej
+bb/UpdateEvents.bb.rej
 *.bb_bak*
 Saves/*
 error_log_*

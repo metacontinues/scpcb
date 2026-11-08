@@ -2,7 +2,7 @@
 
 c rewrite of scpcb on raylib, rendering through gles2 so it runs on [ANGLE](https://chromium.googlesource.com/angle/angle).
 
-the game (`src/game`, ported from the original `.bb` files) runs on a small runtime of its own (`src/rt`):
+the game (`src/game`, ported from the original `.bb` files in `bb/`) runs on a small runtime of its own (`src/rt`):
 an entity tree w/ collisions, picks and animation, textures, 2d, sound, input and files, on raylib.
 entities are int handles (0 = null), angles are degrees, indices count from 0, `irand`/`frnd` take (lo, hi).
 
